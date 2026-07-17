@@ -3528,6 +3528,11 @@ function giMazeOpen(raw,p){
   GIMZ={raw:raw,p:p,lvl:lvl,stage:'jump',cards:pool.slice(0,2+Math.floor(Math.random()*3)),card:null,
     grid:null,W:5,H:Math.min(7,3+lvl),pos:null,trace:0,extraLoad:0,ice:0,intel:0,keyFree:/渗透钥/.test(giVal2('武装')),
     ask:null,ph:0,parts:[],raf:null,msg:''};
+  /* 作战图预定线：3D地图dive态排定的跳板路径（GITS-MAP3D写入GI.state.gmapJumpPath，用后即焚） */
+  try{var jp=GI.state.gmapJumpPath;if(jp&&jp.length){var jn=Math.max(2,Math.min(4,jp.length)),jt=Math.max(4,20-5*jn);
+    GIMZ.cards.unshift({name:'既定路径 '+jp.slice(0,4).join('→'),risk:jn>=4?'低':(jn===3?'中':'高'),step:jn,t0:jt,pre:1,
+      desc:'作战图上排定的'+jn+'跳接力——预铺的线，起点最净（起始追踪'+jt+'/步进+'+jn+'）'});
+    GI.state.gmapJumpPath=null;if(typeof giSave==='function')giSave();}}catch(e){}
   var ov=document.createElement('div');ov.className='gi-ov';ov.id='giMzOv';
   document.body.appendChild(ov);
   ov.addEventListener('click',giMazeClick);
@@ -4340,6 +4345,981 @@ try{if(window.SHELLDIAG){
   if(SHELLDIAG.interact)SHELLDIAG.interact.world=giWorld;
 }}catch(e){}
 /*/GITS-CASE*/
+/*GITS-MAP3D ============================================================
+  S9 TACMAP // NEWPORT GRID —— 1995剧场版车载导航复刻 · 3D战术地图核心模块
+  规格：design/map_ui_spec.md（FUI规格）+ design/MAP_BUILD_NOTES.md（锚点/降级链）
+  自包含：window.GMAP 暴露 open/close/setNodes/setPlayer/pulse/setPolarity/setTopo/onNodeClick
+  懒加载：gmapEnsureThree() 首次 open 才注入 core/three-bundle.min.js（THREE 挂 window.THREE，
+  已验证 bundle 尾部 window.THREE=df 的 IIFE 暴露方式，r185）。失败置 gmapFail → 2D SVG 舆图降级。
+  绘制预算：楼块≤880（移动≤420）、线段≤5万；draw calls ≤7（grid/wire/halo/faces/road/route/dark）。
+  CRT 协调（规格§2.6）：嵌入游戏时不自画横扫描线/暗角（body::before/after 既有层天然罩住，
+  z-index 55 < 2147480000）；仅 standalone:true 时启用 .gm-crt 容器扫描线。辉光=加性复线（§4.2）。
+  颜色铁则（§5.3）：--map-y 目标黄 / --map-route 豌豆黄绿 / --map-sel 蓝白 仅存在于本块。
+========================================================================= */
+(function(){
+var GM={
+  inited:false,opened:false,loading:false,fail:false,q:null,
+  polarity:'physical',mode:'orbit',hscale:1,standalone:false,
+  nodes:null,player:null,playerHeading:0,pulses:[],topo:[],cb:null,
+  scene:null,camera:null,renderer:null,cityGroup:null,lineMats:[],roadMats:[],
+  stats:{bld:0,seg:0,draws:0},anchors:[],marks:[],el:null,
+  raf:0,lastT:0,skip:false,dirty:true,low:false,rm:false,mob:false,
+  cam:{yaw:-2.35,pitch:0.82,dist:460,yaw0:-2.35,tx:0,ty:0,tz:0,vyaw:0,vpitch:0,lastAct:0},
+  drag:null,pinch0:0,cd:323,cdT:0,jitT:0,hscTimer:0,hudT:null
+};
+function gmRM(){try{return !!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);}catch(e){return false;}}
+function gmLow(){try{return document.documentElement.classList.contains('zjLow');}catch(e){return false;}}
+function gmMob(){try{if(window.matchMedia&&matchMedia('(pointer: coarse)').matches)return true;}catch(e){}try{return window.innerWidth<=768;}catch(e){return false;}}
+function gmOff(){ /* 硬停用链：SAFEM崩溃安全/用户3D开关 → 不初始化WebGL直接回落2D（NOTES L688契约） */
+  try{if(localStorage.getItem('gits_3d_off')==='1')return true;}catch(e){}
+  try{if(typeof SAFEM!=='undefined'&&SAFEM)return true;}catch(e){}
+  try{if(localStorage.getItem('gits_safe')==='1')return true;}catch(e){}
+  return false;
+}
+/* ---- 1.懒加载：启动零开销，首次调用注入 three-bundle ---- */
+function gmapEnsureThree(cb){
+  if(window.THREE){GM.fail=false;if(cb)cb(true);return;}
+  if(GM.fail||gmOff()){GM.fail=true;if(cb)cb(false);return;}
+  if(GM.loading){GM.q.push(cb);return;}
+  GM.loading=true;GM.q=cb?[cb]:[];
+  var done=function(ok){
+    GM.loading=false;if(!ok)GM.fail=true;
+    try{window.__THREE_OK__=!!(ok&&window.THREE);}catch(e){}
+    var q=GM.q||[];GM.q=null;
+    for(var i=0;i<q.length;i++){try{if(q[i])q[i](ok&&!!window.THREE);}catch(e){}}
+  };
+  try{
+    var s=document.createElement('script');
+    s.src='core/three-bundle.min.js?v=1';
+    s.onload=function(){done(!!window.THREE);};
+    s.onerror=function(){done(false);};
+    document.head.appendChild(s);
+  }catch(e){done(false);}
+}
+/* ---- 种子PRNG（seed=2029，重建即同城，规格§4.4） ---- */
+function gmRng(seed){var t=seed>>>0;return function(){t+=0x6D2B79F5;var r=Math.imul(t^t>>>15,1|t);r=r+Math.imul(r^r>>>7,61|r)^r;return((r^r>>>14)>>>0)/4294967296;};}
+function gmHash(n){var x=Math.sin(n*127.1+311.7)*43758.5453;return x-Math.floor(x);}
+/* ---- 地点数据（ZJ_LOCS 30地点，raw x:0-1000 y:0-707 → 世界坐标 城市直径≈1000） ---- */
+function gmLocs(){
+  if(GM.nodes&&GM.nodes.length)return GM.nodes;
+  return (typeof ZJ_LOCS!=='undefined'&&ZJ_LOCS)?ZJ_LOCS:[];
+}
+function gmWorld(L){return {x:(L.x/10-50)*10,z:(L.y/7.07-50)*7.07};}
+function gmFindLoc(name){
+  var ls=gmLocs(),i;if(!name)return null;
+  for(i=0;i<ls.length;i++)if(ls[i].name===name)return ls[i];
+  for(i=0;i<ls.length;i++){var al=ls[i].alias||[];for(var j=0;j<al.length;j++)if(al[j]===name)return ls[i];}
+  for(i=0;i<ls.length;i++)if(String(name).indexOf(ls[i].name)>=0||ls[i].name.indexOf(name)>=0)return ls[i];
+  return null;
+}
+/* ---- CSS（全部 .gm- 前缀 + --t-* 令牌 + 直角铁则；--map-* 三特有色只在此块，规格§2.1/§5.3） ---- */
+function gmCss(){
+  if(document.getElementById('gmapCss'))return;
+  var st=document.createElement('style');st.id='gmapCss';
+  st.textContent=[
+  '.gm-layer{--map-bg:#041008;--map-grid:#0e2b18;--map-wire:#1e9e5c;--map-wire-hi:#3ddc84;--map-road:#35d17a;--map-route:#a8e05a;--map-y:#ffd94a;--map-sel:#bfe9ff;--map-white:#cfe6d8;--map-peak:#c9ffe2;',
+  'position:fixed;inset:0;z-index:55;background:var(--map-bg);display:none;overflow:hidden}',
+  '.gm-layer.gm-open{display:block}',
+  '.gm-layer,.gm-layer *{border-radius:0!important;box-sizing:border-box}',
+  '.gm-cv{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:grab;touch-action:none}',
+  '.gm-cv.gm-drag{cursor:grabbing}',
+  '.gm-marks{position:absolute;inset:0;pointer-events:none;overflow:hidden}',
+  '.gm-mk{position:absolute;left:0;top:0;pointer-events:auto;cursor:pointer;transform:translate3d(-200px,-200px,0)}',
+  '.gm-mk svg{display:block;overflow:visible}',
+  '.gm-mk-in{transform:translate(-50%,-50%);display:block}',
+  '.gm-player{pointer-events:none}',
+  '.gm-player .gm-mk-in{animation:gmBreath 2.4s step-end infinite}',
+  '@keyframes gmBreath{0%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.08)}}',
+  '.gm-lab{position:absolute;left:12px;top:-14px;border:1px solid var(--map-white);color:var(--map-white);font-family:var(--fMono,monospace);font-size:10px;line-height:1;padding:2px 4px;white-space:nowrap;background:rgba(4,16,8,.55)}',
+  '.gm-pring{position:absolute;left:50%;top:50%;width:8px;height:8px;margin:-4px 0 0 -4px;border:2px solid var(--t-a2,#ffb000);opacity:0;pointer-events:none}',
+  '.gm-pulse .gm-pring{animation:gmPulse .9s step-end 3}',
+  '@keyframes gmPulse{0%{opacity:.9;transform:scale(.4)}33%{opacity:.65;transform:scale(1.6)}66%{opacity:.4;transform:scale(2.6)}100%{opacity:0;transform:scale(3)}}',
+  '.gm-topod{display:block;width:9px;height:9px;border:1px solid var(--t-a2,#ffb000);transform:translate(-50%,-50%) rotate(45deg);background:rgba(255,176,0,.18)}',
+  '.gm-topolab{position:absolute;left:8px;top:-6px;color:var(--t-a1,#ffcf7d);font-family:var(--fMono,monospace);font-size:9px;white-space:nowrap}',
+  /* HUD chrome（DOM不进canvas，规格§2.5/§4.5） */
+  '.gm-hud{position:absolute;inset:0;pointer-events:none;font-family:var(--fMono,monospace);color:var(--map-white)}',
+  '.gm-corner{position:absolute;left:14px;top:12px;font-size:11px;letter-spacing:.14em}',
+  '.gm-read{position:absolute;right:14px;top:12px;border:1px solid var(--t-g4,#12583a);background:rgba(30,158,92,.30);padding:6px 8px;font-size:12px;line-height:1.4;min-width:186px}',
+  '.gm-read i{font-style:normal;color:var(--map-peak)}',
+  '.gm-modes{position:absolute;right:14px;bottom:46px;pointer-events:auto;font-size:11px;line-height:18px;text-align:left;user-select:none}',
+  '.gm-mode{padding:0 8px;cursor:pointer;letter-spacing:.06em}',
+  '.gm-mode.gm-on{background:rgba(30,158,92,.30)}',
+  '.gm-mode.gm-on b{color:var(--map-peak)}',
+  '.gm-mode b{font-weight:400}',
+  '.gm-viewsw{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);pointer-events:auto;display:flex;gap:0}',
+  '.gm-vbtn{font-family:var(--fMono,monospace);font-size:11px;letter-spacing:.12em;color:var(--t-g3,#1e9e5c);background:rgba(4,16,8,.6);border:1px solid var(--t-g4,#12583a);padding:5px 14px;cursor:pointer}',
+  '.gm-vbtn.gm-on{color:var(--t-ink,#04110a);background:var(--t-g2,#3ddc84);border-color:var(--t-g2,#3ddc84)}',
+  '.gm-boot{position:absolute;left:14px;bottom:44px;font-family:var(--fWork,monospace);font-size:9.5px;line-height:1.5;color:var(--t-g3,#1e9e5c);letter-spacing:.06em;pointer-events:none;white-space:pre}',
+  /* 视图切换重扫（两帧黑场+240ms 自上而下，规格§3.5） */
+  '.gm-rescan{position:absolute;inset:0;pointer-events:none;background:#000;opacity:0}',
+  '.gm-rescan.gm-go{animation:gmRescan .28s step-start 1}',
+  '@keyframes gmRescan{0%{opacity:1;background:#000}14%{opacity:1}15%{opacity:0;background:linear-gradient(180deg,rgba(61,220,132,.14) 0,rgba(61,220,132,.14) 4%,transparent 4%)}100%{opacity:0}}',
+  '.gm-scanline{position:absolute;left:0;right:0;height:2px;background:var(--map-wire-hi);opacity:0;pointer-events:none;box-shadow:0 -8px 14px rgba(61,220,132,.25)}',
+  /* CRT：嵌入游戏=零实现（既有 body::before 罩住）；standalone 才启用（规格§2.6例外） */
+  '.gm-crt{position:absolute;inset:0;pointer-events:none;display:none}',
+  '.gm-standalone .gm-crt{display:block;background:linear-gradient(90deg,rgba(255,0,0,.05),rgba(0,255,0,.02),rgba(0,0,255,.05)),linear-gradient(rgba(0,0,0,0) 50%,rgba(0,0,0,.25) 50%),radial-gradient(ellipse at center,transparent 52%,rgba(0,0,0,.35) 100%);background-size:3px 100%,100% 2px,100% 100%}',
+  /* dive 极性（规格§5.1）：HUD 换琥珀语义；canvas 侧走材质乘色 */
+  '.gm-dive{--map-wire:#b57a3a;--map-wire-hi:#ffb066;background:#0a0703}',
+  '.gm-dive .gm-read{background:rgba(255,176,0,.18);border-color:var(--t-a3,#8f6a1e)}',
+  '.gm-dive .gm-mode.gm-on{background:rgba(255,176,0,.22)}',
+  /* 降级（zjLow / reduced-motion）：一票否决动画 */
+  'html.zjLow .gm-player .gm-mk-in,html.zjLow .gm-pulse .gm-pring{animation:none}',
+  '@media (prefers-reduced-motion:reduce){.gm-player .gm-mk-in,.gm-pulse .gm-pring,.gm-rescan.gm-go{animation:none!important}}'
+  ].join('\n');
+  document.head.appendChild(st);
+}
+/* ---- 程序化线框城市（massing→街块→楼块 分层，threejs-procedural-architecture法；§4.4管线） ---- */
+function gmBuildCity(T){
+  var rnd=gmRng(2029),i,j;
+  var wirePos=[],wireCol=[],gridPos=[],facePos=[],faceIdx=[],darkPos=[],darkIdx=[];
+  var CW={r:0x1e/255,g:0x9e/255,b:0x5c/255},CH={r:0x3d/255,g:0xdc/255,b:0x84/255},CWt={r:0xcf/255,g:0xe6/255,b:0xd8/255};
+  var segN=0,bldN=0,MAXB=(GM.mob?420:880)>>(GM.low?1:0),MAXSEG=50000; /* zjLow低配旗：楼块减半（降级链§4.6，接线任务8） */
+  function edge(ax,ay,az,bx,by,bz,c,f){
+    if(segN>=MAXSEG)return;
+    wirePos.push(ax,ay,az,bx,by,bz);
+    var k=f*(0.92+0.08*gmHash(segN)); /* 手绘线宽不均：静态亮度抖动（§2.2） */
+    wireCol.push(c.r*k,c.g*k,c.b*k,c.r*k,c.g*k,c.b*k);segN++;
+  }
+  function box(cx,cz,w,d,y0,h,c,f){ /* 12棱线框楼块（§4.1方案B：全城合并1次draw） */
+    var x0=cx-w/2,x1=cx+w/2,z0=cz-d/2,z1=cz+d/2,y1=y0+h;
+    edge(x0,y0,z0,x1,y0,z0,c,f);edge(x1,y0,z0,x1,y0,z1,c,f);edge(x1,y0,z1,x0,y0,z1,c,f);edge(x0,y0,z1,x0,y0,z0,c,f);
+    edge(x0,y1,z0,x1,y1,z0,c,f);edge(x1,y1,z0,x1,y1,z1,c,f);edge(x1,y1,z1,x0,y1,z1,c,f);edge(x0,y1,z1,x0,y1,z0,c,f);
+    edge(x0,y0,z0,x0,y1,z0,c,f);edge(x1,y0,z0,x1,y1,z0,c,f);edge(x1,y0,z1,x1,y1,z1,c,f);edge(x0,y0,z1,x0,y1,z1,c,f);
+  }
+  function faceBox(cx,cz,w,d,y0,h){ /* 半透明面（V2限定，§4.1；顶+四侧，免底面） */
+    var x0=cx-w/2,x1=cx+w/2,z0=cz-d/2,z1=cz+d/2,y1=y0+h,b=facePos.length/3;
+    facePos.push(x0,y0,z0,x1,y0,z0,x1,y1,z0,x0,y1,z0, x1,y0,z1,x0,y0,z1,x0,y1,z1,x1,y1,z1,
+                 x0,y0,z1,x0,y0,z0,x0,y1,z0,x0,y1,z1, x1,y0,z0,x1,y0,z1,x1,y1,z1,x1,y1,z0,
+                 x0,y1,z0,x1,y1,z0,x1,y1,z1,x0,y1,z1);
+    for(var q5=0;q5<5;q5++){var o=b+q5*4;faceIdx.push(o,o+1,o+2,o,o+2,o+3);}
+  }
+  function quad(ps,y,arrP,arrI){ /* 平面四边形（暗带/水面） */
+    var b=arrP.length/3;
+    arrP.push(ps[0],y,ps[1],ps[2],y,ps[3],ps[4],y,ps[5],ps[6],y,ps[7]);
+    arrI.push(b,b+1,b+2,b,b+2,b+3);
+  }
+  function crane(cx,cz,rot){ /* 港湾吊臂：门座起重机线画（塔+悬臂+拉索） */
+    var c=Math.cos(rot),s=Math.sin(rot),H=34+rnd()*14,B=26+rnd()*10;
+    function px(x,z){return cx+x*c-z*s;}function pz(x,z){return cz+x*s+z*c;}
+    edge(px(-3,0),0,pz(-3,0),px(-1,0),H,pz(-1,0),CH,1);edge(px(3,0),0,pz(3,0),px(1,0),H,pz(1,0),CH,1);
+    edge(px(-3,0),0,pz(-3,0),px(3,0),0,pz(3,0),CH,1);edge(px(-1,0),H,pz(-1,0),px(1,0),H,pz(1,0),CH,1);
+    edge(px(0,0),H,pz(0,0),px(B,0),H*0.72,pz(B,0),CH,1);      /* 主悬臂 */
+    edge(px(0,0),H,pz(0,0),px(-B*0.4,0),H*0.8,pz(-B*0.4,0),CH,1); /* 配重臂 */
+    edge(px(B,0),H*0.72,pz(B,0),px(B,0),H*0.2,pz(B,0),CH,.7);  /* 吊索 */
+    edge(px(B*0.55,0),H*0.84,pz(B*0.55,0),px(0,0),H,pz(0,0),CH,.7);
+  }
+  /* 1) 岸线+水面：南缘水域（新浜=湾岸人工岛群）+暗底一块 */
+  quad([-560,-400,560,-400,560,400,-560,400],-0.6,darkPos,darkIdx); /* 城市底盘暗面 */
+  quad([-560,285,560,285,560,420,-560,420],0.02,darkPos,darkIdx);   /* 南缘海面暗带 */
+  function gridSeg(ax,ay,az,bx,by,bz){gridPos.push(ax,ay,az,bx,by,bz);segN++;}
+  gridSeg(-560,0.05,285,560,0.05,285); /* 岸线亮描 */
+  /* 2) 运河水道暗带 2条（图2网格暗缝） */
+  var canX=[-180+rnd()*60,60+rnd()*80];
+  for(i=0;i<2;i++){var cw=7+rnd()*4;quad([canX[i]-cw,285,canX[i]+cw,285,canX[i]+cw+30,-260,canX[i]-cw+30,-260],0.04,darkPos,darkIdx);
+    gridSeg(canX[i]-cw,0.06,285,canX[i]-cw+30,0.06,-260);gridSeg(canX[i]+cw,0.06,285,canX[i]+cw+30,0.06,-260);}
+  /* 3) 底网格 L0（街区肌理） */
+  for(i=-13;i<=13;i++)gridSeg(i*40,0,-330,i*40,0,330);
+  for(i=-8;i<=8;i++)gridSeg(-540,0,i*40,540,0,i*40);
+  /* 4) 分区→街块→楼块：ZJ_LOCS 锚点定分区（都心高层/下町低密/港湾码头），热度=f(离中枢距离) */
+  var ls=gmLocs(),anchors=[],core=ls[0]?gmWorld(ls[0]):{x:0,z:0};
+  var districts=[];var totW=0;
+  for(i=0;i<ls.length;i++){
+    var L=ls[i],w=gmWorld(L);
+    anchors.push({name:L.name,note:L.note||'',kind:L.kind,x:w.x,z:w.z,code:(L.name==='新浜市中枢')?'C 13':('C '+(i+11))});
+    if(L.kind==='sea')continue;
+    var dc=Math.sqrt((w.x-core.x)*(w.x-core.x)+(w.z-core.z)*(w.z-core.z));
+    var dockish=(L.kind==='pass')||/港|桥|検|检|渡/.test(L.name);
+    var typ=dockish?'dock':((L.kind==='cap')?'core':'shita');
+    var heat=Math.max(0.35,1.55-dc/900)*(typ==='core'?1.5:(typ==='dock'?0.55:0.85));
+    districts.push({a:anchors[i],typ:typ,heat:heat});totW+=heat;
+  }
+  for(i=0;i<districts.length;i++){
+    var D=districts[i],quota=Math.max(4,Math.floor(MAXB*D.heat/totW)),put=0;
+    var R=D.typ==='core'?94:(D.typ==='dock'?58:78),S=27;
+    var ring=Math.ceil(R/S);
+    for(var gx=-ring;gx<=ring&&put<quota;gx++)for(var gz=-ring;gz<=ring&&put<quota;gz++){
+      var bx=D.a.x+gx*S+(rnd()-0.5)*10,bz=D.a.z+gz*S+(rnd()-0.5)*10;
+      var dd=Math.sqrt((bx-D.a.x)*(bx-D.a.x)+(bz-D.a.z)*(bz-D.a.z));
+      if(dd>R||rnd()<0.22)continue;               /* 留街巷缝=L0网格由块缝构成 */
+      if(bz>278)continue;                          /* 不下海 */
+      var n=1+Math.floor(rnd()*(D.typ==='shita'?3:2));
+      for(j=0;j<n&&put<quota&&bldN<MAXB;j++){
+        var w2=8+rnd()*(D.typ==='core'?14:11),d2=8+rnd()*(D.typ==='core'?14:11);
+        var ox=bx+(rnd()-0.5)*(S-w2),oz=bz+(rnd()-0.5)*(S-d2);
+        var h;var lg=Math.exp((rnd()*2-1)*0.9); /* lognormal(μ=1)近似 */
+        if(D.typ==='core')h=16+D.heat*lg*46;else if(D.typ==='dock')h=4+rnd()*8;else h=5+lg*9;
+        var near=dd<R*0.42,cl=(D.typ==='core'&&near)?CH:CW,fk=near?1:.82;
+        if(D.typ==='core'&&rnd()<0.05){ /* 5%地标塔：高度×2.5 二段收分体块 */
+          var hh=h*2.5;box(ox,oz,w2,d2,0,hh*0.55,CH,1);box(ox,oz,w2*0.6,d2*0.6,hh*0.55,hh*0.45,CH,1);
+          faceBox(ox,oz,w2,d2,0,hh*0.55);bldN+=2;put+=2;
+        }else{
+          box(ox,oz,w2,d2,0,h,cl,fk);
+          if(D.typ==='core'&&near)faceBox(ox,oz,w2,d2,0,h);
+          bldN++;put++;
+        }
+      }
+    }
+    if(D.typ==='dock'){ /* 港湾码头吊臂 */
+      var nc=2+Math.floor(rnd()*2);
+      for(j=0;j<nc;j++)crane(D.a.x+(rnd()-0.5)*70,D.a.z+(rnd()-0.5)*50,rnd()*Math.PI*2);
+    }
+  }
+  /* 5) 路网 ribbon：主干道（实心亮绿带 L2）+主路线高亮带（1995电影同款豌豆黄绿 L3） */
+  function ribbon(pts,w,y,arrP,arrI){
+    var k,px=[],pz=[];
+    for(k=0;k<pts.length;k++){px.push(pts[k].x);pz.push(pts[k].z);}
+    for(k=0;k<pts.length-1;k++){
+      var dx=px[k+1]-px[k],dz=pz[k+1]-pz[k],ln=Math.sqrt(dx*dx+dz*dz)||1;
+      var nx=-dz/ln*w/2,nz=dx/ln*w/2;
+      quad([px[k]+nx,pz[k]+nz,px[k+1]+nx,pz[k+1]+nz,px[k+1]-nx,pz[k+1]-nz,px[k]-nx,pz[k]-nz],y,arrP,arrI);
+    }
+  }
+  var roadPos=[],roadIdx=[],routePos=[],routeIdx=[];
+  function A(n){var f=null;for(var k2=0;k2<anchors.length;k2++)if(anchors[k2].name===n){f=anchors[k2];break;}return f||anchors[0]||{x:0,z:0};}
+  /* 支路：每锚点连最近2锚点（同步产出邻接表→玩法接线A*留桩） */
+  var adj={};
+  for(i=0;i<districts.length;i++){
+    var a=districts[i].a,best=[],k3;
+    for(j=0;j<districts.length;j++){if(i===j)continue;var b=districts[j].a;
+      var d3=(a.x-b.x)*(a.x-b.x)+(a.z-b.z)*(a.z-b.z);best.push([d3,b]);}
+    best.sort(function(p,q){return p[0]-q[0];});
+    adj[a.name]=[];
+    for(k3=0;k3<2&&k3<best.length;k3++){adj[a.name].push(best[k3][1].name);
+      ribbon([{x:a.x,z:a.z},{x:best[k3][1].x,z:best[k3][1].z}],2.4,0.12,roadPos,roadIdx);}
+  }
+  /* 干道2横：城市东西轴 */
+  ribbon([{x:-540,z:-40},{x:540,z:-40}],5,0.16,roadPos,roadIdx);
+  ribbon([{x:-540,z:120},{x:540,z:120}],5,0.16,roadPos,roadIdx);
+  /* 高架道路带：沿主干抬高14单位平行 ribbon + 每40单位立柱线 + 白护栏线（§4.4-4） */
+  var hw=[A('湾岸高层区'),A('湾岸公寓区'),A('新浜市中枢'),A('旧城区'),A('湾岸连络桥'),A('新浜军港')];
+  ribbon(hw,5,14,roadPos,roadIdx);
+  for(i=0;i<hw.length-1;i++){
+    var hx=hw[i+1].x-hw[i].x,hz=hw[i+1].z-hw[i].z,hl=Math.sqrt(hx*hx+hz*hz),np=Math.floor(hl/40);
+    for(j=0;j<=np;j++){var t=j/(np||1),qx=hw[i].x+hx*t,qz=hw[i].z+hz*t;
+      edge(qx,0,qz,qx,14,qz,CW,.8);}
+    var pnx=-hz/hl*2.6,pnz=hx/hl*2.6;
+    edge(hw[i].x+pnx,14.6,hw[i].z+pnz,hw[i+1].x+pnx,14.6,hw[i+1].z+pnz,CWt,.75); /* 护栏 */
+    edge(hw[i].x-pnx,14.6,hw[i].z-pnz,hw[i+1].x-pnx,14.6,hw[i+1].z-pnz,CWt,.75);
+  }
+  /* 主路线实心亮带（抬高0.5防z-fight，§2.2-L3） */
+  ribbon([A('湾岸高层区'),A('湾岸公寓区'),A('新浜市中枢'),A('湾岸连络桥'),A('新浜军港')],9,0.5,routePos,routeIdx);
+  GM.stats.bld=bldN;GM.stats.seg=segN;GM.roadAdj=adj;
+  /* ---- 合并建 buffer（draw calls：grid/wire/halo/face/road/route/dark ≤7，§4.6） ---- */
+  var g=new T.Group();
+  function lineMesh(pos,col,mat){
+    var ge=new T.BufferGeometry();
+    ge.setAttribute('position',new T.Float32BufferAttribute(pos,3));
+    if(col)ge.setAttribute('color',new T.Float32BufferAttribute(col,3));
+    return new T.LineSegments(ge,mat);
+  }
+  function triMesh(pos,idx,mat){
+    var ge=new T.BufferGeometry();
+    ge.setAttribute('position',new T.Float32BufferAttribute(pos,3));
+    ge.setIndex(idx);return new T.Mesh(ge,mat);
+  }
+  var mGrid=new T.LineBasicMaterial({color:0x0e2b18,transparent:true,opacity:0.6});
+  var mWire=new T.LineBasicMaterial({vertexColors:true,transparent:true,opacity:0.95,blending:T.AdditiveBlending,depthWrite:false});
+  var mHalo=new T.LineBasicMaterial({vertexColors:true,transparent:true,opacity:0.28,blending:T.AdditiveBlending,depthWrite:false});
+  var mFace=new T.MeshBasicMaterial({color:0x1e9e5c,transparent:true,opacity:0.10,depthWrite:false,side:T.DoubleSide});
+  var mRoad=new T.MeshBasicMaterial({color:0x35d17a,transparent:true,opacity:0.85,blending:T.AdditiveBlending,depthWrite:false,side:T.DoubleSide});
+  var mRoute=new T.MeshBasicMaterial({color:0xa8e05a,transparent:true,opacity:0.95,blending:T.AdditiveBlending,depthWrite:false,side:T.DoubleSide});
+  var mDark=new T.MeshBasicMaterial({color:0x02120a});
+  g.add(triMesh(darkPos,darkIdx,mDark));
+  g.add(lineMesh(gridPos,null,mGrid));
+  var wire=lineMesh(wirePos,wireCol,mWire);g.add(wire);
+  var draws=4; /* dark/grid/wire/faces */
+  if(!GM.mob&&!GM.low){var halo=new T.LineSegments(wire.geometry,mHalo);g.add(halo);draws++;} /* 加性复线辉光（§4.2主方案，零RT） */
+  else{mWire.opacity=0.9;}
+  var faces=triMesh(facePos,faceIdx,mFace);g.add(faces);
+  g.add(triMesh(roadPos,roadIdx,mRoad));
+  g.add(triMesh(routePos,routeIdx,mRoute));draws+=2;
+  GM.stats.draws=draws;
+  GM.lineMats=[mGrid,mWire,mHalo];GM.roadMats=[mRoad,mRoute,mFace];
+  GM.faceMesh=faces;GM.anchors=anchors;
+  return g;
+}
+/* ---- DOM层：canvas + 标记层 + HUD chrome ---- */
+function gmBuildLayer(){
+  if(GM.el)return;
+  gmCss();
+  var lay=document.createElement('div');lay.className='gm-layer';lay.id='gmapLayer';
+  lay.innerHTML=
+   '<canvas id="gitsMapGL" class="gm-cv"><\/canvas>'
+  +'<div class="gm-marks"><\/div>'
+  +'<div class="gm-hud">'
+   +'<div class="gm-corner zjGlow">BIRD VIEW<\/div>'
+   +'<div class="gm-read zjGlow"><div class="gm-r1">Game --- mile/h<\/div><div class="gm-r2">TRACK STANDBY<\/div><div class="gm-r3"><\/div><\/div>'
+   +'<div class="gm-modes"><div class="gm-mode" data-gm="hunt"><b>*<\/b>Hunting MODE<\/div><div class="gm-mode" data-gm="hscale"><b>*<\/b>Height-scale ×1<\/div><\/div>'
+   +'<div class="gm-viewsw"><button type="button" class="gm-vbtn" data-gm="to2d">2D MAP<\/button><button type="button" class="gm-vbtn gm-on" data-gm="to3d">3D GRID<\/button><\/div>'
+   +'<div class="gm-boot"><\/div>'
+  +'<\/div>'
+  +'<div class="gm-scanline"><\/div><div class="gm-rescan"><\/div><div class="gm-crt"><\/div>';
+  document.body.appendChild(lay);
+  GM.el={layer:lay,cv:lay.querySelector('.gm-cv'),marks:lay.querySelector('.gm-marks'),
+    corner:lay.querySelector('.gm-corner'),r1:lay.querySelector('.gm-r1'),r2:lay.querySelector('.gm-r2'),r3:lay.querySelector('.gm-r3'),
+    modes:lay.querySelector('.gm-modes'),boot:lay.querySelector('.gm-boot'),rescan:lay.querySelector('.gm-rescan')};
+  gmBindInput();
+}
+/* ---- 输入：拖拽环绕（方位角±75°/俯仰30-80°）+滚轮/双指缩放+惯性阻尼 ---- */
+function gmBindInput(){
+  var cv=GM.el.cv,C=GM.cam;
+  function act(){C.lastAct=Date.now();GM.dirty=true;}
+  function onDown(e){
+    if(e.touches&&e.touches.length===2){GM.pinch0=gmPinch(e);return;}
+    var p=e.touches?e.touches[0]:e;
+    GM.drag={x:p.clientX,y:p.clientY};C.vyaw=0;C.vpitch=0;act();
+    if(cv.classList)cv.classList.add('gm-drag');
+    if(e.cancelable&&e.preventDefault)e.preventDefault();
+  }
+  function onMove(e){
+    if(e.touches&&e.touches.length===2){
+      var pd=gmPinch(e);if(GM.pinch0>0){C.dist=gmClampDist(C.dist*GM.pinch0/pd);GM.pinch0=pd;act();}
+      if(e.preventDefault)e.preventDefault();return;
+    }
+    if(!GM.drag)return;
+    var p=e.touches?e.touches[0]:e;
+    var dx=p.clientX-GM.drag.x,dy=p.clientY-GM.drag.y;GM.drag={x:p.clientX,y:p.clientY};
+    C.vyaw=-dx*0.005;C.vpitch=dy*0.004;
+    C.yaw=gmClampYaw(C.yaw+C.vyaw);C.pitch=gmClampPitch(C.pitch+C.vpitch);act();
+    if(e.cancelable&&e.preventDefault)e.preventDefault();
+  }
+  function onUp(){GM.drag=null;GM.pinch0=0;if(cv.classList)cv.classList.remove('gm-drag');}
+  cv.addEventListener('mousedown',onDown);cv.addEventListener('touchstart',onDown,{passive:false});
+  cv.addEventListener('mousemove',onMove);cv.addEventListener('touchmove',onMove,{passive:false});
+  cv.addEventListener('mouseup',onUp);cv.addEventListener('mouseleave',onUp);cv.addEventListener('touchend',onUp);
+  cv.addEventListener('wheel',function(e){C.dist=gmClampDist(C.dist*Math.exp(e.deltaY*0.0012));act();if(e.preventDefault)e.preventDefault();},{passive:false});
+  GM.el.layer.addEventListener('click',function(e){
+    var t=e.target,gm=null,name=null;
+    while(t&&t!==GM.el.layer){
+      if(t.getAttribute){if(!gm)gm=t.getAttribute('data-gm');if(!name)name=t.getAttribute('data-gmloc');}
+      t=t.parentNode;
+    }
+    if(name){gmNodeClick(name);return;}
+    if(gm==='hunt')gmSetMode(GM.mode==='hunt'?'orbit':'hunt');
+    else if(gm==='hscale')gmSetHScale(GM.hscale>=2?1:2);
+    else if(gm==='to2d')GMAP.close();
+  });
+  window.addEventListener('resize',function(){if(GM.opened)gmResize();});
+  document.addEventListener('visibilitychange',function(){
+    if(document.hidden){if(GM.raf){cancelAnimationFrame(GM.raf);GM.raf=0;}}
+    else if(GM.opened&&!GM.raf){GM.lastT=0;GM.raf=requestAnimationFrame(gmLoop);}
+  });
+}
+function gmPinch(e){var a=e.touches[0],b=e.touches[1],dx=a.clientX-b.clientX,dy=a.clientY-b.clientY;return Math.sqrt(dx*dx+dy*dy)||1;}
+function gmClampDist(d){return Math.max(140,Math.min(1500,d));}
+function gmClampPitch(p){return Math.max(30*Math.PI/180,Math.min(80*Math.PI/180,p));}
+function gmClampYaw(y){var c=GM.cam.yaw0,L=75*Math.PI/180;return Math.max(c-L,Math.min(c+L,y));}
+function gmNodeClick(name){
+  GM.dirty=true;
+  if(GM.cb){try{GM.cb(name);}catch(e){}return;}
+  try{if(typeof movePlayerTo==='function')movePlayerTo(name);}catch(e){} /* 默认接线：旅行敕令管线（NOTES L5860原样复用） */
+}
+/* ---- 场景初始化 ---- */
+function gmInitScene(){
+  if(GM.inited)return true;
+  var T=window.THREE;if(!T)return false;
+  try{
+    GM.renderer=new T.WebGLRenderer({canvas:GM.el.cv,antialias:!GM.mob,alpha:false,powerPreference:'high-performance'});
+  }catch(e){GM.fail=true;return false;}
+  if(!GM.renderer)return false;
+  try{
+    GM.renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,GM.mob?1.5:2));
+    if('toneMapping' in GM.renderer)GM.renderer.toneMapping=T.NoToneMapping; /* 过曝靠加性叠加，无真bloom（§4.2） */
+    GM.renderer.setClearColor(0x041008,1);
+  }catch(e){}
+  GM.scene=new T.Scene();
+  GM.camera=new T.PerspectiveCamera(66,1,1,4000); /* fov66=夸张透视，Noessel:畸变即模态提示 */
+  GM.cityGroup=gmBuildCity(T);
+  GM.scene.add(GM.cityGroup);
+  var c0=GM.anchors.length?GM.anchors[0]:{x:0,z:0};
+  GM.cam.tx=c0.x;GM.cam.ty=0;GM.cam.tz=c0.z;
+  GM._v=new T.Vector3();GM._v2=new T.Vector3(); /* 池化，帧内零新建（§4.6） */
+  GM.inited=true;
+  gmResize();
+  gmMarksBuild();
+  return true;
+}
+function gmResize(){
+  if(!GM.renderer)return;
+  var w=0,h=0;
+  try{var r=GM.el.layer.getBoundingClientRect();w=r.width;h=r.height;}catch(e){}
+  w=w||(window.innerWidth||800);h=h||(window.innerHeight||600);
+  GM.vw=w;GM.vh=h;
+  try{GM.renderer.setSize(w,h,false);}catch(e){}
+  GM.camera.aspect=w/h;GM.camera.updateProjectionMatrix();
+  GM.dirty=true;
+}
+/* ---- 相机导演：倾斜鸟瞰 rig + Hunting spring 跟随（camera-direction chase法；规格§3.1/§3.2） ---- */
+function gmCamUpdate(dt){
+  var C=GM.cam,cam=GM.camera;
+  if(GM.mode==='hunt'&&GM.player){
+    var pw=gmWorld(GM.player),lead=12;
+    var hx=Math.sin(GM.playerHeading),hz=-Math.cos(GM.playerHeading);
+    var fx=pw.x+hx*lead,fz=pw.z+hz*lead;
+    var ax=fx-hx*220*(C.dist/460),az=fz-hz*220*(C.dist/460),ay=190*(C.dist/460);
+    var k=1-Math.exp(-dt*4.5); /* 临界阻尼spring，追不上急转=甩镜（§3.2） */
+    cam.position.x+=(ax-cam.position.x)*k;
+    cam.position.y+=(ay-cam.position.y)*k;
+    cam.position.z+=(az-cam.position.z)*k;
+    GM._v.set(fx,2,fz);cam.lookAt(GM._v);
+  }else{
+    /* 惯性阻尼 */
+    if(!GM.drag){
+      C.yaw=gmClampYaw(C.yaw+C.vyaw);C.pitch=gmClampPitch(C.pitch+C.vpitch);
+      var dk=Math.exp(-dt*3.2);C.vyaw*=dk;C.vpitch*=dk;
+      /* 8s 无操作缓慢环绕 0.5°/s（RM/低配关，§3.1-V2） */
+      if(!GM.rm&&!GM.low&&Date.now()-C.lastAct>8000){C.yaw=gmClampYaw(C.yaw+dt*0.00873);GM.dirty=true;}
+    }
+    var cp=Math.cos(C.pitch),sp=Math.sin(C.pitch);
+    cam.position.set(C.tx+Math.sin(C.yaw)*cp*C.dist,sp*C.dist,C.tz+Math.cos(C.yaw)*cp*C.dist);
+    GM._v.set(C.tx,C.ty,C.tz);cam.lookAt(GM._v);
+  }
+  cam.updateMatrixWorld(true);
+}
+/* ---- 标记系统（符号语义辞典§2.4；DOM覆盖＝字体锐利+吃既有CRT层，§4.5选型） ---- */
+function gmMarkEl(html,cls,name,title){
+  var d=document.createElement('div');d.className='gm-mk '+cls;
+  if(name)d.setAttribute('data-gmloc',name);
+  if(title)d.setAttribute('title',title);
+  d.innerHTML=html;return d;
+}
+function gmMarksBuild(){
+  var mk=GM.el.marks;GM.marks=[];
+  try{mk.innerHTML='';}catch(e){}
+  var ls=gmLocs(),i;
+  for(i=0;i<ls.length;i++){
+    var L=ls[i];if(L.kind==='sea')continue;
+    var w=gmWorld(L),a=GM.anchors[i]||{code:'C '+(i+11)};
+    /* M4 POI白色小三角（尖端向下） */
+    var el=gmMarkEl('<span class="gm-mk-in"><svg width="12" height="10" viewBox="-6 -5 12 10"><path d="M-5 -4 L5 -4 L0 4 Z" fill="var(--map-white)"/><\/svg><\/span><span class="gm-pring"><\/span>'
+      +(L.x<420&&L.y<420?'<span class="gm-lab">'+a.code+'<\/span>':''),
+      'gm-poi',L.name,L.name+(L.note?(' · '+L.note):''));
+    mk.appendChild(el);
+    GM.marks.push({el:el,name:L.name,x:w.x,y:2,z:w.z,type:'poi'});
+  }
+  /* M1 玩家锁定环：黄圆环+双三角（呼吸脉冲；黄=目标，琥珀=警示，两不互串§5.3） */
+  var pl=gmMarkEl('<span class="gm-mk-in"><svg width="36" height="36" viewBox="-18 -18 36 36">'
+    +'<circle r="13" fill="none" stroke="var(--map-y)" stroke-width="2"/>'
+    +'<g class="gm-head"><path d="M-7 -4 L0 0 L-7 4 Z" fill="var(--map-y)"/><path d="M0 -4 L7 0 L0 4 Z" fill="var(--map-y)"/><\/g>'
+    +'<\/svg><\/span>','gm-player',null,null);
+  GM.el.marks.appendChild(pl);
+  GM.playerMark={el:pl,x:0,y:3,z:0,head:pl.querySelector('.gm-head')};
+  gmAllMarks();
+  gmSyncPlayer();
+}
+function gmSyncPlayer(){
+  if(!GM.playerMark)return;
+  var L=GM.player||null;
+  if(!L){try{if(typeof playerLoc==='function')L=playerLoc();}catch(e){}}
+  if(!L&&gmLocs().length)L=gmLocs()[0];
+  if(!L)return;
+  GM.player=L;
+  var w=gmWorld(L);GM.playerMark.x=w.x;GM.playerMark.z=w.z;
+  try{GM.playerMark.head.setAttribute('transform','rotate('+Math.round(GM.playerHeading*180/Math.PI)+')');}catch(e){}
+  GM.dirty=true;
+}
+function gmAllMarks(){ /* 投影名册预合成：帧内零新建（§4.6） */
+  GM.allMarks=GM.marks.concat(GM.playerMark?[GM.playerMark]:[]).concat(GM.topoMarks||[]);
+}
+function gmSyncMarks(){ /* 每帧 ≤35 锚点投影→translate3d 批量写（§4.5） */
+  if(!GM.camera)return;
+  var i,v=GM._v2,sy=GM.cityGroup?GM.cityGroup.scale.y:1;
+  var all=GM.allMarks||[];
+  for(i=0;i<all.length;i++){
+    var m=all[i];
+    v.set(m.x,(m.y||2)*sy,m.z);v.project(GM.camera);
+    if(v.z>1||v.x<-1.15||v.x>1.15||v.y<-1.15||v.y>1.15){m.el.style.display='none';continue;}
+    m.el.style.display='';
+    m.el.style.transform='translate3d('+((v.x*0.5+0.5)*GM.vw).toFixed(1)+'px,'+((-v.y*0.5+0.5)*GM.vh).toFixed(1)+'px,0)';
+  }
+}
+/* ---- 主循环（zjLow=按需渲染；移动=隔帧30fps；不可见=rAF停，§4.6） ---- */
+function gmLoop(ts){
+  if(!GM.opened){GM.raf=0;return;}
+  GM.raf=requestAnimationFrame(gmLoop);
+  var dt=GM.lastT?Math.min(0.05,(ts-GM.lastT)/1000):0.016;GM.lastT=ts;
+  if(GM.mob||GM.low){GM.skip=!GM.skip;if(GM.skip)return;dt*=2;}
+  if(GM.low&&!GM.dirty&&GM.mode!=='hunt')return; /* 按需渲染 */
+  gmCamUpdate(dt);
+  gmSyncMarks();
+  try{GM.renderer.render(GM.scene,GM.camera);}catch(e){GM.fail=true;GMAP.close();return;}
+  GM.dirty=(GM.mode==='hunt')||!!GM.drag||Math.abs(GM.cam.vyaw)>0.0001;
+}
+/* ---- 模式/楼高切换 ---- */
+function gmSetMode(m){
+  if(m!==GM.mode){GM.mode=m;gmRescanFx();}
+  var hs=(m==='hunt');
+  if(hs&&GM.hscale!==1)gmSetHScale(1); /* V3强制×1：平面任务不夸张（Noessel任务复杂度原则） */
+  try{
+    var rows=GM.el.modes.querySelectorAll('.gm-mode');
+    for(var i=0;i<rows.length;i++){var on=(rows[i].getAttribute('data-gm')==='hunt')?hs:(GM.hscale>1);
+      if(rows[i].classList)rows[i].classList.toggle('gm-on',on);}
+    GM.el.corner.textContent=hs?'HUNT VIEW':'BIRD VIEW';
+    if(GM.faceMesh)GM.faceMesh.visible=!hs;           /* V3不画楼面：黑底图底分离 */
+    if(GM.renderer)GM.renderer.setClearColor(hs?0x030806:(GM.polarity==='dive'?0x0a0703:0x041008),1);
+  }catch(e){}
+  if(hs){GM.cd=323;GM.cdT=Date.now();}
+  GM.dirty=true;
+}
+function gmSetHScale(n){
+  n=(n>=2)?2:1;
+  if(GM.mode==='hunt')n=1;
+  var from=GM.hscale;GM.hscale=n;
+  if(GM.hscTimer){clearTimeout(GM.hscTimer);GM.hscTimer=0;}
+  var steps=[from+(n-from)/3,from+(n-from)*2/3,n],si=0; /* 300ms 3次step硬跳（§3.3），非连续缓动 */
+  function step(){
+    if(!GM.cityGroup){GM.hscTimer=0;return;}
+    GM.cityGroup.scale.y=steps[si];GM.dirty=true;si++;
+    if(si<steps.length)GM.hscTimer=setTimeout(step,100);else GM.hscTimer=0;
+  }
+  if(GM.rm||GM.low){if(GM.cityGroup)GM.cityGroup.scale.y=n;GM.dirty=true;}else step();
+  try{
+    var rows=GM.el.modes.querySelectorAll('.gm-mode');
+    for(var i=0;i<rows.length;i++)if(rows[i].getAttribute('data-gm')==='hscale'){
+      rows[i].innerHTML='<b>*<\/b>Height-scale ×'+n;
+      if(rows[i].classList)rows[i].classList.toggle('gm-on',n>1);
+    }
+  }catch(e){}
+}
+function gmRescanFx(){ /* 视图切换：两帧黑场+240ms重扫（§3.5）；RM/低配直切 */
+  if(GM.rm||GM.low||!GM.el)return;
+  var r=GM.el.rescan;
+  try{r.classList.remove('gm-go');void r.offsetWidth;r.classList.add('gm-go');}catch(e){}
+}
+/* ---- HUD 读数（逐秒硬跳step，禁滚动动画，§2.5） ---- */
+function gmHudTick(){
+  if(!GM.opened||!GM.el)return;
+  try{
+    var hunt=GM.mode==='hunt';
+    if(hunt){
+      var el2=Date.now()-GM.cdT;GM.cd=Math.max(0,323-Math.floor(el2/1000));
+      var mm=Math.floor(GM.cd/60),ss=GM.cd%60;
+      GM.el.r2.textContent='Hunter->00:'+(mm<10?'0':'')+mm+':'+(ss<10?'0':'')+ss+' ->Game';
+      GM.el.r1.innerHTML='Game <i>'+(119+Math.floor(gmHash(Date.now()>>9)*5))+'<\/i> mile/h'; /* 伪遥测±2抖动 */
+    }else{
+      GM.el.r1.textContent='Game --- mile/h';
+      GM.el.r2.textContent='TRACK STANDBY';
+    }
+    var pn=GM.player?GM.player.name:'';
+    GM.el.r3.textContent=(pn?('LOC '+pn+' / '):'')+'N'+GM.marks.length+' P'+GM.pulses.length+' '+(GM.polarity==='dive'?'DIVE':'PHYS');
+  }catch(e){}
+}
+function gmJitter(){ /* 隔行抖动：每6-10s一次 translateY(±0.5px)（§2.6）；RM/zjLow关 */
+  if(!GM.opened)return;
+  GM.jitT=setTimeout(function(){
+    if(!GM.opened)return;
+    if(!GM.rm&&!GM.low&&GM.el){
+      try{
+        var s=GM.el.layer.style;s.transform='translateY('+(gmHash(Date.now())>0.5?0.5:-0.5)+'px)';s.opacity='0.96';
+        setTimeout(function(){try{s.transform='';s.opacity='';}catch(e){}},66);
+      }catch(e){}
+    }
+    gmJitter();
+  },6000+Math.floor(gmHash(Date.now()+7)*4000));
+}
+/* ---- 极性/拓扑/脉冲 ---- */
+function gmApplyPolarity(){
+  var dive=GM.polarity==='dive';
+  try{if(GM.el&&GM.el.layer.classList)GM.el.layer.classList.toggle('gm-dive',dive);}catch(e){}
+  /* 材质色不重建：顶点色恒绿 × 乘色=琥珀线框（规格§5.1裁定，禁整图品红） */
+  var i,mul=dive?0xffb066:0xffffff;
+  for(i=0;i<GM.lineMats.length;i++){try{GM.lineMats[i].color.setHex(i===0?(dive?0x3a2408:0x0e2b18):mul);}catch(e){}}
+  try{GM.roadMats[0].color.setHex(dive?0xd18a35:0x35d17a);}catch(e){}
+  try{GM.roadMats[1].color.setHex(dive?0xe0a85a:0xa8e05a);}catch(e){}
+  try{GM.roadMats[2].color.setHex(dive?0xb5722a:0x1e9e5c);}catch(e){}
+  try{if(GM.renderer)GM.renderer.setClearColor(GM.mode==='hunt'?0x030806:(dive?0x0a0703:0x041008),1);}catch(e){}
+  gmTopoRender();
+  GM.dirty=true;
+}
+function gmTopoRender(){ /* dive层 ◇拓扑 N# 节点：绕玩家锚点环布（跳板路径点选留桩） */
+  var i;
+  if(GM.topoMarks){for(i=0;i<GM.topoMarks.length;i++){try{GM.topoMarks[i].el.remove();}catch(e){}}}
+  GM.topoMarks=[];
+  if(GM.polarity!=='dive'||!GM.topo.length||!GM.el){gmAllMarks();GM.dirty=true;return;}
+  var c=GM.player?gmWorld(GM.player):{x:GM.cam.tx,z:GM.cam.tz};
+  for(i=0;i<GM.topo.length&&i<12;i++){
+    var t=GM.topo[i],id=(typeof t==='string')?t:(t.id||('N'+(i+1)));
+    var ang=i*Math.PI*2/Math.min(GM.topo.length,12);
+    var el=gmMarkEl('<span class="gm-topod"><\/span><span class="gm-topolab">'+id+'<\/span>','gm-topo',id,(typeof t==='object'&&t.label)?t.label:id);
+    GM.el.marks.appendChild(el);
+    GM.topoMarks.push({el:el,name:id,x:c.x+Math.cos(ang)*46,y:8,z:c.z+Math.sin(ang)*46,type:'topo'});
+  }
+  gmAllMarks();
+  GM.dirty=true;
+}
+/* ---- window.GMAP 公开接口（玩法接线agent对接面；本阶段以 ZJ_LOCS 静态数据自测） ---- */
+var GMAP={
+  ensureThree:gmapEnsureThree,
+  gmapFail:false,
+  failed:function(){return GM.fail;},
+  isOpen:function(){return GM.opened;},
+  open:function(opt){
+    opt=opt||{};
+    if(GM.opened)return true;
+    if(gmOff()||GM.fail){GM.fail=true;GMAP.gmapFail=true;return false;} /* → 2D SVG舆图降级（既有mapBody） */
+    GM.rm=gmRM();GM.low=gmLow();GM.mob=gmMob();GM.standalone=!!opt.standalone;
+    gmBuildLayer();
+    try{GM.el.layer.classList.add('gm-open');GM.el.layer.classList.toggle('gm-standalone',GM.standalone);}catch(e){}
+    try{GM.el.boot.textContent='Global Positioning System Ver 3.27sp\nNEWPORT GRID LINK ... SYN';}catch(e){}
+    GM.opened=true;
+    gmapEnsureThree(function(ok){
+      if(!GM.opened)return;
+      if(!ok||!gmInitScene()){
+        GMAP.gmapFail=true;GMAP.close();return;
+      }
+      try{GM.el.boot.textContent='';}catch(e){}
+      gmSyncPlayer();gmApplyPolarity();gmSetMode(GM.mode);gmRescanFx();
+      GM.lastT=0;GM.dirty=true;
+      if(!GM.raf)GM.raf=requestAnimationFrame(gmLoop);
+      if(GM.hudT)clearInterval(GM.hudT);
+      GM.hudT=setInterval(gmHudTick,1000);gmHudTick();
+      if(GM.jitT)clearTimeout(GM.jitT);
+      gmJitter();
+    });
+    return true;
+  },
+  close:function(){
+    if(!GM.opened)return;
+    GM.opened=false;
+    if(GM.raf){cancelAnimationFrame(GM.raf);GM.raf=0;}
+    if(GM.hudT){clearInterval(GM.hudT);GM.hudT=null;}
+    if(GM.jitT){clearTimeout(GM.jitT);GM.jitT=0;}
+    if(GM.hscTimer){clearTimeout(GM.hscTimer);GM.hscTimer=0;}
+    try{if(GM.el)GM.el.layer.classList.remove('gm-open');}catch(e){}
+  },
+  setNodes:function(nodes){ /* 节点数据注入：[{name,x,y,kind,note,alias}]（缺省=ZJ_LOCS） */
+    GM.nodes=(nodes&&nodes.length)?nodes:null;
+    if(GM.inited){ /* 重建标记层（城市几何按seed恒定，不重建） */
+      gmMarksBuild();gmTopoRender();GM.dirty=true;
+    }
+  },
+  setPlayer:function(locName){
+    var L=gmFindLoc(locName);
+    if(!L)return false;
+    if(GM.player&&GM.player.name!==L.name){
+      var a=gmWorld(GM.player),b=gmWorld(L);
+      if(a.x!==b.x||a.z!==b.z)GM.playerHeading=Math.atan2(b.x-a.x,-(b.z-a.z));
+    }
+    GM.player=L;gmSyncPlayer();gmHudTick();
+    return true;
+  },
+  pulse:function(locNames){ /* 线索/案件地点琥珀脉冲：3级step×3次（§3.5） */
+    var names=(typeof locNames==='string')?[locNames]:(locNames||[]);
+    GM.pulses=names.slice(0);
+    var i,j;
+    for(i=0;i<GM.marks.length;i++){
+      var m=GM.marks[i],hit=false;
+      for(j=0;j<names.length;j++)if(m.name===names[j]||m.name.indexOf(names[j])>=0)hit=true;
+      try{
+        if(m.el.classList){m.el.classList.remove('gm-pulse');if(hit){void m.el.offsetWidth;m.el.classList.add('gm-pulse');}}
+      }catch(e){}
+    }
+    setTimeout(function(){GM.pulses=[];gmHudTick();},3000);
+    gmHudTick();GM.dirty=true;
+  },
+  setPolarity:function(p){ /* 'physical'|'dive'：dive=琥珀主绿辅（ui_spec_final§2.1.5裁定，非品红） */
+    GM.polarity=(p==='dive')?'dive':'physical';
+    if(GM.inited)gmApplyPolarity();else gmHudTick();
+  },
+  setTopo:function(nodes){ /* dive层拓扑 N# 节点（跳板路径卡对接留桩：giMazeOpen路径数据） */
+    GM.topo=nodes||[];
+    if(GM.inited)gmTopoRender();
+  },
+  onNodeClick:function(cb){GM.cb=(typeof cb==='function')?cb:null;},
+  setMode:gmSetMode,
+  setHeightScale:gmSetHScale,
+  _nodeClick:gmNodeClick,
+  __debug:function(){return {opened:GM.opened,inited:GM.inited,fail:GM.fail,mode:GM.mode,polarity:GM.polarity,
+    hscale:GM.hscale,player:GM.player?GM.player.name:null,stats:GM.stats,marks:GM.marks.length,
+    topo:(GM.topoMarks||[]).length,adj:GM.roadAdj?Object.keys(GM.roadAdj).length:0};}
+};
+window.GMAP=GMAP;
+})();
+/* ---- GITS-MAP3D·WIRE B+C 玩法全接线 ----------------------------------------
+   ①入口3D/2D切换(gits_map3d偏好,默认3D) ②ZJ_LOCS→setNodes(含Cxx区块编号)
+   ③◇时地 ZJ_KEYS最长匹配→setPlayer(render管线钩子=giCaseWatch同款挂法)
+   ④onNodeClick→侧边小卡「移驾」=预填敕令+聚焦(giCaseAct pre:同手法,禁代发;
+     递呈走 worldCommand「前往」→movePlayerTo 原管线) ⑤◇线索/案件地点→pulse琥珀
+   ⑥cat='地理'世界书弹卡(最优1条,点击展开进图鉴codex) ⑦dive=setPolarity('dive')
+     琥珀主绿辅(ui_spec_final§2.1.5裁定,整图品红终身禁止,map_ui_spec§5.1)+
+     setTopo(◇拓扑N#)+跳板路径点选2-4节点→GI.state.gmapJumpPath(EWX读接口软对接,
+     不存在则跳过) ⑧降级链:SAFEM/WebGL失败→自动留2D并隐藏3D切换
+   纪律：新代码集中本块；.gm-前缀+--t-*令牌+直角铁则；不碰__GAME__。 ---- */
+(function(){
+var MP=window.GMAP;
+var GMW={psig:'',path:[],topoIds:{},silent:false,pathMsg:''};
+function gmwPref(){try{var v=localStorage.getItem('gits_map3d');return v===null?'1':v;}catch(e){return '1';}} /* 默认3D */
+function gmwSetPref(v){try{localStorage.setItem('gits_map3d',String(v));}catch(e){}}
+function gmwHardOff(){ /* SAFEM/用户3D关（与核心gmOff同账）→留2D并隐藏3D切换（任务8） */
+  try{if(localStorage.getItem('gits_3d_off')==='1')return true;}catch(e){}
+  try{if(typeof SAFEM!=='undefined'&&SAFEM)return true;}catch(e){}
+  try{if(localStorage.getItem('gits_safe')==='1')return true;}catch(e){}
+  return false;
+}
+function gmwAvail(){try{return !!MP&&!gmwHardOff()&&!MP.failed()&&!MP.gmapFail;}catch(e){return false;}}
+function gmwCss(){ /* .gm-前缀+--t-*令牌+直角铁则（切换条渲染于既有Overlay内，侧卡/路径HUD在gm-layer内） */
+  if(document.getElementById('gmapWireCss'))return;
+  var st=document.createElement('style');st.id='gmapWireCss';
+  st.textContent=[
+  '.gm-swbar{display:flex;align-items:center;gap:8px;flex:none;flex-wrap:wrap;padding:7px 18px;border-bottom:1px solid rgba(61,220,132,.18);font-family:var(--fMono,monospace);font-size:11px;letter-spacing:.12em}',
+  '.gm-swbar,.gm-swbar *,.gm-side,.gm-side *,.gm-path,.gm-path *{border-radius:0!important;box-sizing:border-box}',
+  '.gm-swb{cursor:pointer;border:1px solid var(--t-g4,#12583a);color:var(--t-g3,#1e9e5c);background:rgba(4,16,8,.35);padding:4px 12px;user-select:none;white-space:nowrap}',
+  '.gm-swb.gm-swon{color:var(--t-ink,#04110a);background:var(--t-g2,#3ddc84);border-color:var(--t-g2,#3ddc84);cursor:default}',
+  '.gm-swb.gm-go{color:var(--t-a1,#ffcf7d);border-color:var(--t-a3,#8f6a1e)}',
+  '.gm-swb.gm-dis{opacity:.55;cursor:default}',
+  '.gm-swnote{color:var(--t-g4,#12583a);letter-spacing:.08em}',
+  '.gm-side{position:absolute;right:14px;top:118px;width:min(300px,86vw);max-height:56%;overflow-y:auto;border:1px solid var(--t-g4,#12583a);background:rgba(4,16,8,.9);padding:10px 12px;pointer-events:auto;font-family:var(--fMono,monospace);color:var(--map-white,#cfe6d8);font-size:12px;line-height:1.6}',
+  '.gm-sideHd{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px;letter-spacing:.1em;color:var(--map-peak,#c9ffe2)}',
+  '.gm-sideNote{margin-top:5px;color:var(--t-g3,#1e9e5c);font-size:11px}',
+  '.gm-sideLore{margin-top:8px;padding:7px 8px;border:1px dashed var(--t-g4,#12583a);cursor:pointer;font-size:11px;color:var(--map-white,#cfe6d8)}',
+  '.gm-sideLore:hover{background:rgba(61,220,132,.07)}',
+  '.gm-sideLore b{color:var(--t-g2,#3ddc84);font-weight:400}',
+  '.gm-sideMore{color:var(--t-a1,#ffcf7d);margin-left:6px}',
+  '.gm-sideAct{margin-top:9px;display:flex;gap:8px}',
+  '.gm-path{position:absolute;left:14px;bottom:44px;max-width:min(420px,80vw);border:1px solid var(--t-a3,#8f6a1e);background:rgba(10,7,3,.88);padding:8px 10px;pointer-events:auto;font-family:var(--fMono,monospace);font-size:11px;letter-spacing:.08em;color:var(--t-a1,#ffcf7d)}',
+  '.gm-pathLb{color:var(--t-a2,#ffb000)}',
+  '.gm-path i{color:var(--t-g3,#1e9e5c);font-style:normal}',
+  '.gm-pathMsg{margin-top:5px;color:var(--t-g3,#1e9e5c)}',
+  'html.zjLow .gm-side,html.zjLow .gm-path{background:#04100a}',
+  '@media (prefers-reduced-motion:reduce){.gm-swb,.gm-sideLore{transition:none!important}}'
+  ].join('\n');
+  document.head.appendChild(st);
+}
+/* ---- ②节点数据：ZJ_LOCS 30地点→setNodes（名称/别名/坐标/区块编号Cxx，中枢=C 13正典） ---- */
+function gmwNodes(){
+  var ls=(typeof ZJ_LOCS!=='undefined'&&ZJ_LOCS)?ZJ_LOCS:[];
+  return ls.map(function(L,i){return {name:L.name,alias:(L.alias||[]).slice(0),x:L.x,y:L.y,kind:L.kind,note:L.note||'',ch:L.ch,la:L.la,code:(L.name==='新浜市中枢')?'C 13':('C '+(i+11))};});
+}
+function gmwKeys(){return (typeof ZJ_KEYS!=='undefined'&&ZJ_KEYS)?ZJ_KEYS:[];}
+/* ---- ③玩家定位：◇时地文本 ZJ_KEYS 最长匹配（表已按key长度降序，与playerLoc同法） ---- */
+function gmwMatchLoc(text){
+  text=String(text||'');if(!text)return null;
+  var ks=gmwKeys();
+  for(var i=0;i<ks.length;i++)if(text.indexOf(ks[i].k)>=0)return ks[i].L;
+  return null;
+}
+/* ---- ⑤线索脉冲：◇线索/◇案件字段解析地点名（k≥2防单字误伤，≤8个） ---- */
+function gmwClueLocs(eff){
+  var txt=String(eff.world['线索']||'')+'\n'+String(eff.world['案件']||'');
+  var ks=gmwKeys(),out=[],seen={};
+  for(var i=0;i<ks.length;i++){var K=ks[i];
+    if(K.k.length<2||seen[K.L.name])continue;
+    if(txt.indexOf(K.k)>=0){seen[K.L.name]=1;out.push(K.L.name);}}
+  return out.slice(0,8);
+}
+/* ---- ⑦拓扑解析：—切节点/◉当前/?n虚位（与 giEwTargets §2.3 同一文法）→[{id,label}] ---- */
+function gmwParseTopo(s){
+  var out=[],ids={};
+  String(s||'').split(/—+/).forEach(function(tok){
+    tok=tok.replace(/[◉\s]/g,'');if(!tok)return;
+    var m=/^([Nn]\d+|[?？]\d+)/.exec(tok);if(!m)return;
+    var id='N'+m[1].replace(/^[Nn?？]/,'');
+    if(ids[id])return;ids[id]=1;
+    out.push({id:id,label:tok.slice(0,14)});
+  });
+  GMW.topoIds=ids;
+  return out.slice(0,12);
+}
+/* ---- ③⑤⑦汇流：面板→GMAP 同步（render管线每轮触发；force=开地图即刻全量） ---- */
+function gmwSync(force){
+  var eff=null;
+  try{eff=(window.SHELLDIAG&&SHELLDIAG.effUpTo)?SHELLDIAG.effUpTo(S.history):effUpTo(S.history);}catch(e){}
+  if(!eff)return;
+  try{var L=gmwMatchLoc(eff.world['时地']);if(L)MP.setPlayer(L.name);}catch(e){}
+  var dive=false;
+  try{dive=String(eff.world['现实层']||'物理').indexOf('潜入')>=0;MP.setPolarity(dive?'dive':'physical');}catch(e){}
+  try{if(dive)MP.setTopo(gmwParseTopo(eff.world['拓扑']));else{GMW.topoIds={};MP.setTopo([]);}}catch(e){}
+  if(!dive&&GMW.path.length){GMW.path=[];GMW.pathMsg='';gmwPathHud(true);} /* 上浮=清跳板路径 */
+  try{ /* 脉冲：标记层就绪后才发；同一轮同一批不重复 */
+    var inited=false;try{inited=!!(MP.__debug&&MP.__debug().inited);}catch(e2){}
+    if(inited){
+      var names=gmwClueLocs(eff),sig=names.join('|')+'#'+S.history.length;
+      if(sig!==GMW.psig||force){GMW.psig=sig;if(names.length)MP.pulse(names);}
+    }
+  }catch(e){}
+}
+/* ---- ⑥世界书弹卡：cat='地理' keys×地点name/alias 取最优1条（精确>包含，长key优先） ---- */
+function gmwGeoEntry(L){
+  var best=null,bs=0,names=[L.name].concat(L.alias||[]),lb=[];
+  try{lb=(G&&G.lorebook)?G.lorebook:[];}catch(e){}
+  for(var i=0;i<lb.length;i++){var en=lb[i];
+    if(!en||en.cat!=='地理')continue;
+    var sc=0,ks=en.keys||[];
+    for(var j=0;j<ks.length;j++){var k=String(ks[j]||'');if(!k)continue;
+      for(var q=0;q<names.length;q++){var nm=String(names[q]||'');if(!nm)continue;
+        if(k===nm)sc=Math.max(sc,1000+k.length);
+        else if(k.length>1&&(nm.indexOf(k)>=0||k.indexOf(nm)>=0))sc=Math.max(sc,k.length);
+      }}
+    if(sc>bs){bs=sc;best=en;}
+  }
+  return best;
+}
+/* ---- ④⑥节点小卡：地点名+移驾钮+GEO条目摘要（gm-layer内侧边） ---- */
+function gmwClearCard(){
+  try{var lay=document.getElementById('gmapLayer');if(!lay)return;
+    var sc=lay.querySelector('.gm-side');
+    if(sc){if(sc.remove)sc.remove();else if(sc.parentNode)sc.parentNode.removeChild(sc);}
+  }catch(e){}
+}
+function gmwShowCard(L){
+  try{
+    var lay=document.getElementById('gmapLayer');if(!lay)return;
+    gmwClearCard();gmwCss();
+    var here=false;try{here=playerLoc().name===L.name;}catch(e){}
+    var geo=null;try{geo=gmwGeoEntry(L);}catch(e){}
+    var body=String(geo?geo.content||'':'').replace(/\s+/g,' ');
+    var d=document.createElement('div');d.className='gm-side';
+    d.innerHTML='<div class="gm-sideHd"><span>'+esc(L.name)+'<\/span><span class="gm-swb" data-gmw="cardclose">✕<\/span><\/div>'
+      +(L.note?'<div class="gm-sideNote">'+esc(L.note)+'<\/div>':'')
+      +(geo?'<div class="gm-sideLore" data-gmw="codex" data-gmn="'+esc(geo.title)+'" title="展开图鉴该条目"><b>◈ '+esc(geo.title)+'<\/b><br>'+esc(body.slice(0,96))+(body.length>96?'…':'')+'<span class="gm-sideMore">図鑑 ▸<\/span><\/div>':'')
+      +'<div class="gm-sideAct">'+(here
+        ?'<span class="gm-swb gm-dis">已在此地<\/span>'
+        :'<span class="gm-swb gm-go" data-gmw="go" data-gmn="'+esc(L.name)+'">移驾 ▸ 预填敕令<\/span>')
+      +'<\/div>';
+    lay.appendChild(d);
+  }catch(e){}
+}
+/* ---- ④移驾=预填敕令+聚焦（禁代发；递呈走 worldCommand「前往」→movePlayerTo 原管线） ---- */
+function gmwGoPre(name){
+  name=String(name||'');if(!name)return;
+  GMW.silent=true;try{MP.close();}catch(e){}GMW.silent=false;
+  var cmd='前往 '+name;
+  try{
+    S.mode='world';S.input=cmd;S.cmdHint='敕令已预填——回车递呈即移驾（此回合当作赶路）。';
+    render();
+    var ta=document.getElementById('zjInput');
+    if(ta){ta.value=cmd;ta.focus();try{ta.setSelectionRange(cmd.length,cmd.length);}catch(e2){}}
+  }catch(e){}
+}
+/* ---- ⑥点击展开进图鉴 codex 该条目 ---- */
+function gmwCodex(title){
+  GMW.silent=true;try{MP.close();}catch(e){}GMW.silent=false;
+  try{
+    var lb=(G&&G.lorebook)?G.lorebook:[],list=[],i;
+    for(i=0;i<lb.length;i++)if(lb[i]&&lb[i].cat==='地理')list.push(lb[i]);
+    var idx=0;for(i=0;i<list.length;i++)if(list[i].title===title){idx=i;break;}
+    S.overlay='codex';S.codexCat='地理';S.codexIdx=idx;
+    render();
+    try{codexPills();setPills();}catch(e3){}
+  }catch(e){}
+}
+/* ---- ⑦跳板路径点选：dive态点2-4拓扑节点排序→GI.state.gmapJumpPath（EWX读接口软对接） ---- */
+function gmwPathToggle(id){
+  var i=GMW.path.indexOf(id);
+  if(i>=0)GMW.path.splice(i,1);
+  else{
+    if(GMW.path.length>=4){GMW.pathMsg='最多4个节点——先清除再选。';gmwPathHud();return;}
+    GMW.path.push(id);GMW.pathMsg='';
+  }
+  gmwPathHud();
+}
+function gmwPathHud(removeOnly){
+  try{
+    var lay=document.getElementById('gmapLayer');if(!lay)return;
+    var el=lay.querySelector('.gm-path');
+    if(removeOnly||(!GMW.path.length&&!GMW.pathMsg)){
+      if(el){if(el.remove)el.remove();else if(el.parentNode)el.parentNode.removeChild(el);}
+      return;
+    }
+    if(!el){gmwCss();el=document.createElement('div');el.className='gm-path';lay.appendChild(el);}
+    var p=GMW.path;
+    el.innerHTML='<span class="gm-pathLb">跳板路径┃<\/span> '
+      +(p.length?p.join(' → '):'<i>dive态点选2-4个拓扑节点排序<\/i>')
+      +(p.length>=2?' <span class="gm-swb gm-go" data-gmw="pathset">定线写入<\/span>':'')
+      +(p.length?' <span class="gm-swb" data-gmw="pathclr">清除<\/span>':'')
+      +(GMW.pathMsg?'<div class="gm-pathMsg">'+esc(GMW.pathMsg)+'<\/div>':'');
+  }catch(e){}
+}
+function gmwPathSet(){
+  var p=GMW.path.slice(0,4);
+  if(p.length<2){GMW.pathMsg='至少2个节点才成线。';gmwPathHud();return;}
+  var ok=false;
+  try{if(typeof GI!=='undefined'&&GI.state){GI.state.gmapJumpPath={ids:p,at:Date.now()};if(typeof giSave==='function')giSave();ok=true;}}catch(e){}
+  try{if(window.SHELLDIAG&&SHELLDIAG.interact&&typeof SHELLDIAG.interact.jumpPreselect==='function')SHELLDIAG.interact.jumpPreselect(p);}catch(e){} /* EWX读接口：存在则通知，不存在跳过 */
+  GMW.pathMsg=ok?'已定线写入——潜入破壁的跳板选择屏可读为预选。':'GI.state不可用，未写入。';
+  gmwPathHud();
+}
+/* ---- ④⑦节点点击统一入口（覆盖核心默认 movePlayerTo 直发=禁代发） ---- */
+function gmwNodeClick(name){
+  name=String(name||'');
+  if(GMW.topoIds[name]){gmwPathToggle(name);return;} /* dive拓扑节点=路径点选 */
+  var L=null;
+  try{L=locByName(name)||gmwMatchLoc(name);}catch(e){}
+  if(L)gmwShowCard(L);
+}
+/* ---- ①入口：3D态开启 / 2D态回落 ---- */
+function gmwGo3d(){
+  if(!gmwAvail()){gmwTo2d(false);return;}
+  gmwCss();
+  try{if(S.overlay){S.overlay=null;render();}}catch(e){}
+  try{MP.setNodes(gmwNodes());}catch(e){}
+  try{MP.onNodeClick(gmwNodeClick);}catch(e){}
+  var ok=false;try{ok=MP.open();}catch(e){}
+  if(!ok){gmwTo2d(false);return;} /* WebGL/three不可用→自动留2D（任务8） */
+  try{gmwSync(true);}catch(e){}
+}
+function gmwTo2d(user){ /* 2D态=现有SVG舆图（完整保留）；user=切换钮才记偏好 */
+  if(user)gmwSetPref('0');
+  gmwClearCard();
+  try{S.overlay='map';render();}catch(e){}
+}
+/* ---- ①⑧GMAP.close 包裹：HUD「2D MAP」钮=用户切换记偏好；失败关=自动留2D；wire内部silent关不回落 ---- */
+var _gmwClose0=MP?MP.close:null;
+if(MP)MP.close=function(){
+  var was=false;try{was=MP.isOpen();}catch(e){}
+  _gmwClose0.apply(MP,arguments);
+  gmwClearCard();gmwPathHud(true);
+  if(!was||GMW.silent)return;
+  var failed=false;try{failed=!!(MP.failed()||MP.gmapFail);}catch(e){}
+  gmwTo2d(!failed);
+};
+/* ---- ①2D舆图顶部切换条（mapBody包裹：SVG图完整保留；3D不可用整条隐藏=任务8） ---- */
+var _gmwMapBody0=mapBody;
+mapBody=function(){
+  var html=_gmwMapBody0();
+  if(!gmwAvail())return html;
+  gmwCss();
+  var bar='<div class="gm-swbar"><span class="gm-swb" data-gmw="sw3d">3D GRID<\/span><span class="gm-swb gm-swon">2D MAP<\/span><span class="gm-swnote">S9 TACMAP \/\/ NEWPORT GRID——切换将记住偏好<\/span><\/div>';
+  var pre='<div class="col grow" style="min-height:0">';
+  return html.indexOf(pre)===0?(pre+bar+html.slice(pre.length)):(bar+html);
+};
+/* ---- ③render管线钩子（giCaseWatch同款挂法）：地图开着时每轮同步定位/极性/拓扑/脉冲 ---- */
+var _gmwRender0=render;
+render=function(){_gmwRender0();try{if(MP&&MP.isOpen())gmwSync(false);}catch(e){}};
+/* ---- ①事件：捕获期截流——「图」钮(data-ov=map)偏好3D时直开3D；data-gmw=wire自有动作 ---- */
+function gmwAct(w,el){
+  if(w==='sw3d'){gmwSetPref('1');gmwGo3d();return;}
+  if(w==='cardclose'){gmwClearCard();return;}
+  if(w==='go'){gmwGoPre(el?el.getAttribute('data-gmn'):'');return;}
+  if(w==='codex'){gmwCodex(el?el.getAttribute('data-gmn'):'');return;}
+  if(w==='pathset'){gmwPathSet();return;}
+  if(w==='pathclr'){GMW.path=[];GMW.pathMsg='';gmwPathHud();return;}
+}
+function gmwOnClick(e){
+  try{
+    var t=e.target,w=null,wEl=null,ov=null;
+    while(t&&t!==document){
+      if(t.getAttribute){
+        if(w===null){w=t.getAttribute('data-gmw');if(w!==null)wEl=t;}
+        if(ov===null)ov=t.getAttribute('data-ov');
+      }
+      t=t.parentNode;
+    }
+    if(w){e.stopPropagation();if(e.preventDefault)e.preventDefault();gmwAct(w,wEl);return;}
+    if(ov==='map'&&gmwPref()==='1'&&gmwAvail()&&typeof S!=='undefined'&&S.screen==='game'){
+      e.stopPropagation();if(e.preventDefault)e.preventDefault();gmwGo3d(); /* 默认3D入口 */
+    }
+  }catch(e2){}
+}
+try{document.addEventListener('click',gmwOnClick,true);}catch(e){}
+/* ---- 测试/调试面（node软件桩单测对接） ---- */
+try{window.GMAPWIRE={sync:gmwSync,nodeClick:gmwNodeClick,act:gmwAct,avail:gmwAvail,pref:gmwPref,setPref:gmwSetPref,
+  nodes:gmwNodes,matchLoc:gmwMatchLoc,clueLocs:gmwClueLocs,parseTopo:gmwParseTopo,geo:gmwGeoEntry,
+  goPre:gmwGoPre,codex:gmwCodex,go3d:gmwGo3d,to2d:gmwTo2d,card:gmwShowCard,
+  pathToggle:gmwPathToggle,pathSet:gmwPathSet,onClick:gmwOnClick,_st:GMW};}catch(e){}
+})();
+/* ---- /GITS-MAP3D·WIRE ---- */
+/*/GITS-MAP3D*/
 /* 懒人灵感：每幕后由 AI 拟四条可点选的下一步 */
 function genSuggestions(){
   if(S.sugg===false||!apiReady()||TH.available||S.screen!=='game')return;

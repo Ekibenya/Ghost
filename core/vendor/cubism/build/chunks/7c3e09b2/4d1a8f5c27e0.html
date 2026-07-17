@@ -4350,7 +4350,7 @@ try{if(window.SHELLDIAG){
   规格：design/map_ui_spec.md（FUI规格）+ design/MAP_BUILD_NOTES.md（锚点/降级链）
   自包含：window.GMAP 暴露 open/close/setNodes/setPlayer/pulse/setPolarity/setTopo/onNodeClick
   懒加载：gmapEnsureThree() 首次 open 才注入 core/three-bundle.min.js（THREE 挂 window.THREE，
-  已验证 bundle 尾部 window.THREE=df 的 IIFE 暴露方式，r185）。失败置 gmapFail → 2D SVG 舆图降级。
+  已验证 bundle 尾部 window.THREE=df 的 IIFE 暴露方式，r185）。失败置 gmapFail → .gm-noglp 终端占位面板降级（2D舆图已废除）。
   绘制预算：楼块≤880（移动≤420）、线段≤5万；draw calls ≤7（grid/wire/halo/faces/road/route/dark）。
   CRT 协调（规格§2.6）：嵌入游戏时不自画横扫描线/暗角（body::before/after 既有层天然罩住，
   z-index 55 < 2147480000）；仅 standalone:true 时启用 .gm-crt 容器扫描线。辉光=加性复线（§4.2）。
@@ -4370,7 +4370,7 @@ var GM={
 function gmRM(){try{return !!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);}catch(e){return false;}}
 function gmLow(){try{return document.documentElement.classList.contains('zjLow');}catch(e){return false;}}
 function gmMob(){try{if(window.matchMedia&&matchMedia('(pointer: coarse)').matches)return true;}catch(e){}try{return window.innerWidth<=768;}catch(e){return false;}}
-function gmOff(){ /* 硬停用链：SAFEM崩溃安全/用户3D开关 → 不初始化WebGL直接回落2D（NOTES L688契约） */
+function gmOff(){ /* 硬停用链：SAFEM崩溃安全/用户3D开关 → 不初始化WebGL，地图区落 .gm-noglp 占位面板 */
   try{if(localStorage.getItem('gits_3d_off')==='1')return true;}catch(e){}
   try{if(typeof SAFEM!=='undefined'&&SAFEM)return true;}catch(e){}
   try{if(localStorage.getItem('gits_safe')==='1')return true;}catch(e){}
@@ -4425,18 +4425,18 @@ function gmCss(){
   '.gm-cv{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:grab;touch-action:none}',
   '.gm-cv.gm-drag{cursor:grabbing}',
   '.gm-marks{position:absolute;inset:0;pointer-events:none;overflow:hidden}',
-  '.gm-mk{position:absolute;left:0;top:0;pointer-events:auto;cursor:pointer;transform:translate3d(-200px,-200px,0)}',
+  '.gm-mk{position:absolute;left:0;top:0;width:34px;height:34px;margin:-17px 0 0 -17px;pointer-events:auto;cursor:pointer;transform:translate3d(-200px,-200px,0)}', /* 命中区≥32px触摸友好：盒34px居中锚点 */
   '.gm-mk svg{display:block;overflow:visible}',
-  '.gm-mk-in{transform:translate(-50%,-50%);display:block}',
+  '.gm-mk-in{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:block}',
   '.gm-player{pointer-events:none}',
   '.gm-player .gm-mk-in{animation:gmBreath 2.4s step-end infinite}',
   '@keyframes gmBreath{0%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.08)}}',
-  '.gm-lab{position:absolute;left:12px;top:-14px;border:1px solid var(--map-white);color:var(--map-white);font-family:var(--fMono,monospace);font-size:10px;line-height:1;padding:2px 4px;white-space:nowrap;background:rgba(4,16,8,.55)}',
+  '.gm-lab{position:absolute;left:29px;top:3px;border:1px solid var(--map-white);color:var(--map-white);font-family:var(--fMono,monospace);font-size:10px;line-height:1;padding:2px 4px;white-space:nowrap;background:rgba(4,16,8,.55);pointer-events:none}',
   '.gm-pring{position:absolute;left:50%;top:50%;width:8px;height:8px;margin:-4px 0 0 -4px;border:2px solid var(--t-a2,#ffb000);opacity:0;pointer-events:none}',
   '.gm-pulse .gm-pring{animation:gmPulse .9s step-end 3}',
   '@keyframes gmPulse{0%{opacity:.9;transform:scale(.4)}33%{opacity:.65;transform:scale(1.6)}66%{opacity:.4;transform:scale(2.6)}100%{opacity:0;transform:scale(3)}}',
-  '.gm-topod{display:block;width:9px;height:9px;border:1px solid var(--t-a2,#ffb000);transform:translate(-50%,-50%) rotate(45deg);background:rgba(255,176,0,.18)}',
-  '.gm-topolab{position:absolute;left:8px;top:-6px;color:var(--t-a1,#ffcf7d);font-family:var(--fMono,monospace);font-size:9px;white-space:nowrap}',
+  '.gm-topod{position:absolute;left:50%;top:50%;display:block;width:9px;height:9px;border:1px solid var(--t-a2,#ffb000);transform:translate(-50%,-50%) rotate(45deg);background:rgba(255,176,0,.18)}',
+  '.gm-topolab{position:absolute;left:25px;top:11px;color:var(--t-a1,#ffcf7d);font-family:var(--fMono,monospace);font-size:9px;white-space:nowrap;pointer-events:none}',
   /* HUD chrome（DOM不进canvas，规格§2.5/§4.5） */
   '.gm-hud{position:absolute;inset:0;pointer-events:none;font-family:var(--fMono,monospace);color:var(--map-white)}',
   '.gm-corner{position:absolute;left:14px;top:12px;font-size:11px;letter-spacing:.14em}',
@@ -4447,9 +4447,6 @@ function gmCss(){
   '.gm-mode.gm-on{background:rgba(30,158,92,.30)}',
   '.gm-mode.gm-on b{color:var(--map-peak)}',
   '.gm-mode b{font-weight:400}',
-  '.gm-viewsw{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);pointer-events:auto;display:flex;gap:0}',
-  '.gm-vbtn{font-family:var(--fMono,monospace);font-size:11px;letter-spacing:.12em;color:var(--t-g3,#1e9e5c);background:rgba(4,16,8,.6);border:1px solid var(--t-g4,#12583a);padding:5px 14px;cursor:pointer}',
-  '.gm-vbtn.gm-on{color:var(--t-ink,#04110a);background:var(--t-g2,#3ddc84);border-color:var(--t-g2,#3ddc84)}',
   '.gm-boot{position:absolute;left:14px;bottom:44px;font-family:var(--fWork,monospace);font-size:9.5px;line-height:1.5;color:var(--t-g3,#1e9e5c);letter-spacing:.06em;pointer-events:none;white-space:pre}',
   /* 视图切换重扫（两帧黑场+240ms 自上而下，规格§3.5） */
   '.gm-rescan{position:absolute;inset:0;pointer-events:none;background:#000;opacity:0}',
@@ -4651,7 +4648,6 @@ function gmBuildLayer(){
    +'<div class="gm-corner zjGlow">BIRD VIEW<\/div>'
    +'<div class="gm-read zjGlow"><div class="gm-r1">Game --- mile/h<\/div><div class="gm-r2">TRACK STANDBY<\/div><div class="gm-r3"><\/div><\/div>'
    +'<div class="gm-modes"><div class="gm-mode" data-gm="hunt"><b>*<\/b>Hunting MODE<\/div><div class="gm-mode" data-gm="hscale"><b>*<\/b>Height-scale ×1<\/div><\/div>'
-   +'<div class="gm-viewsw"><button type="button" class="gm-vbtn" data-gm="to2d">2D MAP<\/button><button type="button" class="gm-vbtn gm-on" data-gm="to3d">3D GRID<\/button><\/div>'
    +'<div class="gm-boot"><\/div>'
   +'<\/div>'
   +'<div class="gm-scanline"><\/div><div class="gm-rescan"><\/div><div class="gm-crt"><\/div>';
@@ -4699,7 +4695,6 @@ function gmBindInput(){
     if(name){gmNodeClick(name);return;}
     if(gm==='hunt')gmSetMode(GM.mode==='hunt'?'orbit':'hunt');
     else if(gm==='hscale')gmSetHScale(GM.hscale>=2?1:2);
-    else if(gm==='to2d')GMAP.close();
   });
   window.addEventListener('resize',function(){if(GM.opened)gmResize();});
   document.addEventListener('visibilitychange',function(){
@@ -4958,7 +4953,7 @@ var GMAP={
   open:function(opt){
     opt=opt||{};
     if(GM.opened)return true;
-    if(gmOff()||GM.fail){GM.fail=true;GMAP.gmapFail=true;return false;} /* → 2D SVG舆图降级（既有mapBody） */
+    if(gmOff()||GM.fail){GM.fail=true;GMAP.gmapFail=true;return false;} /* → .gm-noglp 占位面板降级（2D舆图已废除） */
     GM.rm=gmRM();GM.low=gmLow();GM.mob=gmMob();GM.standalone=!!opt.standalone;
     gmBuildLayer();
     try{GM.el.layer.classList.add('gm-open');GM.el.layer.classList.toggle('gm-standalone',GM.standalone);}catch(e){}
@@ -5047,39 +5042,36 @@ var GMAP={
 window.GMAP=GMAP;
 })();
 /* ---- GITS-MAP3D·WIRE B+C 玩法全接线 ----------------------------------------
-   ①入口3D/2D切换(gits_map3d偏好,默认3D) ②ZJ_LOCS→setNodes(含Cxx区块编号)
+   ①入口恒3D(2D舆图已废除) ②ZJ_LOCS→setNodes(含Cxx区块编号)
    ③◇时地 ZJ_KEYS最长匹配→setPlayer(render管线钩子=giCaseWatch同款挂法)
-   ④onNodeClick→侧边小卡「移驾」=预填敕令+聚焦(giCaseAct pre:同手法,禁代发;
-     递呈走 worldCommand「前往」→movePlayerTo 原管线) ⑤◇线索/案件地点→pulse琥珀
+   ④onNodeClick→侧卡(停靠态=底部抽屉)「移驾」=预填敕令+聚焦(禁代发;
+     递呈走 worldCommand「前往」→movePlayerTo 原管线;手机预填后切回実況页)
+   ⑤◇线索/案件地点→pulse琥珀
    ⑥cat='地理'世界书弹卡(最优1条,点击展开进图鉴codex) ⑦dive=setPolarity('dive')
      琥珀主绿辅(ui_spec_final§2.1.5裁定,整图品红终身禁止,map_ui_spec§5.1)+
      setTopo(◇拓扑N#)+跳板路径点选2-4节点→GI.state.gmapJumpPath(EWX读接口软对接,
-     不存在则跳过) ⑧降级链:SAFEM/WebGL失败→自动留2D并隐藏3D切换
+     不存在则跳过) ⑧降级链:SAFEM/gits_3d_off/WebGL失败→地图区落 .gm-noglp 终端占位面板
    纪律：新代码集中本块；.gm-前缀+--t-*令牌+直角铁则；不碰__GAME__。 ---- */
 (function(){
 var MP=window.GMAP;
 var GMW={psig:'',path:[],topoIds:{},silent:false,pathMsg:''};
-function gmwPref(){try{var v=localStorage.getItem('gits_map3d');return v===null?'1':v;}catch(e){return '1';}} /* 默认3D */
-function gmwSetPref(v){try{localStorage.setItem('gits_map3d',String(v));}catch(e){}}
-function gmwHardOff(){ /* SAFEM/用户3D关（与核心gmOff同账）→留2D并隐藏3D切换（任务8） */
+function gmwHardOff(){ /* SAFEM/用户3D关（与核心gmOff同账）→地图区落占位面板 */
   try{if(localStorage.getItem('gits_3d_off')==='1')return true;}catch(e){}
   try{if(typeof SAFEM!=='undefined'&&SAFEM)return true;}catch(e){}
   try{if(localStorage.getItem('gits_safe')==='1')return true;}catch(e){}
   return false;
 }
 function gmwAvail(){try{return !!MP&&!gmwHardOff()&&!MP.failed()&&!MP.gmapFail;}catch(e){return false;}}
-function gmwCss(){ /* .gm-前缀+--t-*令牌+直角铁则（切换条渲染于既有Overlay内，侧卡/路径HUD在gm-layer内） */
+function gmwCss(){ /* .gm-前缀+--t-*令牌+直角铁则（侧卡/路径HUD在gm-layer内） */
   if(document.getElementById('gmapWireCss'))return;
   var st=document.createElement('style');st.id='gmapWireCss';
   st.textContent=[
-  '.gm-swbar{display:flex;align-items:center;gap:8px;flex:none;flex-wrap:wrap;padding:7px 18px;border-bottom:1px solid rgba(61,220,132,.18);font-family:var(--fMono,monospace);font-size:11px;letter-spacing:.12em}',
-  '.gm-swbar,.gm-swbar *,.gm-side,.gm-side *,.gm-path,.gm-path *{border-radius:0!important;box-sizing:border-box}',
+  '.gm-side,.gm-side *,.gm-path,.gm-path *{border-radius:0!important;box-sizing:border-box}',
   '.gm-swb{cursor:pointer;border:1px solid var(--t-g4,#12583a);color:var(--t-g3,#1e9e5c);background:rgba(4,16,8,.35);padding:4px 12px;user-select:none;white-space:nowrap}',
-  '.gm-swb.gm-swon{color:var(--t-ink,#04110a);background:var(--t-g2,#3ddc84);border-color:var(--t-g2,#3ddc84);cursor:default}',
   '.gm-swb.gm-go{color:var(--t-a1,#ffcf7d);border-color:var(--t-a3,#8f6a1e)}',
   '.gm-swb.gm-dis{opacity:.55;cursor:default}',
-  '.gm-swnote{color:var(--t-g4,#12583a);letter-spacing:.08em}',
-  '.gm-side{position:absolute;right:14px;top:118px;width:min(300px,86vw);max-height:56%;overflow-y:auto;border:1px solid var(--t-g4,#12583a);background:rgba(4,16,8,.9);padding:10px 12px;pointer-events:auto;font-family:var(--fMono,monospace);color:var(--map-white,#cfe6d8);font-size:12px;line-height:1.6}',
+  '.gm-side{position:absolute;right:14px;top:118px;width:min(300px,86vw);max-height:56%;overflow-y:auto;border:1px solid var(--t-g4,#12583a);background:rgba(4,16,8,.9);padding:10px 12px;pointer-events:auto;font-family:var(--fMono,monospace);color:var(--map-white,#cfe6d8);font-size:12px;line-height:1.6;z-index:5}',
+  '.gm-docked .gm-side{left:0;right:0;top:auto;bottom:0;width:auto;max-height:62%;border-left:none;border-right:none;border-bottom:none;box-shadow:0 -6px 18px rgba(4,16,8,.7)}', /* 停靠窄栏/手机页：侧卡改底部抽屉，不被overflow裁剪 */
   '.gm-sideHd{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px;letter-spacing:.1em;color:var(--map-peak,#c9ffe2)}',
   '.gm-sideNote{margin-top:5px;color:var(--t-g3,#1e9e5c);font-size:11px}',
   '.gm-sideLore{margin-top:8px;padding:7px 8px;border:1px dashed var(--t-g4,#12583a);cursor:pointer;font-size:11px;color:var(--map-white,#cfe6d8)}',
@@ -5197,6 +5189,7 @@ function gmwGoPre(name){
   var cmd='前往 '+name;
   try{
     S.mode='world';S.input=cmd;S.cmdHint='敕令已预填——回车递呈即移驾（此回合当作赶路）。';
+    try{if(typeof isMobile==='function'&&isMobile())S.tab='story';}catch(eT){} /* 手机：预填后自动切回実況页，让用户看到输入框 */
     render();
     var ta=document.getElementById('zjInput');
     if(ta){ta.value=cmd;ta.focus();try{ta.setSelectionRange(cmd.length,cmd.length);}catch(e2){}}
@@ -5258,56 +5251,35 @@ function gmwNodeClick(name){
   try{L=locByName(name)||gmwMatchLoc(name);}catch(e){}
   if(L)gmwShowCard(L);
 }
-/* ---- ①入口：3D态开启 / 2D态回落 ---- */
+/* ---- ①入口：恒3D开启（2D舆图已废除；不可用时地图区由 .gm-noglp 占位面板兜底） ---- */
 function gmwGo3d(){
-  if(!gmwAvail()){gmwTo2d(false);return;}
+  if(!gmwAvail()){try{render();}catch(eR){}return;} /* 不可用→整渲染：停靠容器落 .gm-noglp 占位 */
   gmwCss();
   try{if(S.overlay){S.overlay=null;render();}}catch(e){}
   try{var _dk=document.getElementById('pgMapDock');if(MP.mount)MP.mount(_dk||null);}catch(e){} /*GITS-DOCK 有停靠容器则挂进去，否则全屏（单点挂载）*/
   try{MP.setNodes(gmwNodes());}catch(e){}
   try{MP.onNodeClick(gmwNodeClick);}catch(e){}
   var ok=false;try{ok=MP.open();}catch(e){}
-  if(!ok){gmwTo2d(false);return;} /* WebGL/three不可用→自动留2D（任务8） */
+  if(!ok){try{render();}catch(eR2){}return;} /* WebGL/three不可用→占位面板兜底 */
   try{gmwSync(true);}catch(e){}
-  try{var _dk2=document.getElementById('pgMapDock');var _f2d=_dk2&&_dk2.querySelector('.pg-2dwrap');if(_f2d&&_f2d.parentNode)_f2d.parentNode.removeChild(_f2d);}catch(e){} /*GITS-DOCK 移除停靠2D降级底稿*/
 }
-function gmwTo2d(user){ /* 2D态=现有SVG舆图（完整保留）；user=切换钮才记偏好 */
-  if(user)gmwSetPref('0');
-  gmwClearCard();
-  try{S.overlay='map';render();}catch(e){}
-}
-/* ---- ①⑧GMAP.close 包裹：HUD「2D MAP」钮=用户切换记偏好；失败关=自动留2D；wire内部silent关不回落 ---- */
+/* ---- ①⑧GMAP.close 包裹：失败/外部关→整渲染（停靠容器按可用性落3D或 .gm-noglp 占位）；wire内部silent关不触发 ---- */
 var _gmwClose0=MP?MP.close:null;
 if(MP)MP.close=function(){
   var was=false;try{was=MP.isOpen();}catch(e){}
   _gmwClose0.apply(MP,arguments);
   gmwClearCard();gmwPathHud(true);
   if(!was||GMW.silent)return;
-  var failed=false;try{failed=!!(MP.failed()||MP.gmapFail);}catch(e){}
-  /*GITS-DOCK 停靠态关闭（HUD「2D MAP」/失败）：不弹全屏2D overlay，改记偏好+整渲染→停靠容器落到 .pg-2dwrap 2D降级 */
-  try{var _lay=document.getElementById('gmapLayer'),_dk=document.getElementById('pgMapDock');
-    if(_dk&&_lay&&_dk.contains(_lay)){if(!failed)gmwSetPref('0');try{render();}catch(e2){}return;}
-  }catch(e3){}
-  gmwTo2d(!failed);
-};
-/* ---- ①2D舆图顶部切换条（mapBody包裹：SVG图完整保留；3D不可用整条隐藏=任务8） ---- */
-var _gmwMapBody0=mapBody;
-mapBody=function(){
-  var html=_gmwMapBody0();
-  if(!gmwAvail())return html;
-  gmwCss();
-  var bar='<div class="gm-swbar"><span class="gm-swb" data-gmw="sw3d">3D GRID<\/span><span class="gm-swb gm-swon">2D MAP<\/span><span class="gm-swnote">S9 TACMAP \/\/ NEWPORT GRID——切换将记住偏好<\/span><\/div>';
-  var pre='<div class="col grow" style="min-height:0">';
-  return html.indexOf(pre)===0?(pre+bar+html.slice(pre.length)):(bar+html);
+  try{render();}catch(e2){}
 };
 /* ---- ③render管线钩子（giCaseWatch同款挂法）：地图开着时每轮同步定位/极性/拓扑/脉冲 ---- */
 var _gmwRender0=render;
 render=function(){_gmwRender0();try{if(MP&&MP.isOpen())gmwSync(false);}catch(e){}};
-/* ---- ①事件：捕获期截流——「图」钮(data-ov=map)偏好3D时直开3D；data-gmw=wire自有动作 ---- */
+/* ---- ①事件：捕获期截流——data-ov=map 兼容跳转(手机切地図・装備页/桌面开3D)；data-gmw=wire自有动作 ---- */
 function gmwAct(w,el){
-  if(w==='sw3d'){gmwSetPref('1');gmwGo3d();return;}
   if(w==='cardclose'){gmwClearCard();return;}
   if(w==='go'){gmwGoPre(el?el.getAttribute('data-gmn'):'');return;}
+  if(w==='noglgo'){gmwGoPre(el?el.getAttribute('data-gmn'):'');return;} /* 占位面板地点列表：与3D节点同一移驾预填流程 */
   if(w==='codex'){gmwCodex(el?el.getAttribute('data-gmn'):'');return;}
   if(w==='pathset'){gmwPathSet();return;}
   if(w==='pathclr'){GMW.path=[];GMW.pathMsg='';gmwPathHud();return;}
@@ -5323,22 +5295,24 @@ function gmwOnClick(e){
       t=t.parentNode;
     }
     if(w){e.stopPropagation();if(e.preventDefault)e.preventDefault();gmwAct(w,wEl);return;}
-    if(ov==='map'&&gmwPref()==='1'&&gmwAvail()&&typeof S!=='undefined'&&S.screen==='game'){
-      e.stopPropagation();if(e.preventDefault)e.preventDefault();gmwGo3d(); /* 默认3D入口 */
+    if(ov==='map'&&typeof S!=='undefined'&&S.screen==='game'){ /* 兼容路由：map overlay已废除 */
+      e.stopPropagation();if(e.preventDefault)e.preventDefault();
+      try{if(typeof isMobile==='function'&&isMobile()&&typeof swipeTab==='function'){swipeTab('gear');return;}}catch(e3){}
+      gmwGo3d();
     }
   }catch(e2){}
 }
 try{document.addEventListener('click',gmwOnClick,true);}catch(e){}
 /* ---- 测试/调试面（node软件桩单测对接） ---- */
-try{window.GMAPWIRE={sync:gmwSync,nodeClick:gmwNodeClick,act:gmwAct,avail:gmwAvail,pref:gmwPref,setPref:gmwSetPref,
+try{window.GMAPWIRE={sync:gmwSync,nodeClick:gmwNodeClick,act:gmwAct,avail:gmwAvail,
   nodes:gmwNodes,matchLoc:gmwMatchLoc,clueLocs:gmwClueLocs,parseTopo:gmwParseTopo,geo:gmwGeoEntry,
-  goPre:gmwGoPre,codex:gmwCodex,go3d:gmwGo3d,to2d:gmwTo2d,card:gmwShowCard,
+  goPre:gmwGoPre,codex:gmwCodex,go3d:gmwGo3d,card:gmwShowCard,
   pathToggle:gmwPathToggle,pathSet:gmwPathSet,onClick:gmwOnClick,_st:GMW};}catch(e){}
 })();
 /* ---- /GITS-MAP3D·WIRE ---- */
 /*/GITS-MAP3D*/
 /*GITS-DOCK ============================================================
-  「地図・装備」停靠层：手机第3页（実況/診断/地図・装備 三页横滑）＋电脑左侧停靠栏（≥1200px 三栏）。
+  「地図・装備」停靠层：手机第1页（地図・装備↔実況↔診断 三页横滑，実況默认落地）＋电脑左侧停靠栏（≥1200px 三栏）。
   挂载机制：GMAP.mount(host) 移动唯一 gmapLayer 节点（appendChild 天然卸旧挂新＝单点挂载守卫）；
   render() root.innerHTML 整树重建后，pgSync（render 包裹钩子）把持久 layer 节点重新挂回新容器
   （节点由 JS 引用持活，WebGL context 随 canvas 节点迁移存活）。装备舱复用 equipBody(true)=堆叠布局。
@@ -5350,37 +5324,42 @@ function pgCss(){
   st.textContent=[
   '.pg-leftcol{flex:none;width:320px;display:flex;flex-direction:column;min-height:0;position:relative;border-right:1px solid var(--t-grid,rgba(61,220,132,.18));padding-top:62px;background:rgba(7,18,12,.35)}',
   '@media (min-width:1600px){.pg-leftcol{width:340px}}',
-  '.pg-leftcol,.pg-mapdock,.pg-mapdock *,.pg-eqdock,.pg-gear,.pg-swb,.pg-expbtn,.pg-2dwrap{border-radius:0!important;box-sizing:border-box}',
+  '.pg-leftcol,.pg-mapdock,.pg-mapdock *,.pg-eqdock,.pg-gear,.pg-expbtn{border-radius:0!important;box-sizing:border-box}',
   '.pg-mapdock{position:relative;flex:none;height:46%;min-height:210px;overflow:hidden;background:#041008;border-bottom:1px solid var(--t-grid,rgba(61,220,132,.18))}',
   '.pg-mapdock.pg-expanded{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(1100px,94vw);height:min(680px,88vh);z-index:70;border:1px solid var(--t-g4,#12583a);box-shadow:0 0 0 200vmax rgba(4,16,8,.62)}',
   '.pg-eqdock{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}',
   '.pg-gear{height:100%;display:flex;flex-direction:column;min-height:0;background:rgba(7,18,12,.25)}',
   '.pg-expbtn{position:absolute;left:12px;top:32px;z-index:6;cursor:pointer;font-family:var(--fMono,monospace);font-size:10px;letter-spacing:.14em;color:var(--t-g3,#1e9e5c);background:rgba(4,16,8,.6);border:1px solid var(--t-g4,#12583a);padding:4px 10px;user-select:none}',
   '.pg-expbtn:hover{color:var(--t-g2,#3ddc84);border-color:var(--t-g2,#3ddc84)}',
-  '.pg-2dwrap{position:absolute;inset:0;overflow-y:auto;background:#041008}',
-  '.pg-sw{display:flex;gap:0;padding:8px 10px;border-bottom:1px solid var(--t-grid,rgba(61,220,132,.18))}',
-  '.pg-swb{cursor:pointer;font-family:var(--fMono,monospace);font-size:11px;letter-spacing:.12em;border:1px solid var(--t-g4,#12583a);color:var(--t-g3,#1e9e5c);background:rgba(4,16,8,.35);padding:4px 12px;user-select:none;white-space:nowrap}',
-  '.pg-swb.pg-on{color:var(--t-ink,#04110a);background:var(--t-g2,#3ddc84);border-color:var(--t-g2,#3ddc84);cursor:default}',
-  '.pg-2dmap{position:relative;width:100%;aspect-ratio:1000/707;background:radial-gradient(ellipse at 50% 50%,transparent 62%,rgba(18,40,27,.16) 100%),linear-gradient(160deg,#f2e8cd,#e6d9b6 55%,#eee2c4)}',
-  '.pg-2dnote{font-family:var(--fMono,monospace);font-size:10px;letter-spacing:.1em;color:var(--t-g4,#12583a);padding:7px 10px}',
+  '.gm-noglp{position:absolute;inset:0;overflow-y:auto;background:#041008;font-family:var(--fMono,monospace);color:var(--t-g3,#1e9e5c);font-size:11px;letter-spacing:.08em;padding:10px 12px}', /* 3D不可用降级：终端风占位面板（2D舆图已废除） */
+  '.gm-noglp,.gm-noglp *{border-radius:0!important;box-sizing:border-box}',
+  '.gm-noglpHd{color:var(--t-g2,#3ddc84);font-size:12px;letter-spacing:.14em;padding-bottom:6px;border-bottom:1px solid var(--t-g4,#12583a);margin-bottom:6px}',
+  '.gm-noglpLoc{color:var(--t-a1,#ffcf7d);margin:5px 0 8px}',
+  '.gm-noglpIt{cursor:pointer;padding:4px 2px;min-height:24px;color:var(--map-white,#cfe6d8)}',
+  '.gm-noglpIt:hover{background:rgba(61,220,132,.08);color:var(--t-g2,#3ddc84)}',
+  '.gm-noglpIt i{font-style:normal;color:var(--t-g4,#12583a)}',
   'html.zjLow .pg-leftcol,html.zjLow .pg-gear{background:var(--t-bg1,#07120c)}',
-  '@media (prefers-reduced-motion:reduce){.pg-expbtn,.pg-swb{transition:none!important}}'
+  '@media (prefers-reduced-motion:reduce){.pg-expbtn,.gm-noglpIt{transition:none!important}}'
   ].join('\n');
   document.head.appendChild(st);
 }
-function pgWant3d(){try{var W=window.GMAPWIRE;return !!(W&&W.avail()&&W.pref()==='1');}catch(e){return false;}}
-function pg2dHtml(){ /* 3D关/不可用时的停靠2D降级（保留 3D GRID 回切钮=data-gmw走既有捕获链） */
-  var can3d=false;try{can3d=!!(window.GMAPWIRE&&GMAPWIRE.avail());}catch(e){}
-  return '<div class="pg-2dwrap">'
-    +'<div class="pg-sw">'+(can3d?'<span class="pg-swb" data-gmw="sw3d">3D GRID</span>':'')+'<span class="pg-swb pg-on">2D MAP</span></div>'
-    +'<div class="pg-2dmap">'+(typeof mapSvg==='function'?mapSvg():'')+'</div>'
-    +'<div class="pg-2dnote">S9 TACMAP // NEWPORT GRID'+(can3d?'——3D GRID 即回三维':'（3D不可用：SAFE/低配降级）')+'</div>'
-  +'</div>';
+function pgWant3d(){try{var W=window.GMAPWIRE;return !!(W&&W.avail());}catch(e){return false;}} /* 恒3D：可用即3D（2D/3D切换偏好开关已废除） */
+function pgNoglHtml(){ /* 降级链终点：WebGL失败/SAFEM/gits_3d_off→终端风占位面板（保底移驾功能不丢，非SVG地图） */
+  var td='';try{var p=currentPanel();td=String((p&&p.world&&p.world['时地'])||'');}catch(e){}
+  var cur=null;try{cur=playerLoc();}catch(e){}
+  var ls=(typeof ZJ_LOCS!=='undefined'&&ZJ_LOCS)?ZJ_LOCS:[];
+  var rows=ls.map(function(L){
+    var here=!!(cur&&cur.name===L.name);
+    return '<div class="gm-noglpIt" data-gmw="noglgo" data-gmn="'+esc(L.name)+'" title="'+esc(L.note||'')+'">'+(here?'◉ ':'· ')+esc(L.name)+(L.note?' <i>'+esc(L.note)+'</i>':'')+'</div>';
+  }).join('');
+  return '<div class="gm-noglp"><div class="gm-noglpHd">MAP OFFLINE ─ 3D描画不可</div>'
+    +'<div class="gm-noglpLoc">◇时地 '+esc(td||(cur?cur.name:'—'))+'</div>'
+    +'<div>地点一覧（点击=预填移驾敕令）</div>'+rows+'</div>';
 }
 function pgMapDockHtml(desktop){
   pgCss();
   return '<div id="pgMapDock" class="pg-mapdock">'
-    +(pgWant3d()?'':pg2dHtml())
+    +(pgWant3d()?'':pgNoglHtml())
     +(desktop?'<div class="pg-expbtn" data-pgx="expand" title="临时放大成大窗">⤢ 展开</div>':'')
   +'</div>';
 }
@@ -5411,9 +5390,9 @@ function pgSync(){ /* render 整树重建后的停靠同步：单点挂载守卫
     }
     return;
   }
-  if(!pgWant3d())return; /* 2D偏好/3D不可用：容器里已渲染 .pg-2dwrap 降级 */
+  if(!pgWant3d())return; /* 3D不可用：容器里已渲染 .gm-noglp 占位面板 */
   MP.mount(host);
-  try{var _f2d=host.querySelector('.pg-2dwrap');if(_f2d&&_f2d.parentNode)_f2d.parentNode.removeChild(_f2d);}catch(e){}
+  try{var _fb=host.querySelector('.gm-noglp');if(_fb&&_fb.parentNode)_fb.parentNode.removeChild(_fb);}catch(e){}
   var lazy=false;try{lazy=isMobile()&&S.tab!=='gear';}catch(e){} /* 手机：首次滑到第3页才起动3D */
   if(!MP.isOpen()&&!lazy){
     try{MP.setNodes(W&&W.nodes?W.nodes():null);}catch(e){}
@@ -6288,76 +6267,74 @@ function newsBox(cw,newsImg){
     var i=t.search(/[，、：·]/);var hd='',tx=t;
     if(i>0&&i<=13){hd=t.slice(0,i).trim();tx=t.slice(i+1).trim();}
     if(tx&&'。！？…」』.'.indexOf(tx.slice(-1))<0)tx+='。';
-    return (hd?'<b style="color:#2b2318;font-weight:700">'+esc(hd)+'</b>——':'')+esc(tx);
+    return (hd?'<b style="color:var(--t-a1,#ffcf7d);font-weight:700">'+esc(hd)+'</b>──':'')+esc(tx);
   }
-  function secHd(t,sub){return '<div style="margin:13px 0 6px"><div style="display:flex;align-items:center;gap:9px"><span style="flex:1;height:1px;background:rgba(74,64,50,.4)"></span><span class="kai" style="font-size:12.5px;letter-spacing:.3em;color:#b9d6c6;white-space:nowrap;font-weight:700">'+t+'</span><span style="flex:1;height:1px;background:rgba(74,64,50,.4)"></span></div>'+(sub?'<div style="text-align:center;font-size:7.5px;letter-spacing:.3em;color:#9a8d72;font-family:var(--fMono);margin-top:2px">'+sub+'</div>':'')+'</div>';}
+  function secHd(t,sub){return '<div style="margin:13px 0 6px;font-family:var(--fMono)"><div style="display:flex;align-items:center;gap:8px"><span style="flex:1;height:1px;background:var(--t-g4,#12583a)"></span><span style="font-size:11.5px;letter-spacing:.3em;color:var(--t-g2,#3ddc84);white-space:nowrap">── '+t+' ──</span><span style="flex:1;height:1px;background:var(--t-g4,#12583a)"></span></div>'+(sub?'<div style="text-align:center;font-size:7.5px;letter-spacing:.3em;color:var(--t-g3,#1e9e5c);margin-top:2px">'+sub+'</div>':'')+'</div>';}
 
   function gazClip(id){
-    var _s=String(id),_h=0,_i;for(_i=0;_i<_s.length;_i++)_h=((_h*31+_s.charCodeAt(_i))>>>0);
-    var mode=_h%2,w=70;
+    var w=70;
     var ov=function(css){return '<div style="position:absolute;inset:0;pointer-events:none;'+css+'"></div>';};
-    var film=SAFEM?(ov('background:rgba(90,60,26,.14);mix-blend-mode:multiply')+ov('background:radial-gradient(120% 96% at 50% 44%,transparent 44%,rgba(28,16,8,.6) 100%)')):(ov('background:rgba(20,74,82,.30);mix-blend-mode:screen')
-      +ov('background:radial-gradient(120% 90% at 50% 30%,rgba(214,150,86,.22),transparent 60%);mix-blend-mode:screen')
-      +ov('background:rgba(150,54,96,.16);mix-blend-mode:soft-light')
-      +ov('background:radial-gradient(circle at 88% 8%,rgba(232,150,70,.5),transparent 42%);mix-blend-mode:screen')
-      +ov('background:radial-gradient(120% 96% at 50% 44%,transparent 40%,rgba(28,16,8,.7) 100%)')
-      +ov('background:url('+GAZ_GRAIN+');background-size:64px 64px;opacity:.24;mix-blend-mode:overlay')
-      +ov('box-shadow:inset 0 0 20px rgba(24,14,6,.55)'));
+    /* CRT显像管处理：磷光绿罩(screen)+扫描线+黑暗角+轻色差；SAFEM=纯绿罩静态 */
+    var crt=SAFEM?ov('background:rgba(61,220,132,.22);mix-blend-mode:screen')
+      :(ov('background:rgba(61,220,132,.24);mix-blend-mode:screen')
+      +ov('background:repeating-linear-gradient(0deg,rgba(0,0,0,.30) 0 1px,transparent 1px 3px)')
+      +ov('background:linear-gradient(90deg,rgba(255,79,216,.08),transparent 20%,transparent 80%,rgba(125,255,176,.10));mix-blend-mode:screen')
+      +ov('background:radial-gradient(120% 96% at 50% 44%,transparent 50%,rgba(0,0,0,.68) 100%)')
+      +ov('background:url('+GAZ_GRAIN+');background-size:64px 64px;opacity:.14;mix-blend-mode:overlay')
+      +ov('box-shadow:inset 0 0 16px rgba(0,0,0,.6)'));
     var inner=id?'<div data-img="'+esc(id)+'" style="width:'+w+'px;aspect-ratio:2/3;display:block"></div>':'<div style="width:'+w+'px;aspect-ratio:2/3;display:block;background:#0b0d16 url(core/res/vn/gaz_default.webp?v=1) center/cover"></div>';
-    var ph='<div style="position:relative;width:'+w+'px;overflow:hidden;filter:sepia(.30) contrast(1.24) brightness(1.05) saturate(.62)">'+inner+film+'</div>';
-    var frame='<div style="border:1px solid rgba(74,64,50,.5);padding:3px 3px 6px;background:#f3ecd9;box-shadow:2px 4px 8px rgba(40,30,20,.4)">'+ph+'<div style="font-size:6px;letter-spacing:.1em;color:#8a7c62;text-align:center;margin-top:2px">现场速写</div></div>';
-    var es='<div style="position:absolute;top:-2px;left:50%;margin-left:-7px;width:14px;height:6px;border-radius:50%;background:radial-gradient(circle,rgba(28,16,8,.5),rgba(28,16,8,0));z-index:2"></div>';
-    var pin='<img src="'+GAZ_PIN+'" alt="" style="position:absolute;top:-20px;left:50%;margin-left:-7px;height:28px;filter:drop-shadow(1px 1px 1.5px rgba(30,20,10,.5));z-index:4;pointer-events:none">';
-    var clip='<div style="position:relative;display:inline-block;transform:rotate('+(mode?'2.5deg':'-3deg')+')">'+frame+es+pin+'</div>';
-    return '<div style="text-align:center;margin:20px 0 4px">'+clip+'</div>';
+    var ph='<div style="position:relative;width:'+w+'px;overflow:hidden;filter:saturate(.35) contrast(1.18) brightness(.94)">'+inner+crt+'</div>';
+    var frame='<div style="border:1px solid var(--t-g4,#12583a);padding:3px 3px 5px;background:#020604;box-shadow:0 0 9px rgba(61,220,132,.14),inset 0 0 6px rgba(61,220,132,.08)">'+ph+'<div style="font-family:var(--fMono);font-size:6px;letter-spacing:.16em;color:var(--t-g3,#1e9e5c);text-align:center;margin-top:2px">▸ VISUAL FEED</div></div>';
+    var clip='<div style="position:relative;display:inline-block">'+frame+'</div>';
+    return '<div style="text-align:center;margin:14px 0 4px">'+clip+'</div>';
   }
-  var mast='<div style="text-align:center;padding:1px 0 6px">'
-    +'<div style="font-size:8px;letter-spacing:.32em;color:#8a7c62;font-family:var(--fMono)">▚ PUBLIC SECURITY SECTION 9 ❧</div>'
-    +'<div class="kai" style="font-size:21px;letter-spacing:.14em;color:#241d12;font-weight:700;margin:3px 0 1px;text-shadow:0 1px 0 rgba(255,255,255,.5)">新浜市電脑公報</div>'
-    +'<div style="font-size:8.5px;letter-spacing:.28em;color:#6f6250;font-family:var(--fMono)">S9 // NET FEED</div>'
+  var mast='<div style="text-align:center;padding:1px 0 6px;font-family:var(--fMono)">'
+    +'<div style="font-size:8px;letter-spacing:.32em;color:var(--t-g3,#1e9e5c)">▚ PUBLIC SECURITY SECTION 9 ▞</div>'
+    +'<div style="font-size:16.5px;letter-spacing:.18em;color:var(--t-g1,#7dffb0);font-weight:700;margin:4px 0 2px;text-shadow:0 0 7px rgba(125,255,176,.4)">▚ 新浜市電脑公報 ▞</div>'
+    +'<div style="font-size:8.5px;letter-spacing:.28em;color:var(--t-a2,#ffb000)">─── S9 // NET FEED ───</div>'
     +'</div>'
-    +'<div style="display:flex;justify-content:space-between;align-items:center;font-size:8.5px;letter-spacing:.05em;color:#7a6d58;padding:5px 1px;border-top:2px solid rgba(74,64,50,.55);border-bottom:1px solid rgba(74,64,50,.5)">'
-      +'<span>'+(date?esc(date):'西历')+'</span>'
-      +'<span style="letter-spacing:.22em;color:#5a4e3c">号　外</span>'
-      +'<span>'+(stance?esc(stance):'新浜市')+' · 号外</span>'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;font-family:var(--fMono);font-size:8.5px;letter-spacing:.08em;color:var(--t-g3,#1e9e5c);padding:5px 1px;border-top:3px double var(--t-g2,#3ddc84);border-bottom:1px solid var(--t-g4,#12583a)">'
+      +'<span style="color:var(--t-g2,#3ddc84)">RX '+(date?esc(date):'----.--.--')+'</span>'
+      +'<span style="letter-spacing:.22em;color:var(--t-a1,#ffcf7d)">▸ 号外</span>'
+      +'<span>'+(stance?esc(stance):'新浜市')+'</span>'
     +'</div>';
-  var subline=(place||wind)?'<div style="text-align:center;font-size:9px;letter-spacing:.1em;color:#8a7c62;padding:5px 4px 1px">'+esc([place,wind].filter(Boolean).join('　｜　'))+'</div>':'';
+  var subline=(place||wind)?'<div style="text-align:center;font-family:var(--fMono);font-size:9px;letter-spacing:.1em;color:var(--t-g3,#1e9e5c);padding:5px 4px 1px">▸ '+esc([place,wind].filter(Boolean).join(' ▸ '))+'</div>':'';
 
   var newsBlock='';
   if(zj||wind){
     newsBlock='<div style="margin-top:8px">'
-      +'<div style="text-align:center;font-size:8px;letter-spacing:.42em;color:#9a2a2c;font-family:var(--fMono);margin-bottom:3px">SITUATION</div>'
-      +'<div class="kai" style="font-size:15px;line-height:1.3;text-align:center;color:#2b2318;font-weight:700;letter-spacing:.02em;margin-bottom:6px">政 局 速 览</div>'
-      +(cap!=null?'<div style="display:flex;align-items:center;gap:8px;font-size:10px;color:#5a4e3c;margin-bottom:6px"><span style="letter-spacing:.16em;color:#7a6d58;flex:none">资本</span><span style="flex:1;height:6px;border-radius:99px;overflow:hidden;background:rgba(74,64,50,.18)"><i style="display:block;height:100%;width:'+cap+'%;background:linear-gradient(90deg,#8f6a1e,#c9a063)"></i></span><span style="flex:none;font-weight:700;color:#8f6a1e">'+cap+'</span></div>':'')
-      +(wind?'<div style="font-size:12px;line-height:1.78;color:#453b2c;text-align:justify"><span class="kai" style="float:left;font-size:2.4em;line-height:.8;font-weight:700;color:#8f6a1e;margin:3px 5px -2px 0">'+esc(wind.slice(0,1))+'</span>'+esc(wind.slice(1))+'</div>':'')
+      +'<div style="text-align:center;font-size:8px;letter-spacing:.42em;color:var(--t-a2,#ffb000);font-family:var(--fMono);margin-bottom:3px">SITUATION</div>'
+      +'<div style="font-family:var(--fMono);font-size:12.5px;line-height:1.3;text-align:center;color:var(--t-g2,#3ddc84);letter-spacing:.18em;margin-bottom:6px">── 政局速覽 ──</div>'
+      +(cap!=null?'<div style="display:flex;align-items:center;gap:8px;font-family:var(--fMono);font-size:10px;color:var(--t-g3,#1e9e5c);margin-bottom:6px"><span style="letter-spacing:.16em;flex:none">资本</span><span style="flex:1;height:6px;overflow:hidden;background:rgba(18,88,58,.3);border:1px solid var(--t-g4,#12583a)"><i style="display:block;height:100%;width:'+cap+'%;background:linear-gradient(90deg,var(--t-a3,#8f6a1e),var(--t-a2,#ffb000))"></i></span><span style="flex:none;font-weight:700;color:var(--t-a1,#ffcf7d)">'+cap+'</span></div>':'')
+      +(wind?'<div style="font-size:12px;line-height:1.78;color:var(--t-g1b,#a8e8c4);text-align:justify"><span style="font-family:var(--fMono);color:var(--t-a2,#ffb000)">▸ </span>'+esc(wind)+'</div>':'')
       +'</div>';
   }else{
-    newsBlock='<div style="text-align:center;color:#8a7d66;padding:14px 0 4px"><div class="kai" style="font-size:15px;letter-spacing:.14em;color:#4a4030">静 候 后 文</div><div style="font-size:11px;letter-spacing:.12em;margin-top:5px">行过一轮即录</div></div>';
+    newsBlock='<div style="text-align:center;font-family:var(--fMono);color:var(--t-g3,#1e9e5c);padding:14px 0 4px"><div style="font-size:13px;letter-spacing:.2em;color:var(--t-g2,#3ddc84)">── STANDBY ──</div><div style="font-size:11px;letter-spacing:.12em;margin-top:5px">行过一轮即录</div></div>';
   }
 
   var worldBlock='';
   if(clues.length){
     worldBlock=secHd('線 索 速 報','LEADS')
-      +'<div style="font-size:10.5px;line-height:1.72;color:#493d2d">'
-      +clues.map(function(t){return '<div style="break-inside:avoid;margin-bottom:6px;padding-left:10px;border-left:2px solid rgba(143,106,30,.5)">'+esc(t)+'</div>';}).join('')
+      +'<div style="font-size:10.5px;line-height:1.72;color:var(--t-g1b,#a8e8c4)">'
+      +clues.map(function(t){return '<div style="break-inside:avoid;margin-bottom:6px;padding-left:10px;border-left:1px solid var(--t-g4,#12583a)"><span style="font-family:var(--fMono);color:var(--t-a2,#ffb000)">◆ </span>'+esc(t)+'</div>';}).join('')
       +'</div>';
   }
   var meter='';
   if(expo!=null){
     var pct=Math.max(0,Math.min(100,expo));var fl=Math.round(pct/10);var sq='';
-    for(var s2=0;s2<10;s2++)sq+='<span style="color:'+(s2<fl?'#9a2a2c':'#cbbb9c')+'">'+(s2<fl?'■':'□')+'</span>';
-    meter='<div style="display:flex;align-items:center;gap:8px;margin-top:9px;padding-top:8px;border-top:1px solid rgba(74,64,50,.28);font-size:10px;color:#5a4e3c"><span style="letter-spacing:.16em;color:#7a6d58;flex:none">曝光风险</span><span style="letter-spacing:1.5px;font-size:9px;flex:1">'+sq+'</span><span style="flex:none">曝光 '+pct+'</span></div>';
+    for(var s2=0;s2<10;s2++)sq+='<span style="color:'+(s2<fl?'var(--t-r1,#ff5c5c)':'var(--t-g4,#12583a)')+'">'+(s2<fl?'■':'□')+'</span>';
+    meter='<div style="display:flex;align-items:center;gap:8px;margin-top:9px;padding-top:8px;border-top:1px solid var(--t-g4,#12583a);font-family:var(--fMono);font-size:10px;color:var(--t-g3,#1e9e5c)"><span style="letter-spacing:.16em;flex:none">曝光风险</span><span style="letter-spacing:1.5px;font-size:9px;flex:1">'+sq+'</span><span style="flex:none;color:var(--t-a1,#ffcf7d)">曝光 '+pct+'</span></div>';
   }
 
   var jiangBlock='';
   if(stance){
-    jiangBlock='<div style="margin-top:11px;text-align:center;font-size:9.5px;letter-spacing:.24em;color:#9a2a2c">態 勢 · '+esc(stance)+'</div>';
+    jiangBlock='<div style="margin-top:11px;text-align:center;font-family:var(--fMono);font-size:9.5px;letter-spacing:.24em;color:var(--t-a2,#ffb000)">▸ 態勢 · '+esc(stance)+'</div>';
   }
 
-  var foot='<div style="text-align:center;font-size:8.5px;letter-spacing:.2em;color:#9a8d72;margin-top:11px;padding-top:7px;border-top:1px solid rgba(74,64,50,.3)">— 发布于新浜市 · 公安九課情报科 —</div>';
+  var foot='<div style="text-align:center;font-family:var(--fMono);font-size:8.5px;letter-spacing:.2em;color:var(--t-g3,#1e9e5c);margin-top:11px;padding-top:7px;border-top:1px solid var(--t-g4,#12583a)">─ 发布于新浜市 · 公安九課情报科 ─</div>';
 
   var photoStd=newsImg?gazClip(newsImg):'';
-  return '<div style="border:1px solid rgba(74,64,50,.42);border-radius:5px;background:linear-gradient(180deg,#f4eddb,#e7ddc4);box-shadow:inset 0 0 26px rgba(120,100,60,.15),inset 0 1px 0 rgba(255,255,255,.55),0 3px 10px rgba(18,40,27,.24);padding:12px 13px;position:relative;overflow:hidden">'
+  return '<div style="border:1px solid var(--t-g4,#12583a);border-radius:0;background:var(--t-bg1,#07120c);box-shadow:inset 0 0 22px rgba(61,220,132,.07),0 0 8px rgba(61,220,132,.08);padding:12px 13px;position:relative;overflow:hidden">'
     +mast+subline+newsBlock+worldBlock+photoStd+meter+jiangBlock+foot+'</div>';
 }
 function sidebar(){
@@ -6685,22 +6662,22 @@ function gameView(){
   }
   var body;
   if(mob){
-    /*GITS-DOCK 三页横滑：実況(默认)/診断/地図・装備 */
-    var _tabDefs=[['story','実況'],['panel','診断'],['gear','地図・装備']];
+    /*GITS-DOCK 三页横滑：地図・装備(0)↔実況(1,默认落地)↔診断(2) */
+    var _tabDefs=[['gear','地図・装備'],['story','実況'],['panel','診断']];
     var _tabBar=(TABISLE
         ? '<div id="zjTabWrap" style="position:absolute;left:0;right:0;bottom:calc(11px + env(safe-area-inset-bottom));z-index:6;pointer-events:none"><div id="zjTabBar" style="pointer-events:auto;position:relative;margin:0 auto;width:272px;height:34px;display:flex;align-items:center;border-radius:99px;background:linear-gradient(0deg,rgba(7,18,12,.5),rgba(7,18,12,.2));-webkit-backdrop-filter:blur(13px) saturate(150%);backdrop-filter:blur(13px) saturate(150%);box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 4px 16px rgba(18,40,27,.22)">'
           +_tabDefs.map(function(t){var on=S.tab===t[0];return '<div class="btn" data-tab="'+t[0]+'" id="zjTab_'+t[0]+'" style="flex:1;position:relative;z-index:1;text-align:center;cursor:pointer;font-family:var(--kai);font-size:13px;letter-spacing:.08em;white-space:nowrap;color:'+(on?'var(--gold2)':'var(--mut)')+';text-shadow:'+(on?'0 0 12px rgba(61,220,132,.7),0 0 5px rgba(61,220,132,.5),0 1px 0 rgba(255,255,255,.6)':'0 1px 0 rgba(255,255,255,.55)')+';transition:color .25s,text-shadow .25s">'+t[1]+'</div>';}).join('')
-          +'<span id="zjTabBall" style="position:absolute;top:50%;left:'+(S.tab==='panel'?'50%':S.tab==='gear'?'83.333%':'16.666%')+';width:7px;height:7px;border-radius:50%;background:radial-gradient(circle,#c9ffe2,#7dffb0);transform:translate(-50%,-50%);animation:zjIsleGlow 2.4s ease-in-out infinite;pointer-events:none;z-index:0;transition:left .3s cubic-bezier(.32,.72,0,1)"></span>'
+          +'<span id="zjTabBall" style="position:absolute;top:50%;left:'+(S.tab==='story'?'50%':S.tab==='panel'?'83.333%':'16.666%')+';width:7px;height:7px;border-radius:50%;background:radial-gradient(circle,#c9ffe2,#7dffb0);transform:translate(-50%,-50%);animation:zjIsleGlow 2.4s ease-in-out infinite;pointer-events:none;z-index:0;transition:left .3s cubic-bezier(.32,.72,0,1)"></span>'
           +'</div></div>'
         : '<div id="zjTabWrap" style="position:absolute;left:10px;right:10px;bottom:calc(8px + env(safe-area-inset-bottom));z-index:6;pointer-events:none"><div class="glass" style="pointer-events:auto;position:relative;max-width:420px;margin:0 auto;height:50px;display:flex;padding:6px;border-radius:99px">'
-          +'<div id="zjTabPill" class="zjPillHl" style="top:6px;bottom:6px;width:calc(33.333% - 8px);left:'+(S.tab==='panel'?'calc(33.333% + 3px)':S.tab==='gear'?'calc(66.666% + 1px)':'6px')+';border-radius:99px;transition:left .3s cubic-bezier(.32,.72,0,1)"></div>'
+          +'<div id="zjTabPill" class="zjPillHl" style="top:6px;bottom:6px;width:calc(33.333% - 8px);left:'+(S.tab==='story'?'calc(33.333% + 3px)':S.tab==='panel'?'calc(66.666% + 1px)':'6px')+';border-radius:99px;transition:left .3s cubic-bezier(.32,.72,0,1)"></div>'
           +_tabDefs.map(function(t){var on=S.tab===t[0];return '<div class="btn" data-tab="'+t[0]+'" style="flex:1;position:relative;z-index:1;display:flex;align-items:center;justify-content:center;cursor:pointer;font-family:var(--kai);font-size:14px;letter-spacing:.08em;white-space:nowrap;color:'+(on?'var(--gold2)':'var(--mut)')+';transition:color .25s">'+t[1]+'</div>';}).join('')+'</div></div>');
     body='<div id="zjPager" class="grow" style="position:relative;min-height:0;overflow:hidden">'
       +'<div id="zjPagerBg" style="position:absolute;inset:0;z-index:0;pointer-events:none;background:rgba(7,18,12,var(--zjbga,.3));-webkit-backdrop-filter:blur(var(--zjblur,9px)) saturate(180%);backdrop-filter:blur(var(--zjblur,9px)) saturate(180%)"></div>'
       +'<div id="zjTrack" style="display:flex;height:100%;width:300%;position:relative;z-index:1;transform:translateX('+(-(typeof pgIdx==='function'?pgIdx(S.tab):0)*33.3333)+'%)">'
+        +'<div class="zjPage" data-page="gear" style="flex:0 0 33.3333%;height:100%;position:relative;overflow:hidden">'+(window.PGDOCK?window.PGDOCK.gearHtml():'')+'</div>'
         +'<div class="zjPage" data-page="story" style="flex:0 0 33.3333%;height:100%;position:relative;overflow:hidden">'+storyPane()+'</div>'
         +'<div class="zjPage" data-page="panel" style="flex:0 0 33.3333%;height:100%;position:relative;overflow:hidden">'+sidebar()+'</div>'
-        +'<div class="zjPage" data-page="gear" style="flex:0 0 33.3333%;height:100%;position:relative;overflow:hidden">'+(window.PGDOCK?window.PGDOCK.gearHtml():'')+'</div>'
       +'</div>'
       +_tabBar
       +'</div>';
@@ -6812,17 +6789,6 @@ function introBody(){
      +'<div style="font-size:12.5px;line-height:1.85;color:var(--mut2);margin-top:3px"><b style="color:var(--grn2)">会遇到：</b>'+o[5]+'</div>'
      +'</div>';
   }).join('');
-  var mapPieces=(typeof ZJ_LOCS!=='undefined'?ZJ_LOCS:[]).map(function(L){
-    var sym;
-    if(L.kind==='cap')sym='<span style="font-size:14px;line-height:1;color:#7a5f28;text-shadow:0 0 3px #f8f2df,0 1px 1px rgba(18,40,27,.4)">★</span>';
-    else if(L.kind==='sea')sym='<span style="font-size:13px;line-height:1;color:#1e9e5c;font-weight:700;text-shadow:0 0 3px #f2e8cf">≈</span>';
-    else if(L.kind==='pass')sym='<span style="color:#ffb000;font-size:11px;line-height:11px;font-weight:700">✕</span>';
-    else sym='<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#fbf6ea;border:1.5px solid #4a4032;box-shadow:0 1px 2px rgba(18,40,27,.4)"></span>';
-    var lbl='<div style="font-size:9px;letter-spacing:.04em;line-height:1.1;color:#b9d6c6;text-shadow:0 0 3px #f2e8cf,0 0 3px #f2e8cf,0 0 4px #f2e8cf;white-space:nowrap">'+esc(L.name)+'</div>';
-    var symd='<div style="height:12px;display:flex;align-items:center;justify-content:center">'+sym+'</div>';
-    return '<div style="position:absolute;left:'+(L.x/10)+'%;top:'+(L.y/7.07)+'%;transform:translate(-50%,'+(L.la==='n'?'calc(-100% + 6px)':'-6px')+');width:74px;text-align:center;z-index:2">'+(L.la==='n'?lbl+symd:symd+lbl)+'</div>';
-  }).join('');
-  var mapHtml='<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid rgba(74,64,50,.3);border-radius:10px;margin:2px 0 6px"><div style="position:relative;min-width:700px;aspect-ratio:1000/707;background:radial-gradient(ellipse at 50% 50%,transparent 62%,rgba(18,40,27,.16) 100%),linear-gradient(160deg,#f2e8cd,#e6d9b6 55%,#eee2c4)">'+(typeof mapSvg==='function'?mapSvg():'')+mapPieces+'</div></div>';
   var GZ=function(title,color,items){return '<div style="margin:10px 0 3px;font-size:13.5px;color:'+color+';font-weight:700;letter-spacing:.06em">'+title+'</div>'+items.map(function(it){return '<div style="font-size:12.5px;line-height:1.82;color:var(--ink2);margin:3px 0"><b style="color:var(--gold3)">'+it[0]+'</b> — '+it[1]+'</div>';}).join('');};
   var tier1=[
    ['新浜市（ニューポートシティ）','沿岸人工都市、核战后日本的暂定首都；公安9課本部所在，全篇的主战场。'],
@@ -6876,9 +6842,6 @@ function introBody(){
    +H('十四个开局','挑一个开始')
    +P('前十个以<b style="color:var(--gold)">草薙素子</b>为主视角（含一段办公室日常与一个自由沙盒）；后四个让你换一双眼睛，扮演<b style="color:var(--gold)">巴特 / 陀古萨 / 荒卷 / Fuchikoma</b>。')
    +cards
-   +H('新浜市 · 広域図')
-   +P('故事的舞台是沿岸人工都市新浜市与它周边的近海。下面就是游戏里的広域図（进游戏后点右上「图」，还能拖动标记亲赴各地，当作一回合行动）。')
-   +mapHtml
    +H('地点 · 由主到次')
    +P('按剧情分量排个序：主舞台新浜市 → 近海与法外之地 → 只在背景里出现的列国与网络。')
    +GZ('① 最重要 · 主舞台（新浜市圏）','#8f6a1e',tier1)
@@ -6888,8 +6851,8 @@ function introBody(){
    +'</div></div>';
 }
 function overlayView(){
-  var title=S.overlay==='intro'?'任务简报 [BRIEFING] · 新手导览':S.overlay==='codex'?'資料庫 [DB] · 世界书':S.overlay==='map'?'舆图 [MAP]':S.overlay==='equip'?'装 备 舱 [ORDNANCE] · 军械科':S.overlay==='case'?'案 件 盘 [CASE BOARD] · 侦办中枢':S.overlay==='caseReport'?'結案報告書 [CASE FILE · CLOSED]':S.overlay==='preset'?'自定义预设':S.overlay==='api'?'AI 接口设置':S.overlay==='jpsb'?'日文沙盒':S.overlay==='set'?'设 置':S.overlay==='mem'?'长程记忆 · 编年长卷':'存 档'; /*GITS-CASE 案件盘/结案报告书标题位*/
-  var inner=S.overlay==='intro'?introBody():S.overlay==='codex'?codexBody():S.overlay==='map'?mapBody():S.overlay==='equip'?equipBody():S.overlay==='case'?caseBody():S.overlay==='caseReport'?caseReportBody():S.overlay==='preset'?presetBody():S.overlay==='api'?apiBody():S.overlay==='jpsb'?jpsbBody():S.overlay==='set'?setBody():S.overlay==='mem'?memBody():savesBody(); /*GITS-CASE*/
+  var title=S.overlay==='intro'?'任务简报 [BRIEFING] · 新手导览':S.overlay==='codex'?'資料庫 [DB] · 世界书':S.overlay==='equip'?'装 备 舱 [ORDNANCE] · 军械科':S.overlay==='case'?'案 件 盘 [CASE BOARD] · 侦办中枢':S.overlay==='caseReport'?'結案報告書 [CASE FILE · CLOSED]':S.overlay==='preset'?'自定义预设':S.overlay==='api'?'AI 接口设置':S.overlay==='jpsb'?'日文沙盒':S.overlay==='set'?'设 置':S.overlay==='mem'?'长程记忆 · 编年长卷':'存 档'; /*GITS-CASE 案件盘/结案报告书标题位*/
+  var inner=S.overlay==='intro'?introBody():S.overlay==='codex'?codexBody():S.overlay==='equip'?equipBody():S.overlay==='case'?caseBody():S.overlay==='caseReport'?caseReportBody():S.overlay==='preset'?presetBody():S.overlay==='api'?apiBody():S.overlay==='jpsb'?jpsbBody():S.overlay==='set'?setBody():S.overlay==='mem'?memBody():savesBody(); /*GITS-CASE*/
   return '<div id="zjOvWrap" style="position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:14px">'
     +'<div id="zjOvDim" data-act="closeov" class="fade" style="position:absolute;inset:0;background:radial-gradient(120% 100% at 50% 40%,rgba(30,24,15,.14),rgba(18,13,8,.28));-webkit-backdrop-filter:blur(3px) saturate(115%);backdrop-filter:blur(3px) saturate(115%)"></div>'
     +'<div data-stop="1" id="zjOvBox" class="glass" style="--glassTint:.58;-webkit-backdrop-filter:url(#glassR) blur(7px) saturate(165%) brightness(1.04);backdrop-filter:url(#glassR) blur(7px) saturate(165%) brightness(1.04);position:relative;width:min(1060px,96vw);height:min(720px,92vh);display:flex;flex-direction:column;overflow:hidden">'
@@ -6962,170 +6925,7 @@ function movePlayerTo(name){
   S.overlay=null;
   sendText('（起行——我自'+cur.name+'动身前往'+L.name+'，'+L.note+'。此回合我只是赶路：请描写沿途见闻与抵达'+L.name+'时的景象，并将时地更新为'+L.name+'。）');
 }
-var ZJ_SVG=null;
-function mapSvg(){
-  if(ZJ_SVG)return ZJ_SVG;
-  function P(d,f,s,w,extra){return '<path d="'+d+'" fill="'+f+'" stroke="'+(s||'none')+'"'+(w?' stroke-width="'+w+'"':'')+(extra||'')+'></path>';}
-  function poly(pts){var d='M'+pts[0]+' '+pts[1];for(var i=2;i<pts.length;i+=2)d+='L'+pts[i]+' '+pts[i+1];return d+'Z';}
-  function line(pts){var d='M'+pts[0]+' '+pts[1];for(var i=2;i<pts.length;i+=2)d+='L'+pts[i]+' '+pts[i+1];return d;}
-  var INK='#4a4032';
-  /* 共用边界（首尾与海岸缝合） */
-  var RP=[350,248,356,262,352,276,360,290,356,304,362,318,358,332,363,346,358,360,362,374,355,388,347,402,339,416,331,430,323,444,317,458,315,470];
-  var RC=[149,456,162,460,176,455,190,461,204,456,218,462,232,457,246,463,260,458,274,464,288,460,300,466,315,470];
-  var CP=[315,470,320,484,316,498,322,512,318,518];
-  var CE=[318,518,312,532,317,546,311,560,316,574,310,588,314,600];
-  var SB=[153,608,160,602,174,596,188,591,202,597,216,592,230,598,244,593,258,599,272,594,286,600,300,594,314,600];
-  var HF=[244,593,240,608,246,624,240,640,247,656,252,672];
-  var FG=[314,600,320,614,316,628,322,640,324,643];
-  var PS=[318,518,334,512,350,517,366,511,382,516,398,510,414,515,430,509,446,514,462,508,478,513,494,507,500,509,510,512,526,506,540,511,552,505,560,500];
-  var GZ=[446,514,452,538,447,562,453,586,448,610,452,634];
-  var ZS=[500,509,496,538,501,564,495,590,500,616,500,643];
-  var SD=[560,500,556,514,561,536,555,558,560,582,556,602,560,614];
-  var CD=[560,500,576,506,592,512,608,518,626,522,644,524,660,524];
-  var PC=[559,252,556,270,561,286,555,302,560,318,554,334,559,350,553,366,558,382,552,398,557,414,551,430,556,446,550,462,555,478,552,490,560,500];
-  var HC=[559,252,566,247,580,242,598,236,616,228,630,216,636,200,631,184,637,168,632,152,638,136,633,120,639,104,644,95];
-  var NCOAST=[138,258,152,250,168,255,184,248,200,253,216,247,232,252,248,246,264,251,280,245,296,250,310,246,324,249,338,244,350,248];
-  var WCOAST_R=[149,456,154,440,148,424,153,408,147,392,152,376,146,360,151,344,145,328,150,312,144,296,149,280,143,266,138,258];
-  var WCOAST_C=[153,608,158,592,152,576,157,560,151,544,156,528,150,512,155,496,150,480,154,468,149,456];
-  var PCOAST=[350,248,362,256,376,261,390,257,404,263,418,259,432,265,446,261,460,266,474,262,488,267,502,263,516,268,530,264,542,269,552,266,559,252];
-  var HZS=[559,252,552,240,536,244,522,238,508,243,494,237,480,242,466,236,452,241,438,235,424,240,410,234,398,238,391,240,383,231];
-  var HZW=[383,231,387,219,382,205,386,190,381,175,385,160,380,145,384,130,380,116,385,104,392,96];
-  var HZN=[392,96,410,101,428,94,446,100,464,93,482,99,500,93,518,99,536,93,554,98,572,92,590,98,608,92,626,98,644,95];
-  var CCN=[644,95,662,99,680,93,698,99,716,93,734,99,752,94,770,100,788,95,806,101,824,96,842,102,858,97,872,106,880,120];
-  var CCE=[880,120,886,138,882,156,887,174,883,192,888,210,884,228,878,246,882,262,874,280,866,296,854,312,844,326,830,342,818,356,802,372,788,384,770,396,752,406,734,414,718,424,706,436,696,450,688,462,682,474,674,486,668,498,664,510,660,524];
-  var DCOAST=[660,524,658,540,661,556,655,570,648,583,639,595,628,604,614,611,600,607,586,613,572,609,560,614];
-  var SCOAST_S=[560,614,548,622,532,628,516,636,500,643];
-  var SCOAST_Z=[500,643,484,648,468,641,452,634];
-  var SCOAST_G=[452,634,436,627,420,620,404,614,388,619,372,625,356,631,340,637,324,643];
-  var SCOAST_F=[324,643,308,637,292,644,278,652,266,662,252,672];
-  var SCOAST_H=[252,672,236,678,220,671,204,675,190,666,176,655,166,643,158,630,154,616,153,608];
-  function rev(a){var o=[];for(var i=a.length-2;i>=0;i-=2){o.push(a[i],a[i+1]);}return o;}
-  function cat(){var o=[];for(var i=0;i<arguments.length;i++)o=o.concat(arguments[i]);return o;}
-  /* 国家多边形 */
-  var pRoselia=poly(cat(NCOAST,RP,rev(RC),WCOAST_R.slice(2)));
-  var pPlumenia=poly(cat(PCOAST,PC.slice(2),rev(PS),rev(CP).slice(2),rev(RP).slice(2)));
-  var pCasa=poly(cat(RC,CP.slice(2),CE.slice(2),rev(SB).slice(2),WCOAST_C.slice(2)));
-  var pHydra=poly(cat(SB.slice(0,16),HF.slice(2),SCOAST_H));
-  var pFree=poly(cat(SB.slice(14),FG.slice(2),SCOAST_F,rev(HF).slice(2)));
-  var pGerb=poly(cat(PS.slice(0,18),GZ.slice(2),SCOAST_G,rev(FG).slice(2),rev(CE).slice(2)));
-  var pZeph=poly(cat(PS.slice(16,26),ZS.slice(2),SCOAST_Z,rev(GZ).slice(2)));
-  var pSalv=poly(cat(PS.slice(24),SD.slice(2),SCOAST_S,rev(ZS).slice(2)));
-  var pDahl=poly(cat(CD,DCOAST.slice(2),rev(SD).slice(2)));
-  var pHez=poly(cat(HZS,HZW.slice(2),HZN.slice(2),rev(HC).slice(2)));
-  var pCroc=poly(cat(HC,CCN.slice(2),CCE.slice(2),rev(CD).slice(2),rev(PC).slice(2)));
-  var pLilia='M64 96L78 84L94 76L108 66L124 57L140 52L154 58L166 52L176 62L179 76L171 88L177 102L169 116L174 130L166 144L171 158L162 172L166 186L155 197L141 192L129 201L114 206L100 198L88 190L92 176L80 168L84 152L73 144L77 128L66 120L70 106Z';
-  var pEnclave='M672 486L678 492L676 504L668 512L662 506L664 494Z';
-  var pChurch='M696 448L706 452L708 464L700 474L690 470L686 458Z';
-  var pIsles='M726 556L738 548L752 551L760 560L754 570L740 573L728 568Z';
-  var s='<svg viewBox="0 0 1000 707" preserveAspectRatio="none" style="position:absolute;inset:0;width:100%;height:100%">';
-  s+='<defs>'
-    +'<pattern id="zjPmD" width="6" height="6" patternUnits="userSpaceOnUse"><rect width="6" height="6" fill="#ddd1ad"></rect><circle cx="1.6" cy="1.6" r=".75" fill="rgba(74,64,50,.3)"></circle></pattern>'
-    +'<pattern id="zjHzD" width="7" height="7" patternUnits="userSpaceOnUse"><rect width="7" height="7" fill="#cfc09b"></rect><path d="M0 7L7 0" stroke="rgba(74,64,50,.3)" stroke-width="1"></path></pattern>'
-    +'<pattern id="zjCcS" width="5" height="5" patternUnits="userSpaceOnUse"><rect width="5" height="5" fill="#e8debd"></rect><rect width="5" height="1.1" y="1" fill="rgba(74,64,50,.16)"></rect></pattern>'
-    +'<pattern id="zjLlX" width="6" height="6" patternUnits="userSpaceOnUse"><rect width="6" height="6" fill="#d8cba6"></rect><path d="M0 0L6 6M6 0L0 6" stroke="rgba(74,64,50,.24)" stroke-width=".8"></path></pattern>'
-    +'<filter id="zjSh" x="-4%" y="-4%" width="108%" height="108%"><feDropShadow dx="1.5" dy="2.5" stdDeviation="2.2" flood-color="rgba(18,40,27,.4)"></feDropShadow></filter>'
-    +'</defs>';
-  /* 海 */
-  s+='<rect x="14" y="12" width="972" height="683" fill="#ded2ae"></rect>';
-  var wv='';[[52,182],[84,228],[58,432],[92,532],[70,662],[214,222],[300,158],[338,108],[250,120],[698,562],[762,612],[846,548],[948,204],[936,424],[952,650],[512,688],[906,96]].forEach(function(c){wv+='<path d="M'+c[0]+' '+c[1]+' q6 -5 12 0 t12 0" fill="none" stroke="rgba(90,110,130,.22)" stroke-width="1.2"></path>';});
-  s+=wv;
-  /* 陆地（整体投影） */
-  s+='<g filter="url(#zjSh)">'
-    +P(pCroc,'url(#zjCcS)',INK,1.3)
-    +P(pHez,'url(#zjHzD)',INK,1.3)
-    +P(pPlumenia,'url(#zjPmD)',INK,1.3)
-    +P(pRoselia,'#f8f2df',INK,1.3)
-    +P(pCasa,'#c9b992',INK,1.3)
-    +P(pHydra,'#eee3c4',INK,1.1)+P(pFree,'#dfd3b0',INK,1.1)+P(pGerb,'#e9dec0',INK,1.1)+P(pZeph,'#dcd0ac',INK,1.1)+P(pSalv,'#e5dabb',INK,1.1)+P(pDahl,'#d7cba6',INK,1.1)
-    +P(pLilia,'url(#zjLlX)',INK,1.3)
-    +'<circle cx="185" cy="112" r="3" fill="url(#zjLlX)" stroke="'+INK+'"></circle><circle cx="188" cy="126" r="2" fill="url(#zjLlX)" stroke="'+INK+'"></circle>'
-    +'<circle cx="360" cy="244" r="3.2" fill="#e6dcc0" stroke="'+INK+'"></circle><circle cx="367" cy="239" r="2.4" fill="#e6dcc0" stroke="'+INK+'"></circle><circle cx="373" cy="234" r="2" fill="#e6dcc0" stroke="'+INK+'"></circle><circle cx="364" cy="250" r="1.8" fill="#e6dcc0" stroke="'+INK+'"></circle>'
-    +P(pIsles,'url(#zjLlX)',INK,1.1)+'<circle cx="768" cy="576" r="3.5" fill="url(#zjLlX)" stroke="'+INK+'"></circle><circle cx="720" cy="545" r="2.5" fill="url(#zjLlX)" stroke="'+INK+'"></circle>'
-    +P(pEnclave,'url(#zjLlX)',INK,1.1)
-    +P(pChurch,'#b7a67d',INK,1.2)
-    +'</g>';
-  /* 新浜市区界（虚线）：环状区带 + 辐条 + 外区 */
-  var DS='fill="none" stroke="rgba(90,76,56,.5)" stroke-width=".7" stroke-dasharray="3 2.5"';
-  s+='<circle cx="218" cy="337" r="16" '+DS+'></circle>'
-    +'<path d="M218 256C262 260 298 296 307 342C313 380 276 412 232 418C186 424 148 400 142 356C136 312 170 260 218 256Z" '+DS+'></path>';
-  [[210,323,180,270],[226,323,256,270],[233,332,290,312],[234,341,300,362],[225,352,252,408],[213,352,196,410],[204,345,148,376],[202,334,140,324]].forEach(function(a){s+='<path d="M'+a[0]+' '+a[1]+'L'+a[2]+' '+a[3]+'" '+DS+'></path>';});
-  [[310,246,314,264,308,282,314,298],[314,298,332,303,351,304],[332,303,340,318,336,334,342,350,338,366,343,382,347,402],[273,289,308,282],[240,264,275,255,310,246],[180,270,150,262],[148,430,166,436,184,431,202,437,216,432,228,424],[230,420,242,440,246,463],[276,412,288,436,296,460,300,466]].forEach(function(a){s+='<path d="'+line(a)+'" '+DS+'></path>';});
-  /* 大国内部纹理线 */
-  var DS2='fill="none" stroke="rgba(90,76,56,.32)" stroke-width=".7" stroke-dasharray="3 2.5"';
-  [[420,262,430,300,424,340,432,380,426,420,432,460,428,500],[360,376,420,384,480,378,540,386,556,382],[700,100,694,180,700,260,692,330,682,380],[780,110,786,190,778,270,764,330],[455,100,448,160,455,230],[540,96,534,160,540,236]].forEach(function(a){s+='<path d="'+line(a)+'" '+DS2+'></path>';});
-  /* 山脉：管制区边界 + 南方岛链交界 */
-  var mt='';[[357,300],[362,318],[356,336],[361,354],[355,372],[359,390],[302,470],[314,476],[326,468]].forEach(function(c){mt+='<path d="M'+(c[0]-7)+' '+c[1]+' l7 -10 l7 10" fill="none" stroke="#6b5c44" stroke-width="1.2"></path><path d="M'+(c[0]-3)+' '+c[1]+' l3 -4.5 l3 4.5" fill="none" stroke="rgba(107,92,68,.55)" stroke-width=".9"></path>';});
-  s+=mt;
-  /* 国名 */
-  function TX(x,y,t,fs,ls,fill,style){return '<text x="'+x+'" y="'+y+'" text-anchor="middle" font-size="'+fs+'" letter-spacing="'+ls+'" fill="'+(fill||'rgba(63,54,40,.85)')+'" style="font-family:var(--kai),serif;'+(style||'')+'">'+t+'</text>';}
-  s+=TX(218,376,'日本',14,4,'rgba(63,54,40,.5)')
-    +TX(462,300,'大陆連邦',17,7)
-    +TX(240,572,'南洋同盟',15,5)
-    +TX(120,104,'合众国',11,2)
-    +TX(478,152,'択捉島',16,10)
-    +TX(748,208,'極东通商圏',17,9)
-    ;
-  /* 区名（小） */
-  var ST='rgba(107,92,68,.9)';
-  s+=TX(145,317,'湾岸区',8.5,0,ST)+TX(228,280,'中央区',8.5,0,ST)+TX(184,382,'旧城区',8.5,0,ST)+TX(290,412,'新都心',8.5,0,ST)+TX(222,420,'南新浜区',8.5,0,ST);
-  /* 图例 */
-  s+='<rect x="40" y="318" width="82" height="112" fill="rgba(244,236,214,.88)" stroke="'+INK+'" stroke-width="1"></rect>'
-    +'<rect x="44" y="322" width="74" height="104" fill="none" stroke="rgba(74,64,50,.35)"></rect>'
-    +'<text x="54" y="345" text-anchor="middle" font-size="11" fill="#7a5f28">★</text><text x="64" y="345" font-size="10" fill="#b9d6c6" style="font-family:var(--kai),serif">首都</text>'
-    +'<circle cx="54" cy="366" r="4" fill="#fbf6ea" stroke="'+INK+'" stroke-width="1.4"></circle><text x="64" y="370" font-size="10" fill="#b9d6c6" style="font-family:var(--kai),serif">城邑</text>'
-    +'<path d="M49 386l10 10M59 386l-10 10" stroke="#ffb000" stroke-width="1.6"></path><text x="64" y="395" font-size="10" fill="#b9d6c6" style="font-family:var(--kai),serif">要冲</text>'
-    +'<text x="54" y="420" text-anchor="middle" font-size="13" font-weight="700" fill="#1e9e5c">≈</text><text x="64" y="419" font-size="10" fill="#b9d6c6" style="font-family:var(--kai),serif">海路</text>';
-  /* 罗盘 */
-  s+='<g opacity=".8"><path d="M915 611L920 630L939 635L920 640L915 659L910 640L891 635L910 630Z" fill="rgba(61,220,132,.5)" stroke="'+INK+'" stroke-width=".8"></path>'
-    +'<path transform="rotate(45 915 635)" d="M915 622L918 632L928 635L918 638L915 648L912 638L902 635L912 632Z" fill="rgba(61,220,132,.3)"></path>'
-    +'<circle cx="915" cy="635" r="2.6" fill="#4a4032"></circle>'
-    +'<text x="915" y="604" text-anchor="middle" font-size="13" fill="#1e9e5c" font-family="serif">N</text></g>';
-  /* 题签 + 印 */
-  s+='<rect x="698" y="614" width="180" height="58" fill="rgba(244,236,214,.85)" stroke="'+INK+'" stroke-width="1.2"></rect>'
-    +'<rect x="704" y="620" width="168" height="46" fill="none" stroke="rgba(74,64,50,.35)"></rect>'
-    +TX(788,646,'新浜市広域圏',16,6,'#3f3628')
-    +TX(788,661,'西历2030 · 义体と網の时代',8.5,2,'rgba(107,92,68,.9)')
-    +'<g transform="rotate(-5 940 70)" opacity=".85"><rect x="908" y="36" width="64" height="68" fill="rgba(255,176,0,.5)" rx="3"></rect><rect x="913" y="41" width="54" height="58" fill="none" stroke="rgba(168,232,196,.35)"></rect><text x="940" y="65" text-anchor="middle" fill="#efdcba" font-size="21" font-family="serif">九</text><text x="940" y="91" text-anchor="middle" fill="#efdcba" font-size="21" font-family="serif">課</text></g>';
-  /* 边框与角饰 */
-  s+='<rect x="14" y="12" width="972" height="683" fill="none" stroke="rgba(61,220,132,.35)" stroke-width="2.5"></rect><rect x="22" y="20" width="956" height="667" fill="none" stroke="rgba(61,220,132,.18)"></rect>';
-  [[26,24,1,1],[974,24,-1,1],[26,683,1,-1],[974,683,-1,-1]].forEach(function(c){
-    var x=c[0],y=c[1],sx=c[2],sy=c[3];
-    s+='<path d="M'+x+' '+(y+sy*34)+' L'+x+' '+y+' L'+(x+sx*34)+' '+y+'" fill="none" stroke="rgba(61,220,132,.4)" stroke-width="2.5"></path>'
-      +'<path d="M'+(x+sx*8)+' '+(y+sy*34)+' L'+(x+sx*8)+' '+(y+sy*8)+' L'+(x+sx*34)+' '+(y+sy*8)+'" fill="none" stroke="rgba(61,220,132,.22)" stroke-width="1.5"></path>';
-  });
-  s+=TX(500,52,'新 浜 市 広 域 圏',24,16,'rgba(61,220,132,.22)','opacity:.9')
-    +'</svg>';
-  ZJ_SVG=s;return s;
-}
-function mapBody(){
-  var p=currentPanel();var era=p?[p.world['时地']].filter(Boolean).join(' · '):'西历2030 · 义体と網の时代';
-  var cur=playerLoc();
-  var pend=S.movePending?locByName(S.movePending):null;
-  var kpos=pend||cur;
-  var pieces=ZJ_LOCS.map(function(L){
-    var here=L.name===cur.name;
-    var sym;
-    if(L.kind==='cap')sym='<span style="font-size:15px;line-height:1;color:#7a5f28;text-shadow:0 0 3px #f8f2df,0 1px 1px rgba(18,40,27,.4)">★</span>';
-    else if(L.kind==='sea')sym='<span style="font-size:14px;line-height:1;color:#1e9e5c;font-weight:700;text-shadow:0 0 3px #f2e8cf">≈</span>';
-    else if(L.kind==='pass')sym='<span style="position:relative;display:inline-block;width:11px;height:11px"><span style="position:absolute;inset:0;color:#ffb000;font-size:11px;line-height:11px;font-weight:700">✕</span></span>';
-    else sym='<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#fbf6ea;border:1.5px solid #4a4032;box-shadow:0 1px 2px rgba(18,40,27,.4)"></span>';
-    var lbl='<div style="font-size:9.5px;letter-spacing:.06em;line-height:1.15;color:'+(here?'#7dffb0':'#b9d6c6')+';font-weight:'+(here?'700':'400')+';text-shadow:0 0 3px #f2e8cf,0 0 3px #f2e8cf,0 0 4px #f2e8cf;white-space:nowrap">'+esc(L.name)+'</div>';
-    var symd='<div style="height:13px;display:flex;align-items:center;justify-content:center" title="'+esc(L.note)+'">'+sym+'</div>';
-    return '<div data-loc="'+esc(L.name)+'" style="position:absolute;left:'+(L.x/10)+'%;top:'+(L.y/7.07)+'%;transform:translate(-50%,'+(L.la==='n'?'calc(-100% + 7px)':'-7px')+');width:74px;text-align:center;pointer-events:none;z-index:2">'
-      +(here?'<div style="position:absolute;left:50%;'+(L.la==='n'?'bottom:1px':'top:6px')+';transform:translate(-50%,'+(L.la==='n'?'50%':'-50%')+');width:22px;height:22px;border-radius:50%;border:1.5px solid rgba(143,116,48,.85);box-shadow:0 0 10px rgba(143,116,48,.5)"></div>':'')
-      +(L.la==='n'?lbl+symd:symd+lbl)+'</div>';
-  }).join('');
-  var king=(pend?'<div style="position:absolute;left:'+(pend.x/10)+'%;top:'+(pend.y/7.07)+'%;transform:translate(-50%,-50%);width:62px;height:62px;border-radius:50%;border:2px dashed rgba(61,220,132,.75);box-shadow:0 0 26px rgba(180,30,45,.38);z-index:4;pointer-events:none"></div>':'')
-    +'<div id="zjKing" title="拖动御印亲赴其地" style="position:absolute;left:'+(kpos.x/10)+'%;top:'+(kpos.y/7.07)+'%;transform:translate(-50%,-50%);width:40px;height:40px;border-radius:50%;cursor:grab;touch-action:none;z-index:5;background:radial-gradient(circle at 34% 30%,#c0303a,#7a0e15 72%);border:2px solid rgba(168,232,196,.8);box-shadow:inset 0 0 0 3px #5a0a10, inset 0 0 0 4px rgba(168,232,196,.4), 0 6px 16px rgba(120,20,30,.55), 0 0 22px rgba(180,30,45,.42);display:flex;align-items:center;justify-content:center">'
-    +'<span class="kai" style="font-size:19px;color:#f7ecd8;text-shadow:0 1px 2px #3a0a10;pointer-events:none">素</span></div>';
-  return '<div class="col grow" style="min-height:0">'
-    +'<div style="flex:none;display:flex;align-items:center;gap:14px;padding:10px 18px;border-bottom:1px solid rgba(61,220,132,.15);flex-wrap:wrap"><span style="font-size:12.5px;color:#1e9e5c;letter-spacing:.05em">舆图行军 —— 拖动红色御印至任一地点，即为亲赴其地，当作一回合行动</span><div class="grow"></div><span style="font-size:12px;color:var(--gold)">'+esc(era)+'</span></div>'
-    +'<div class="grow" style="overflow:auto;padding:12px"><div id="zjBoard" style="position:relative;min-width:760px;width:100%;max-width:1000px;margin:0 auto;aspect-ratio:1000/707;background:radial-gradient(ellipse at 50% 50%,transparent 62%,rgba(18,40,27,.16) 100%),linear-gradient(160deg,#f2e8cd,#e6d9b6 55%,#eee2c4)">'+mapSvg()+pieces+king+'</div></div>'
-    +(pend
-      ?'<div style="flex:none;display:flex;align-items:center;gap:12px;padding:9px 18px;border-top:1px solid rgba(255,176,0,.35);background:rgba(255,176,0,.1);flex-wrap:wrap"><span class="kai" style="font-size:14.5px;color:var(--gold3);letter-spacing:.05em">前往 '+esc(pend.name)+'？</span><span style="font-size:12px;color:#1e9e5c">'+esc(pend.note)+' · 此举将耗去一回合</span><div class="grow"></div><button data-act="moveYes" class="gbtn btn" style="font-size:13.5px;letter-spacing:.18em;padding:7px 20px">确认前往</button><button data-act="moveNo" class="obtn btn" style="font-size:13px;letter-spacing:.15em;padding:7px 16px">收回</button></div>'
-      :'<div id="zjMapHint" style="flex:none;padding:8px 18px;font-size:12px;letter-spacing:.08em;color:#1e9e5c;border-top:1px solid rgba(61,220,132,.12)">当前所在：'+esc(cur.name)+' · '+esc(cur.note)+'</div>')
-    +'</div>';
-}
+/* 2D SVG舆图已废除：地图=3D GRID（GITS-MAP3D），降级=.gm-noglp 终端占位面板（PGDOCK） */
 function savesBody(){
   var rows=S.saves.map(function(sv){return '<div style="display:flex;align-items:center;gap:12px;border:1px solid rgba(61,220,132,.2);background:rgba(255,255,255,.015);padding:12px 15px;margin-bottom:9px;flex-wrap:wrap"><span class="kai" style="font-size:16px;color:var(--gold3)">'+esc(sv.scene)+'</span><span style="font-size:12px;color:var(--gold)">'+esc(sv.era)+'</span><span style="font-size:12px;color:var(--mut)">第 '+sv.turns+' 回合</span><div class="grow"></div><span style="font-size:11px;color:#1e9e5c">'+esc(sv.time)+'</span><button data-load="'+sv.id+'" class="obtn btn" style="font-size:12.5px;letter-spacing:.12em;padding:6px 15px">读取</button><button data-del="'+sv.id+'" class="btn" style="font-size:12.5px;letter-spacing:.12em;padding:6px 15px;background:transparent;border:1px solid rgba(255,176,0,.35);color:#ffb000">删除</button></div>';}).join('');
   if(!rows)rows='<div style="text-align:center;padding:38px 0;font-size:13px;letter-spacing:.3em;color:#1e9e5c">尚无手动存档</div>';
@@ -8290,44 +8090,7 @@ root.addEventListener('change',function(e){
     }catch(err){S.imgSetMsg='导入失败：'+String(err&&err.message||err).slice(0,80);S.imgSetMsgC='var(--red2)';renderOverlay();}};
     lrd.readAsText(lf);return;}
 });
-/* 棋子拖拽 */
-var DRAG=null;
-function dropTarget(x,y,w,h){
-  var best=null,bd=1e9;
-  for(var i=0;i<ZJ_LOCS.length;i++){var L=ZJ_LOCS[i];
-    var dx=(x-L.x/1000)*w,dy=(y-L.y/707)*h,d=Math.sqrt(dx*dx+dy*dy);
-    if(d<bd){bd=d;best=L;}}
-  return bd<=38?best:null;
-}
-root.addEventListener('pointerdown',function(e){
-  var k=e.target&&e.target.closest?e.target.closest('#zjKing'):null;
-  if(!k)return;
-  var board=document.getElementById('zjBoard');if(!board)return;
-  e.preventDefault();
-  try{k.setPointerCapture(e.pointerId);}catch(err){}
-  DRAG={k:k,board:board};
-  k.style.cursor='grabbing';k.style.zIndex='9';
-});
-root.addEventListener('pointermove',function(e){
-  if(!DRAG)return;
-  var r=DRAG.board.getBoundingClientRect();
-  var x=Math.max(0,Math.min(1,(e.clientX-r.left)/r.width)),y=Math.max(0,Math.min(1,(e.clientY-r.top)/r.height));
-  DRAG.k.style.left=(x*100)+'%';DRAG.k.style.top=(y*100)+'%';
-  var t=dropTarget(x,y,r.width,r.height);
-  var hint=document.getElementById('zjMapHint');
-  if(hint)hint.textContent=t?('前往：'+t.name+' · '+t.note):'执印而行……松手择地';
-});
-function dragEnd(e,commit){
-  if(!DRAG)return;
-  var r=DRAG.board.getBoundingClientRect();
-  var x=(e.clientX-r.left)/r.width,y=(e.clientY-r.top)/r.height;
-  var t=commit?dropTarget(x,y,r.width,r.height):null;
-  DRAG=null;
-  if(t&&!S.thinking&&t.name!==playerLoc().name){S.movePending=t.name;}
-  render();
-}
-root.addEventListener('pointerup',function(e){dragEnd(e,true);});
-root.addEventListener('pointercancel',function(e){dragEnd(e,false);});
+/* 2D舆图棋子拖拽已废除（移驾=3D节点/占位面板点击→预填敕令管线） */
 root.addEventListener('change',function(e){
   if(e.target&&e.target.id==='zjTtsAuto'){TTS.auto=!!e.target.checked;ttsSave();return;}
   if(e.target&&e.target.id==='zjDlgPick'){var pD2=DLGC;DLGC=e.target.value||'#7dffb0';dlgApply(pD2);return;}
@@ -8611,9 +8374,9 @@ function zenToggle(){
     }
   }
 }
-/*GITS-DOCK 三页横滑状态机：頁序 実況(story,默认落地)↔診断(panel)↔地図・装備(gear) */
-var PG_TABS=['story','panel','gear'];
-function pgIdx(tb){var i=PG_TABS.indexOf(tb);return i<0?0:i;}
+/*GITS-DOCK 三页横滑状态机：頁序 地図・装備(gear,0)↔実況(story,1,默认落地)↔診断(panel,2) */
+var PG_TABS=['gear','story','panel'];
+function pgIdx(tb){var i=PG_TABS.indexOf(tb);return i<0?1:i;} /* 未知tab落回実況(1) */
 function pagerW(){var pg=document.getElementById('zjPager');return pg?(pg.clientWidth||1):1;}
 function updateTabHl(ntb){var _i=pgIdx(ntb);var ball=document.getElementById('zjTabBall');if(ball)ball.style.left=['16.666%','50%','83.333%'][_i];var pill=document.getElementById('zjTabPill');if(pill)pill.style.left=['6px','calc(33.333% + 3px)','calc(66.666% + 1px)'][_i];[].forEach.call(document.querySelectorAll('#zjPager [data-tab]'),function(el){var on=el.getAttribute('data-tab')===ntb;el.style.color=on?'var(--gold2)':'var(--mut)';if(el.id)el.style.textShadow=on?'0 0 12px rgba(61,220,132,.7),0 0 5px rgba(61,220,132,.5),0 1px 0 rgba(255,255,255,.6)':'0 1px 0 rgba(255,255,255,.55)';});}
 function pagerSnap(idx,stag){idx=Math.max(0,Math.min(PG_TABS.length-1,idx|0));var track=document.getElementById('zjTrack');var ntb=PG_TABS[idx]||'story';if(!track){S.tab=ntb;return;}var pg=document.getElementById('zjPager');if(pg)pg.classList.add('zjSliding');var W=pagerW(),was=S.tab;track.style.transition='transform .34s cubic-bezier(.32,.72,0,1)';track.style.transform='translateX('+(-idx*W)+'px)';S.tab=ntb;updateTabHl(ntb);try{if(ntb==='gear'&&window.PGDOCK)window.PGDOCK.sync();}catch(ePd){}function done(){track.style.transition='';track.style.willChange='';if(pg)pg.classList.remove('zjSliding');track.removeEventListener('transitionend',done);}track.addEventListener('transitionend',done);setTimeout(done,460);}
@@ -8705,7 +8468,7 @@ root.addEventListener('click',function(e){
       if(t.getAttribute('data-dev')){S.device=t.getAttribute('data-dev');savePref();render();codexPills();setPills();return;}
       if(t.getAttribute('data-tab')){swipeTab(t.getAttribute('data-tab'));return;}
       if(t.getAttribute('data-jpact')){var jk9=t.getAttribute('data-jpact');readJpForm();JPCFG[jk9]=!JPCFG[jk9];jpcfgSave();renderOverlay();return;}
-      if(t.getAttribute('data-ov')){if(morphBusy)return;var ovK=t.getAttribute('data-ov');var ovWas=S.overlay;S.overlay=ovK;S.movePending=null;S.apiMsg=null;S.jpMsg=null;S.wipeArm=false;try{var _vr9=document.getElementById('vnRoot');if(_vr9)_vr9.style.display='none';var _vp9=document.getElementById('vnPill');if(_vp9)_vp9.style.display='none';}catch(e9){}
+      if(t.getAttribute('data-ov')){if(morphBusy)return;var ovK=t.getAttribute('data-ov');var ovWas=S.overlay;S.overlay=ovK;S.apiMsg=null;S.jpMsg=null;S.wipeArm=false;try{var _vr9=document.getElementById('vnRoot');if(_vr9)_vr9.style.display='none';var _vp9=document.getElementById('vnPill');if(_vp9)_vp9.style.display='none';}catch(e9){}
         if(ovWas){renderOverlay();codexPills();setPills();return;}
         var ovTmp=document.createElement('div');ovTmp.innerHTML=overlayView();
         if(ovTmp.firstChild)root.appendChild(ovTmp.firstChild);
@@ -8963,7 +8726,7 @@ root.addEventListener('click',function(e){
       else if(a==='imgLoreExport'){try{syncImgForm();var glb=new Blob([JSON.stringify(IMGLORE,null,2)],{type:'application/json'});var glu=URL.createObjectURL(glb);var gla=document.createElement('a');gla.href=glu;gla.download='攻壳生图世界书.json';document.body.appendChild(gla);gla.click();document.body.removeChild(gla);setTimeout(function(){URL.revokeObjectURL(glu);},4000);}catch(e){}return;}
       else if(a==='imgRefClear'){IMGCFG.refImg=null;imgCfgSave();S.imgSetMsg='参考图已移除';S.imgSetMsgC='var(--mut2)';renderOverlay();return;}
       else if(a==='histmore'){S.histShow=(S.histShow||30)+30;S._stayTop=true;S._noFade=true;render();return;}
-      else if(a==='closeov'){var cvk=S.overlay;var dm=document.getElementById('zjOvDim');if(dm){dm.style.pointerEvents='none';dm.style.webkitBackdropFilter='none';dm.style.backdropFilter='none';if(dm.animate)dm.animate([{opacity:1},{opacity:0}],{duration:280,easing:'ease',fill:'forwards'});dm.style.transition='opacity 280ms';dm.style.opacity='0';}zjWglOff();morphClose('zjOvBox','[data-ov="'+cvk+'"]',function(){S.overlay=null;S.movePending=null;var ow=document.getElementById('zjOvWrap');if(ow&&ow.parentNode)ow.parentNode.removeChild(ow);else render();});}
+      else if(a==='closeov'){var cvk=S.overlay;var dm=document.getElementById('zjOvDim');if(dm){dm.style.pointerEvents='none';dm.style.webkitBackdropFilter='none';dm.style.backdropFilter='none';if(dm.animate)dm.animate([{opacity:1},{opacity:0}],{duration:280,easing:'ease',fill:'forwards'});dm.style.transition='opacity 280ms';dm.style.opacity='0';}zjWglOff();morphClose('zjOvBox','[data-ov="'+cvk+'"]',function(){S.overlay=null;var ow=document.getElementById('zjOvWrap');if(ow&&ow.parentNode)ow.parentNode.removeChild(ow);else render();});}
       else if(a==='isleHide'){try{localStorage.setItem('gits_isle_hide','1');}catch(e){}S.isleBig=false;S.worldFull=false;S._noFade=true;render();}
       else if(a==='isleBig'||a==='isleSmall'){
         var bfI=document.getElementById('zjSceneIsle');var bfR=bfI&&bfI.getBoundingClientRect();
@@ -9112,8 +8875,6 @@ root.addEventListener('click',function(e){
       else if(a==='pMaster'){if(PRESET){PRESET.on=!PRESET.on;presetSave();render();}}
       else if(a==='pClear'){PRESET=null;presetSave();S.pMsg='预设已移除';render();}
       else if(a==='pImport'){var ptx=document.getElementById('zjPresetText');importPresetText(ptx?ptx.value:'','粘贴的预设');}
-      else if(a==='moveYes'){var mp=S.movePending;S.movePending=null;if(mp)movePlayerTo(mp);}
-      else if(a==='moveNo'){S.movePending=null;render();}
       return;
     }
     t=t.parentNode;

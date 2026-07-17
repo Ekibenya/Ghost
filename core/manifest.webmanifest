@@ -1,0 +1,9 @@
+{
+  "name": "攻殻機動隊",
+  "short_name": "攻殻機動隊",
+  "description": "你即草薙素子，公安9课由 AI 扮演。2029年新浜市，电脑化时代的攻性组织纪事。",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#050807",
+  "theme_color": "#050807"
+}

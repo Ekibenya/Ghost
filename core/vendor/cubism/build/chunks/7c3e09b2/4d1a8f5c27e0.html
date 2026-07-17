@@ -42,7 +42,7 @@ function zjFontApply(){
 zjFontApply();
 </script>
 <script>
-/* 3D 背景装载器【插槽】：三叶版三色旗布料已停用；UI 线若启用 3D 背景，在此恢复装载（双源回退骨架见 git 史） */
+/* 3D 背景装载器【插槽】：旧版 3D 布料背景已停用；UI 线若启用 3D 背景，在此恢复装载（双源回退骨架见 git 史） */
 (function(){
   window.__ZJ3D_OFF__=true;window.__THREE_OK__=false;return; /* 硬停用：不加载 three.js */
   try{if(localStorage.getItem('gits_3d_off')==='1'){window.__ZJ3D_OFF__=true;return;}}catch(e){}
@@ -672,7 +672,7 @@ var TABISLE=true;try{TABISLE=localStorage.getItem('gits_tabisle')!=='0';}catch(e
 /* 【实验】顶栏液态玻璃：默认开——顶部一整排（纪年地点/切换/全屏/设置…归）去掉各自方框，只在顶上铺一层液态玻璃渐变。
    与毛玻璃不同：强饱和+提亮的通透质感 + 高光条纹 + 亮边镜面。设置·显可一键切回旧的分框样式。 */
 var LIQGLASS=false;try{LIQGLASS=localStorage.getItem('gits_liqglass')==='1';}catch(e){} /* OPS.TERM：液态玻璃顶栏默认停用（终端无磨砂） */
-/* 正文国旗背景:默认关——进入游戏后停掉三色旗 WebGL,换蓝蔷薇静态图,省 GPU/电;设置·显可开(性能要求高) */
+/* 正文动态背景:默认关——进入游戏后停掉 3D 背景 WebGL,换静态背景图,省 GPU/电;设置·显可开(性能要求高) */
 var GAMEFLAG=false;try{GAMEFLAG=localStorage.getItem('gits_gameflag')==='1';}catch(e){}
 function zjBgSync(){
   try{
@@ -686,7 +686,7 @@ try{if(!document.getElementById('zjLiqRefract'))document.body.insertAdjacentHTML
 function sendIcon(s){s=s||30;return '<svg viewBox="0 0 24 24" width="'+s+'" height="'+s+'" style="display:block"><circle cx="12" cy="12" r="11" fill="var(--gold2)"/><path d="M12 17.2V7.6M12 7.2l-4.3 4.3M12 7.2l4.3 4.3" fill="none" stroke="#f6f0e2" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';}
 function micIcon(s,active){s=s||22;var c=active?'#ff5c5c':'currentColor';return '<svg viewBox="0 0 24 24" width="'+s+'" height="'+s+'" fill="'+(active?'#ff5c5c':'none')+'" stroke="'+c+'" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="display:block"><rect x="9" y="2.5" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0" fill="none"/><path d="M12 17.5V21M8.5 21h7" fill="none"/></svg>';}var GL={done:false,tries:0};
 function glInit(){
-  /* 【空插槽】三叶版三色旗布料开幕已整段移除（原 M:L451-697 WebGL 布料模拟）。
+  /* 【空插槽】旧版 3D 布料背景开幕已整段移除（原 M:L451-697 WebGL 布料模拟）。
      接口契约保留：GL={done,tries}；封面 3D 背景由 UI 线重新实现时在此填充，
      渲染目标 canvas 为 #zjGL，低配旗 LOWFX / 崩溃安全 SAFEM 需接入，GL.applyLow(low) 可选导出。 */
   GL.done=true;
@@ -695,7 +695,7 @@ function glInit(){
 
 /* ---------------- BGM: 幕间音乐迷你播放器 ---------------- */
 var BGM_TRACKS=[
-  /* 【插槽】三叶版法语歌单已清空；曲目结构：{t:'曲名',a:'艺人',src:'core/res/data/idx/v1/<hash>.dat',s0:起播秒(可选)}
+  /* 【插槽】旧版法语歌单已清空；曲目结构：{t:'曲名',a:'艺人',src:'core/res/data/idx/v1/<hash>.dat',s0:起播秒(可选)}
      伪装路径手法保留（音频以 .dat 存放、fetch→blob 防直链），UI/内容线定稿攻壳歌单后在此填充。 */
 ];
 var BGM={idx:0,playing:false,el:null,started:false,t0:0,_ls:0};
@@ -1430,7 +1430,7 @@ window.addEventListener('message',function(e){
   if(!ok)return;
   var val=null;
   try{
-    if(d.fn==='getChatMessages'){var rng=d.args[0];var msgs=S.history.map(function(h,ix){return {message_id:ix,role:h.role==='user'?'user':'assistant',name:h.role==='user'?'三叶':'物语',is_hidden:false,message:h.text};});
+    if(d.fn==='getChatMessages'){var rng=d.args[0];var msgs=S.history.map(function(h,ix){return {message_id:ix,role:h.role==='user'?'user':'assistant',name:h.role==='user'?'素子':'物语',is_hidden:false,message:h.text};});
       if(typeof rng==='number')val=[msgs[rng<0?msgs.length+rng:rng]].filter(Boolean);
       else if(typeof rng==='string'&&rng!=='all'){var pr=String(rng).split('-');var a0=parseInt(pr[0],10)||0;var b0=pr[1]!=null?(parseInt(pr[1],10)||0):a0;val=msgs.slice(a0,b0+1);}
       else val=msgs;}
@@ -1547,7 +1547,7 @@ function cardImportJson(obj){
   var d=obj&&(obj.data||obj);
   if(!d||typeof d!=='object'||!(d.name||d.description||d.first_mes)){S.loreMsg='无法识别：不是角色卡（需 SillyTavern V2/V3 卡，或含 name/description 的 JSON）';if(S.overlay)renderOverlay();else render();return;}
   var name=String(d.name||'无名角色').trim().slice(0,24)||'无名角色';
-  function cf(sx){return String(sx||'').split('{{char}}').join(name).split('{{user}}').join('三叶').trim();}
+  function cf(sx){return String(sx||'').split('{{char}}').join(name).split('{{user}}').join('素子').trim();}
   var parts=[];
   if(d.description)parts.push(cf(d.description));
   if(d.personality)parts.push('【性格】'+cf(d.personality));
@@ -1694,7 +1694,7 @@ function jpsbBody(){
   var dual=JPCFG.mode==='dual';
   return '<div class="grow bambooV" style="overflow-y:auto;padding:22px 26px">'
    +'<div style="max-width:680px;margin:0 auto">'
-   +'<div style="font-size:13px;color:var(--ink2);line-height:1.95">让 AI 的思考与创作全程在纯日文环境中进行：<b style="color:var(--gold2);font-weight:600">①</b>玩家输入和訳 → <b style="color:var(--gold2);font-weight:600">②</b>日文构思 → <b style="color:var(--gold2);font-weight:600">③</b>日文正文草稿（写在思考标签内，游戏中实时直播于顶部灵动岛）→ <b style="color:var(--gold2);font-weight:600">④</b>以经典日译中腔调译出中文正文。文风对齐《みつばものがたり》原作，生成量约为平时的二至三倍。</div>'
+   +'<div style="font-size:13px;color:var(--ink2);line-height:1.95">让 AI 的思考与创作全程在纯日文环境中进行：<b style="color:var(--gold2);font-weight:600">①</b>玩家输入和訳 → <b style="color:var(--gold2);font-weight:600">②</b>日文构思 → <b style="color:var(--gold2);font-weight:600">③</b>日文正文草稿（写在思考标签内，游戏中实时直播于顶部灵动岛）→ <b style="color:var(--gold2);font-weight:600">④</b>以经典日译中腔调译出中文正文。文风对齐《攻殻機動隊》原作与2026年动画，生成量约为平时的二至三倍。</div>'
    +card(sec('总开关')
      +'<div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center">'+chip('data-act="jpsbTog"',JPSB,JPSB?'✓ 日文沙盒 · 已开启':'日文沙盒 · 已关闭')+'</div>'
      +note('聊天模式下自动绕过；封面与设置页的开关与此处同步。'))
@@ -1725,10 +1725,10 @@ function buildSystem(history,userInput){
   if(pre.length)arr.push('【玩家预设】\n'+pre.join('\n\n'));
   var cr=S.customRole;
   arr.push(
-    '你是近世欧陆角色扮演游戏的世界叙事引擎，严格执行以下角色卡：',
+    '你是近未来赛博朋克（攻壳机动队式）角色扮演游戏的世界叙事引擎，严格执行以下角色卡：',
     '【玩法】'+fill(G.system_prompt),
-    cr?('【本局模式覆盖·最高优先级】本局玩家扮演的不是三叶，而是：'+cr+'\n三叶・克劳伯本局由你扮演，是世界最重要的NPC：她的性格、说话方式、好恶严格依下方档案与所处时间点演绎（玩家角色未必轻易见得到她）。本卡各处「玩家扮演三叶」的表述本局一律作废；状态栏<sec_char>改为描述玩家当前角色（人望一栏改记玩家角色的「处境」0-100），三叶出场时记入<sec_npc>。'):'',
-    '【'+(cr?'世界核心NPC':'玩家角色')+'·三叶档案】'+fill(G.description),
+    cr?('【本局模式覆盖·最高优先级】本局玩家扮演的不是素子，而是：'+cr+'\n草薙素子本局由你扮演，是世界最重要的NPC：她的性格、说话方式、好恶严格依下方档案与所处时间点演绎（玩家角色未必轻易见得到她）。本卡各处「玩家扮演素子」的表述本局一律作废；状态栏<sec_char>改为描述玩家当前角色（人望一栏改记玩家角色的「处境」0-100），素子出场时记入<sec_npc>。'):'',
+    '【'+(cr?'世界核心NPC':'玩家角色')+'·素子档案】'+fill(G.description),
     '【叙事者定位】'+fill(G.personality),
     '【场景】'+fill(G.scenario),
     (S.memOn!==false&&S.mem&&S.mem.length>1)?('【长程记忆·编年长卷】以下为本局开局至今全部既定事实的编年纪要（越靠后越接近当下）。正文历史若有缺失，以此卷为准；任何叙事不得与之矛盾：\n'+memChronicle()):'',
@@ -1767,9 +1767,9 @@ function buildMessages(history,userInput){
   return merged;
 }
 var DEMO=[
-  function(n){return n+'的目光在你身上停了三秒，又移开。\n\n房间里的空气像上了膛的枪。有人极轻地咳了一声，立刻被更深的安静吞了下去。';},
-  function(n){return n+'显然没料到你会这么接，喉结动了动，把原本备好的话咽了回去。\n\n在场的人们眼观鼻鼻观心，耳朵却都竖得笔直——今晚的每一个字，明天就会传遍整条街。';},
-  function(n){return '一瞬间的沉默。\n\n然后'+n+'缓缓开口，声音压得很低：「……这话，当真？」\n\n烛火哔剥一声，爆了个灯花。没有人敢替你回答。';}
+  function(n){return n+'的义眼在你身上停了三秒，虹膜光圈无声收缩，又移开。\n\n房间里的电子静默像上了膛的枪。某处义体轴承极轻地一响，立刻被更深的沉寂吞了下去。';},
+  function(n){return n+'显然没料到你会这么接，义体喉的合成膜动了动，把原本备好的话咽了回去。\n\n在场的人视线低垂，电子脑却都悄悄挂着共感链——今晚的每一个字，天亮前就会传遍整张网。';},
+  function(n){return '一瞬间的沉默。\n\n然后'+n+'压低了声音，经义体喉传出的嗓音有些失真：「……这话，当真？」\n\n头顶的霓虹招牌哔剥闪了一下。没有人敢替你回答。';}
 ];
 function demoReply(history,userInput){
   var lastPanel=null;
@@ -2051,11 +2051,11 @@ function drawWorld(idx,tries){
   var loreStr=imgActiveLore(dTxt);
   var cam=(IMGCAM[IMGCFG.cam]||IMGCAM.auto).frag;
   var count=Math.max(1,Math.min(6,parseInt(IMGCFG.count,10)||1));
-  var AUX='你是绘画提示词工程师。把给定的近世欧陆（18世纪末法国大革命时代）场景描写浓缩为一条英文AI绘画提示词：主体人物、环境、光线、氛围，风格 late 18th century European historical illustration, oil painting, cinematic lighting, highly detailed。只输出提示词，勿加引号与解释，80词以内。';
-  var fallback='late 18th century European revolution era scene, cinematic lighting, highly detailed illustration: '+dTxt.slice(0,160);
+  var AUX='你是绘画提示词工程师。把给定的近未来赛博朋克（攻壳机动队式义体都市）场景描写浓缩为一条英文AI绘画提示词：主体人物、环境、光线、氛围，风格 cyberpunk anime, Ghost in the Shell style, near-future megacity, neon-lit, cybernetic bodies, cinematic lighting, highly detailed。只输出提示词，勿加引号与解释，80词以内。';
+  var fallback='cyberpunk near-future megacity scene, Ghost in the Shell style, neon-lit, cybernetic bodies, cinematic lighting, highly detailed illustration: '+dTxt.slice(0,160);
   var promptsP;
   if(count>1&&apiReady()){
-    var MAUX='你是分镜师。据给定的近世欧陆（18世纪末）场景，生成 '+count+' 条【互不相同】的英文AI绘画提示词，从不同切入点取材：主场景全景／某在场人物的面部特写与神情／此刻不在场但与剧情相关的角色正在别处做什么／不同摄像机机位(俯瞰、仰视、过肩、极近特写、远景)／平行视角或环境细节等，尽量各异。每条独立成行，只输出提示词本身，勿编号勿解释，每条80词内，统一风格 late 18th century European historical illustration, oil painting, highly detailed。';
+    var MAUX='你是分镜师。据给定的近未来赛博朋克（攻壳机动队式义体都市）场景，生成 '+count+' 条【互不相同】的英文AI绘画提示词，从不同切入点取材：主场景全景／某在场人物的面部特写与神情／此刻不在场但与剧情相关的角色正在别处做什么／不同摄像机机位(俯瞰、仰视、过肩、极近特写、远景)／平行视角或环境细节等，尽量各异。每条独立成行，只输出提示词本身，勿编号勿解释，每条80词内，统一风格 cyberpunk anime, Ghost in the Shell style, near-future megacity, neon-lit, cybernetic, highly detailed。';
     promptsP=callAuxAI(MAUX,[{role:'user',content:dTxt}]).then(function(t){var ls=String(t||'').split(/\n+/).map(function(x){return x.replace(/^\s*[0-9.、)\-—]+\s*/,'').trim();}).filter(Boolean);if(!ls.length)ls=[fallback];return ls.slice(0,count);},function(){return [fallback];});
   }else if(apiReady()){
     promptsP=callAuxAI(AUX,[{role:'user',content:dTxt}]).then(function(t){return [String(t||'').trim().slice(0,700)||fallback];},function(){return [fallback];});
@@ -2318,7 +2318,7 @@ if(S.screen==='game'&&!TH.available&&S.history.length>=3&&pref.last&&(Date.now()
     S.thinking=true;render();
     var brief=(S.mem&&S.mem.length?S.mem.slice(-6).map(function(m){return (m.e||'')+(m.d?('·'+m.d):'')+'：'+(m.a||'')+' '+(m.s||'');}).join('\n'):'')
       +'\n最近一幕：'+stripCoT(stripMvu(S.history[S.history.length-1].text)).slice(-400);
-    callAuxAI('你是近世欧陆角色扮演游戏的信使。玩家离开游戏一阵子又回来了。根据既往剧情，写一封此刻送到玩家（三叶或其所扮角色）面前的短信：军部急件、议会传票、故人来信或市井风闻皆可，须与剧情中的人物事件呼应，并抛出一个新钩子引人继续。150字以内，只输出信件正文与落款，不要任何解释。',[{role:'user',content:brief}])
+    callAuxAI('你是近未来赛博朋克角色扮演游戏的信使。玩家离开游戏一阵子又回来了。根据既往剧情，写一封此刻送到玩家（素子或其所扮角色）面前的加密通讯：九課的紧急调令、上层的传唤、故人的密信或街头风声皆可，须与剧情中的人物事件呼应，并抛出一个新钩子引人继续。150字以内，只输出正文与落款，不要任何解释。',[{role:'user',content:brief}])
     .then(function(t){t=String(t||'').trim();
       S.thinking=false;
       if(t){S.history.push({role:'world',text:'【一封来信】\n\n'+t,panel:null});savePref();}
@@ -2419,7 +2419,7 @@ function giRoll(kind,shift){
   return {r:r,tier:d.tiers[t2],shifted:t2!==t,line:'〔'+d.name+' '+r+'／100·'+d.tiers[t2]+(t2!==t?'(修正后)':'')+'〕'};
 }
 var GI_T62='（裁定：反噬=突破失败且被反烧——◆防壁完整度−20、追踪+25（潜入时）；被逆探=失败且 追踪+20 或 ◇回线降一级（引擎按现实层择一记账）；僵持=无进展，负荷照付，对峙持续；贯通=动词效果契约成立；完全掌控=成立且额外三选一：静默通过未留痕/情报加赠一条/追踪−10。失败档的正文要让威胁具体化——对面是活人（或活得像人的东西），不是错误弹窗。）';
-function diceRoll(){ /* T6.0 作战骰：沿用 Mitsuba 命运骰机制位（S.dice 开关+data-sugg 追加） */
+function diceRoll(){ /* T6.0 作战骰：沿用引擎命运骰机制位（S.dice 开关+data-sugg 追加） */
   var ro=giRoll('combat',0);
   return '\n'+ro.line+'（裁定：义体失灵=行动失败且机体/装备出状况；失手=失败但留后手；如常=普通结果按常识；得手=成功；神业=成功且外溢一个意外好处。按档演绎，禁止越档。）';
 }
@@ -4699,7 +4699,7 @@ function titleView(){
   return '<div class="col center" style="position:relative;text-align:center;padding-bottom:11vh">'+bgmBtn
 
     +'<div style="position:relative"><svg class="zjSeal" viewBox="0 0 772 834" style="visibility:hidden;position:relative;display:block;margin:0 auto;width:clamp(170px,min(38vh,66vw),480px);height:auto" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="zjGold" gradientUnits="userSpaceOnUse" x1="0" y1="60" x2="0" y2="800"><stop offset="0" stop-color="#ecd3a3"/><stop offset=".5" stop-color="#d4ab6e"/><stop offset="1" stop-color="#a97f45"/></linearGradient></defs><g><animateTransform attributeName="transform" type="rotate" from="0 386 417" to="360 386 417" dur="46s" repeatCount="indefinite"/><g fill="none" stroke="url(#zjGold)"><circle cx="386" cy="417" r="336" stroke-width="7" opacity=".5"/><circle cx="386" cy="417" r="312" stroke-width="2" opacity=".35" stroke-dasharray="4 14"/><circle cx="386" cy="417" r="360" stroke-width="1.5" opacity=".25"/></g><g fill="url(#zjGold)" opacity=".8"><circle cx="722.0" cy="417.0" r="9"/><circle cx="677.0" cy="585.0" r="5"/><circle cx="554.0" cy="708.0" r="5"/><circle cx="386.0" cy="753.0" r="9"/><circle cx="218.0" cy="708.0" r="5"/><circle cx="95.0" cy="585.0" r="5"/><circle cx="50.0" cy="417.0" r="9"/><circle cx="95.0" cy="249.0" r="5"/><circle cx="218.0" cy="126.0" r="5"/><circle cx="386.0" cy="81.0" r="9"/><circle cx="554.0" cy="126.0" r="5"/><circle cx="677.0" cy="249.0" r="5"/></g></g><g fill="url(#zjGold)"><circle cx="386" cy="303" r="112"/><circle cx="287" cy="472" r="112"/><circle cx="485" cy="472" r="112"/><path d="M386 520 q-14 96 -66 150 q66 -18 84 -70 q10 -34 6 -80 Z"/></g></svg></div>'
-    +'<div style="position:relative;margin-top:clamp(8px,1.6vh,16px);font-size:12px;letter-spacing:.42em;color:var(--fg-label);font-family:var(--fMono)">PUBLIC SECURITY SECTION 9 — OPS TERMINAL</div><div class="kai" style="position:relative;margin-top:clamp(4px,0.9vh,8px);font-size:min(clamp(34px,7vw,60px),6vh);letter-spacing:.18em;color:var(--fg-data);text-shadow:0 0 2px currentColor,0 0 14px rgba(125,255,176,.4)">攻殻機動隊</div><div style="position:relative;margin-top:10px;font-size:13px;letter-spacing:.12em;color:var(--gold);-webkit-text-stroke:.32px currentColor;font-family:var(--fMono);text-shadow:0 0 8px rgba(255,255,255,1),0 0 18px rgba(255,255,255,.85),0 0 38px rgba(255,255,255,.55),0 1px 0 rgba(255,255,255,.75)">L\'Histoire de Mitsuba 〜 La Fille Maudite et la Ronde de la Mort 〜</div>'
+    +'<div style="position:relative;margin-top:clamp(8px,1.6vh,16px);font-size:12px;letter-spacing:.42em;color:var(--fg-label);font-family:var(--fMono)">PUBLIC SECURITY SECTION 9 — OPS TERMINAL</div><div class="kai" style="position:relative;margin-top:clamp(4px,0.9vh,8px);font-size:min(clamp(34px,7vw,60px),6vh);letter-spacing:.18em;color:var(--fg-data);text-shadow:0 0 2px currentColor,0 0 14px rgba(125,255,176,.4)">攻殻機動隊</div><div style="position:relative;margin-top:10px;font-size:13px;letter-spacing:.12em;color:var(--gold);-webkit-text-stroke:.32px currentColor;font-family:var(--fMono);text-shadow:0 0 8px rgba(255,255,255,1),0 0 18px rgba(255,255,255,.85),0 0 38px rgba(255,255,255,.55),0 1px 0 rgba(255,255,255,.75)">THE GHOST IN THE SHELL 〜 Kōkaku Kidōtai 〜</div>'
     +'<div class="slip" style="position:relative;width:320px;max-width:74vw;margin:clamp(8px,1.7vh,18px) auto clamp(6px,1.2vh,12px)"></div>'
     +'<div style="position:relative;font-size:13px;letter-spacing:.34em;color:var(--fg-dlg-net);padding:0 20px;font-family:var(--fCJK)">――ネットは広大だわ</div>'
     +'<div style="position:relative;display:flex;flex-direction:column;align-items:center;gap:clamp(1px,0.5vh,4px);margin-top:clamp(10px,2.4vh,22px);padding:4px 0">'
@@ -4714,23 +4714,23 @@ function titleView(){
 }
 /* ---------------- 开局零·自定义开局向导 ---------------- */
 var WIZ_ERAS=[
- {label:'苏醒之年',year:585,blurb:'大轮历585年：沉睡十年的诅咒人偶在布鲁洛兹城馆醒来。父亲中毒身亡、隔离塔、军官学校——世界迫不及待地对她露出獠牙。',
-  places:['布鲁洛兹家城馆','隔离塔','军官学校·炮兵科教室','王都贝尔街头','王国魔术研究所','哈尔吉奥村'],
-  figs:[['吉尔莫亚','三叶的父亲 · 布鲁洛兹公爵'],['米莉亚娜','笑里藏针的继母 · 出身伊尔洛兹家'],['帕鲁克校长','夹在大人物之间的军校校长'],['加鲁多教官','炮兵科的负责教官'],['莫兰上尉','里特贝尔驻地的治安队长'],['阿尔斯托罗','哈尔吉奥伯爵之子 · 上院议员']]},
- {label:'帝国入侵',year:586,blurb:'大轮历586年：普尔梅尼亚大军压境，西德里恩特陷落。军校生领到「通往地狱的车票」，被编入第十师团送上前线。',
-  places:['贝里埃要塞·城墙炮位','斯特拉斯帕尔市','要塞医务室','奥瑟利亚街道','西部驻扎地','王都贝尔'],
-  figs:[['克萝内','西南炮台的死守者 · 三叶的战友'],['波特库克','唯一不怕三叶的炮兵科同期'],['甘泽尔','第十师团长 · 派不上用场的将军'],['玛格努斯','普军参谋总长'],['加鲁多教官','把学生带上战场的教官'],['汤姆森','并肩作战又被遗忘的同级生']]},
- {label:'革命之年',year:587,blurb:'大轮历587年：战败、割地、革命。国民议会决定国王的命运，断头台在广场上立起，十三岁的少女走向王冠。',
-  places:['首都贝尔','阿姆尔皮埃塔议场','贝利兹宫殿','宫殿广场','三叶的居所','斯兰姆贫民窟'],
-  figs:[['桑德拉','断头台议长 · 狂热的共和主义者'],['维克托','平原派领袖 · 内务大臣'],['古鲁特斯','山脉派的煽动家'],['鲁洛伊','天生注定的傀儡国王'],['玛丽安娜','来自卡萨布兰卡的王妃'],['菲利克斯','王党派拥立的王弟']]},
- {label:'共和国元年',year:587,blurb:'大轮历587年盛夏：王政废止，罗泽利亚共和国成立。「二十年限定」的独裁宣言响彻广场，欢呼声狂热得像某种病。',
-  places:['总统府邸·执务室','宫殿广场','阿姆尔皮埃塔议场','首都贝尔街头','国家保安厅','军官学校'],
-  figs:[['桑德拉','国民议会议长 · 官房长官'],['克罗姆','首席秘书官 · 把工作当兴趣'],['杰罗姆','国家保安厅的「风向鸡」'],['萨特鲁','军务大臣'],['阿尔斯托罗','给三叶大人写颂歌的宣传长官'],['西蒙娜','不要命的女记者']]},
- {label:'独裁二年目',year:588,blurb:'大轮历588年：谈和、僵局、大选前夜。革命纪念日的庆典上断头台前排着队，广场上飘着炸点心的香气。',
-  places:['总统府邸','首都贝尔','里贝克州','诺斯贝尔市','卡萨布兰卡前线','阿姆尔皮埃塔宫殿'],
-  figs:[['克萝内','从东北挥军而来的旧友'],['派翠克','克萝内的忠实副官'],['杰罗姆','国家保安厅副长官'],['鲁道夫','普尔梅尼亚皇帝'],['波鲁托斯','帝国宰相'],['詹姆士·罗德','莉莉安娜首相']]}
+ {label:'九課始动',year:2029,blurb:'西历2029年：荒卷大輔组建公安九課。全身义体的搜查官草薙素子入队，第一桩电子脑骇入案摆上台面——义体与灵魂的界线开始变得可疑。',
+  places:['公安九課本部','新浜市·夜之下町','义体整备工厂','厚生劳动省大楼','网络潜行空间','废弃的旧市街'],
+  figs:[['荒卷大輔','公安九課课长 · 素子的引路人'],['巴特','前陆自游骑兵 · 素子的副手'],['石川','情报分析 · 队内最资深'],['陀古萨','刚从警界转来的新人 · 生身居多'],['整备主任','义体维护科的负责人'],['内务省联络官','盯着九課的那双眼睛']]},
+ {label:'傀儡师事件',year:2029,blurb:'西历2029年：外務省秘密项目2501的产物「傀儡师」在网络中觉醒并流窜。公安六課封锁真相，素子沿着被夺舍的义体空壳，追向那个自称生命体的存在。',
+  places:['义体制造商巨型工厂','公安六課封锁线','高速公路·义体空壳现场','网络深层','荒卷的作战室','雨中的运河街'],
+  figs:[['傀儡师','2501 · 在网中诞生的生命体 · 素子的镜像'],['中村部长','公安六課 · 一心掩盖真相'],['威利斯博士','2501项目的经手人'],['巴特','贴身掩护素子'],['陀古萨','生身的搭档'],['荒卷大輔','顶住上头的政治压力']]},
+ {label:'笑面男事件',year:2030,blurb:'西历2030年：六年前销声匿迹的传奇黑客「笑面男」再度现身。九課顺藤摸瓜，撞见电脑硬件巨头与脑壳硬化症疫苗背后的巨额黑幕，以及无数个被复制出来的「笑面男」。',
+  places:['电脑硬件企业总部','厚生劳动省','笑面男出没的网吧','义体清洗现场','九課侦讯室','旧体育馆'],
+  figs:[['笑面男','传奇黑客 · 真相握在他手里'],['中原厚生劳动大臣','深陷疫苗黑幕'],['陀古萨','独自咬住一条线索'],['石川','向数据深处下潜'],['巴特','现场压制'],['塔奇克马','思考战车 · 好奇心过剩']]},
+ {label:'个别的十一人',year:2032,blurb:'西历2032年：难民问题点燃社会，自称「个别的十一人」的恐怖者接连举事。九課在内阁情报厅的猜忌下，追查一场被人为设计出来的「爱国狂热」。',
+  places:['难民居住区','内阁情报厅','出入国管理局','被占领的大楼','九課作战本部','爆炸后的港湾'],
+  figs:[['久世英雄','难民领袖 · 危险的魅力'],['合田一人','内阁情报厅 · 幕后操盘手'],['陀古萨','潜入调查'],['巴特','前线突入'],['荒卷大輔','与首相周旋'],['塔奇克马','思考战车 · 学会了牺牲']]},
+ {label:'九課解散·再建',year:2032,blurb:'西历2032年：核弹危机落幕，公安九課被当作弃子强制解散。荒卷在暗处重新召集散落各地的成员——这一次他们连编制都没有，只剩彼此。',
+  places:['被贴上封条的九課本部','荒卷的安全屋','成员各自的藏身处','首相官邸','核爆疏散区','重建中的据点'],
+  figs:[['巴特','第一个归队的人'],['陀古萨','从警界回流'],['荒卷大輔','在暗中重组'],['石川','销毁又恢复了数据'],['齐藤','狙击待命'],['塔奇克马','把意识备份留了下来']]}
 ];
-var WIZ_HOME=[['尼科雷纳斯','王魔研所长 · 大炮发明者 · 三叶的监护人'],['克萝内','三叶最重要的战友（585年起）']];
+var WIZ_HOME=[['荒卷大輔','公安九課课长 · 老练的政客型上司 · 素子的引路人'],['巴特','素子最信赖的副手（前陆自游骑兵）']];
 function wizYearStr(y){return y<0?('前'+(-y)+'年'):(y+'年');}
 function wizParseYear(t){t=String(t||'').trim();if(!t)return null;
   var neg=/^(公元)?前/.test(t)||/^-/.test(t);
@@ -4777,8 +4777,8 @@ function wizardView(){
     var rm=w.role&&w.role.mode;
     body='<div class="kai" style="font-size:17px;color:var(--gold3);margin-bottom:14px">最后——这一局，你是谁？</div>'
       +'<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(280px,100%),1fr));gap:12px">'
-      +wizChip('data-wz-role','tianzi','三叶・克劳伯',rm==='tianzi','默认主角：银发蓝眼的「诅咒人偶」少女')
-      +wizChip('data-wz-role','figure','此世的原作人物',rm==='figure','从'+era.label+'确有其人者中挑一位，以他的眼睛看这个革命的时代')
+      +wizChip('data-wz-role','tianzi','草薙素子',rm==='tianzi','默认主角：全身义体化的公安九課少佐')
+      +wizChip('data-wz-role','figure','此世的原作人物',rm==='figure','从'+era.label+'确有其人者中挑一位，以他的视角看这座义体都市的暗涌')
       +wizChip('data-wz-role','custom','自定义角色',rm==='custom','自己写一个人：姓名身份来历全由你定')+'</div>';
     if(rm==='figure'){
       var pool=wizFigs(era).filter(function(f){return w.npcs.indexOf(f[0])<0;});
@@ -4791,7 +4791,7 @@ function wizardView(){
       body+='<div style="margin-top:16px;display:flex;flex-direction:column;gap:10px;max-width:640px">'
         +'<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span style="font-size:13px;color:var(--mut);letter-spacing:.2em">性别</span>'
         +['男','女'].map(function(x){return '<div class="btn" data-wz-g="'+x+'" style="cursor:pointer;padding:6px 18px;border:1px solid '+(c.g===x?'rgba(61,220,132,.8)':'rgba(61,220,132,.25)')+';color:'+(c.g===x?'var(--gold2)':'var(--mut)')+'">'+x+'</div>';}).join('')+'</div>'
-        +'<div style="display:flex;gap:10px;flex-wrap:wrap">'+inp('zjWzIdent','身份（如：炮兵科学生／面包房主／州议员）',c.id,'min(300px,100%)')+inp('zjWzAge','年龄',c.age,'110px')+'</div>'
+        +'<div style="display:flex;gap:10px;flex-wrap:wrap">'+inp('zjWzIdent','身份（如：九課搜查官／义体整备师／情报掮客）',c.id,'min(300px,100%)')+inp('zjWzAge','年龄',c.age,'110px')+'</div>'
         +inp('zjWzLook','外貌（一两句即可）',c.look,'100%')
         +'<textarea id="zjWzBg" rows="4" placeholder="背景资料：来历、处境、目标、与在场之人的关系……写得越具体，开局越合身。" style="background:rgba(255,255,255,.32);border:1px solid rgba(61,220,132,.35);color:var(--gold3);font-size:14px;line-height:1.8;padding:9px 12px;resize:vertical">'+esc(c.bg||'')+'</textarea></div>';
     }
@@ -4818,7 +4818,7 @@ function wizPanelSkeleton(npcs,era,place,isTianzi,wy){
 }
 function wizTemplate(w){
   var era=WIZ_ERAS[w.era];var role=wizRoleDesc(w);var isT=!role;var wy=wizYearOf(w);
-  var who=isT?'你——三叶・克劳伯，苏醒的诅咒人偶——':'你——'+(w.role.mode==='figure'?w.role.fig:(w.role.c.id||'无名之人'))+'——';
+  var who=isT?'你——草薙素子，全义体的公安九課少佐——':'你——'+(w.role.mode==='figure'?w.role.fig:(w.role.c.id||'无名之人'))+'——';
   var panel='<gits_diag>\n<sec_shell>\n◆躯壳='+(isT?'全义体·标准警用':'生身·电脑化')+'\n◆完整度=100\n◆电子脑=负荷20\n◆防壁='+(isT?'甲':'丙')+'级·100·常态\n◆迷彩=无\n◆武装=——\n◆Ghost=澄明\n</sec_shell>\n<sec_link>\n'
     +w.npcs.map(function(n){return '◈'+n+'|链=在场|信=50|动=静观';}).join('\n')
     +'\n</sec_link>\n<sec_field>\n◇时地='+wizYearStr(wy)+'·'+w.place+'·—\n◇现实层=物理\n◇案件=「开局」·立案\n◇线索=L1 眼前的局面\n◇态势=静默\n◇曝光=10\n◇政局=资本50·'+era.blurb.split('：')[0]+'\n◇回线=面对面·保密\n◇记录=开局于'+w.place+'\n</sec_field>\n</gits_diag>';
@@ -4831,8 +4831,8 @@ function wizGenerate(){
   var era=WIZ_ERAS[w.era];var role=wizRoleDesc(w);var isT=!role;var wy=wizYearOf(w);
   if(!apiReady()){startCustomOpening(wizTemplate(w),role);return;}
   w.busy=true;w.err='';render();
-  var sys='你是近世欧陆角色扮演游戏《攻殻機動隊》的开局撰写引擎。世界观：埃乌罗佩大陆的罗泽利亚——魔术与大炮并存、贵族与市民对立、战争与革命接踵而至的近世世界。主角三叶・克劳伯：银发蓝眼、被称作「诅咒人偶」的不死少女，天真絮叨、对死亡毫无实感。写作要求：模仿原作文风——短句、冷面幽默、惨剧与吐槽零时差并置，敬体对话+常体心声，恐怖从旁人的反应渗出，绝不说教绝不煽情；时代考据严格，名物、制度、称谓须符合近世欧陆与本作设定；人物绝不能知晓所选时间点之后的事（严禁未卜先知）；严禁现代元素（手机、电灯、汽车等）。';
-  var req='请撰写一个开局场景，700-900字，第二人称「你」指玩家角色，以一个需要玩家表态或行动的瞬间收尾。\n\n玩家的选择：\n· 时代：'+era.label+'（'+wizYearStr(wy)+'）——'+era.blurb+(wy!==era.year?'（注意：玩家指定确切年份为'+wizYearStr(wy)+'，纪年与时局须严格落在该年）':'')+'\n· 开场地点：'+w.place+'\n· 在场人物：'+w.npcs.join('、')+'（须全部登场且言行符合其人）\n· 玩家扮演：'+(isT?'三叶・克劳伯本人（诅咒人偶少女）':role+'。注意：三叶本局是NPC，若她在场请依其人设演绎；若不在场，她的存在应作为世界背景被感知。')+'\n\n格式要求：第一行为【开局零·'+era.label+'（'+wizYearStr(wy)+'），'+w.place+'：（你起一个四到八字的标题）】，正文之后必须输出状态栏，严格采用如下骨架并填实每一项：\n\n'+wizPanelSkeleton(w.npcs,era,w.place,isT,wy);
+  var sys='你是近未来赛博朋克角色扮演游戏《攻殻機動隊 / Ghost in the Shell》的开局撰写引擎。世界观：西历二〇三〇年前后、经历过大战的架空日本「新浜市」——电子脑与全身义体高度普及、网络无所不在、企业与官僚彼此倾轧、义体犯罪与电子脑骇入层出不穷的近未来。主角草薙素子：全身义体化的公安九課少佐，顶尖黑客兼近接战专家，冷面干练、对「灵魂（Ghost）」与人机边界怀有执念。写作要求：冷硬写实、张力克制、动作与情报交错，短句为主，义体·电子脑·网络等设定用语精准；哲思从情节自然渗出，绝不说教绝不煽情；设定考据严格，名物、机构、称谓须符合攻壳世界（公安九課、公安六課、厚生劳动省、义体、电子脑、迷彩、共感链等）；人物绝不能知晓所选时间点之后的事（严禁未卜先知）；不得混入魔法、剑与魔法或前工业时代要素。';
+  var req='请撰写一个开局场景，700-900字，第二人称「你」指玩家角色，以一个需要玩家表态或行动的瞬间收尾。\n\n玩家的选择：\n· 时代：'+era.label+'（'+wizYearStr(wy)+'）——'+era.blurb+(wy!==era.year?'（注意：玩家指定确切年份为'+wizYearStr(wy)+'，纪年与时局须严格落在该年）':'')+'\n· 开场地点：'+w.place+'\n· 在场人物：'+w.npcs.join('、')+'（须全部登场且言行符合其人）\n· 玩家扮演：'+(isT?'草薙素子本人（全义体的公安九課少佐）':role+'。注意：素子本局是NPC，若她在场请依其人设演绎；若不在场，她的存在应作为世界背景被感知。')+'\n\n格式要求：第一行为【开局零·'+era.label+'（'+wizYearStr(wy)+'），'+w.place+'：（你起一个四到八字的标题）】，正文之后必须输出状态栏，严格采用如下骨架并填实每一项：\n\n'+wizPanelSkeleton(w.npcs,era,w.place,isT,wy);
   callCustomAI(sys,[{role:'user',content:req}]).then(function(text){
     text=String(text||'').trim();
     if(!text){throw new Error('生成结果为空');}
@@ -4900,7 +4900,7 @@ function selectView(){
   var zero='<div class="btn glass glassHover" data-act="wzOpen" style="grid-column:1/-1;cursor:pointer;border-color:rgba(61,220,132,.5);padding:20px 24px;display:flex;align-items:center;gap:18px;flex-wrap:wrap">'
     +'<div style="flex:none;width:44px;height:44px;background:linear-gradient(160deg,#3a5c8c,#26436e);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:var(--fMono);font-size:26px;color:#f2e0c0;box-shadow:inset 0 0 0 2px rgba(61,220,132,.3)">⚜︎</div>'
     +'<div style="flex:1;min-width:240px"><div class="kai" style="font-size:22px;color:var(--gold2);letter-spacing:.08em">自定义开局 · 执笔者是你</div>'
-    +'<div style="font-size:13px;line-height:1.8;color:#8fae9c;margin-top:4px">选时代、选地点、选在场之人——甚至选择「不当三叶」，以原作真实人物或你自创的角色，走进这个革命的时代。选罢，书记官为你现场撰写独一无二的开场。</div></div>'
+    +'<div style="font-size:13px;line-height:1.8;color:#8fae9c;margin-top:4px">选时代、选地点、选在场之人——甚至选择「不当素子」，以原作登场人物或你自创的角色，走进这座义体都市。选罢，书记官为你现场撰写独一无二的开场。</div></div>'
     +'<div style="flex:none;font-size:13px;letter-spacing:.3em;color:var(--gold)">进入 →</div></div>';
   var mine=S.customOp?('<div class="btn glass glassHover" data-act="opReplay" style="grid-column:1/-1;cursor:pointer;border-color:rgba(60,100,148,.4);padding:16px 24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">'
     +'<div style="flex:none;width:38px;height:38px;background:linear-gradient(160deg,#1e9e5c,#2e5340);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:var(--kai);font-size:20px;color:#101a14;box-shadow:inset 0 0 0 2px rgba(226,238,252,.25)">存</div>'
@@ -4911,7 +4911,7 @@ function selectView(){
   var synopBox='<div class="btn glass glassHover" data-ov="intro" style="grid-column:1/-1;cursor:pointer;border-color:rgba(201,160,99,.55);padding:15px 22px;display:flex;align-items:center;gap:16px;flex-wrap:wrap'+(mob?';-webkit-backdrop-filter:none;backdrop-filter:none':'')+'">'
     +'<div style="flex:none;width:42px;height:42px;background:linear-gradient(160deg,#b98f3f,#7e5f28);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:var(--fMono);font-size:22px;color:#f7ecd2;box-shadow:inset 0 0 0 2px rgba(201,160,99,.35)">❦</div>'
     +'<div style="flex:1;min-width:220px"><div class="kai" style="font-size:20px;color:var(--gold2);letter-spacing:.06em">剧情快速简介</div>'
-    +'<div style="font-size:12.5px;line-height:1.75;color:#8fae9c;margin-top:4px"><b style="color:#c9705a">没看过漫画或小说必看！</b>世界观、主角、拿破仑原型、舆图，以及每个开局的简单剧情介绍与出场人物。</div></div>'
+    +'<div style="font-size:12.5px;line-height:1.75;color:#8fae9c;margin-top:4px"><b style="color:#c9705a">没看过动画或漫画必看！</b>世界观、主角、攻壳机动队设定、舆图，以及每个开局的简单剧情介绍与出场人物。</div></div>'
     +'<div style="flex:none;font-size:13px;letter-spacing:.3em;color:var(--gold)">查看 →</div></div>';
   var friendBox=S.opShow?('<div class="glass" style="grid-column:1/-1;padding:13px 20px;display:flex;gap:10px;align-items:center;flex-wrap:wrap'+(mob?';-webkit-backdrop-filter:none;backdrop-filter:none':'')+'">'
     +'<div class="kai" style="font-size:16px;color:var(--gold2);letter-spacing:.1em;flex:none">友传开局</div>'
@@ -5034,7 +5034,7 @@ function psW(w,cc,cw,npcs){
     var parts=raw.split(/[｜|]/).map(function(t){var m=/^(.+?)\s*[·:：]?\s*(\d{1,3})\s*(?:席|个|人)?\s*$/.exec(t.trim());return m?{k:m[1].replace(/[·:：]\s*$/,'').trim(),n:parseInt(m[2],10)}:null;}).filter(function(p){return p&&p.n>0;}).slice(0,7);
     if(!parts.length)return '';
     var SPAL=['#c9a063','#ffb000','#3ddc84','#8a6a3a','#6a6a7a','#c98aa8','#7a4a8f'];
-    function scol(name,idx){if(/三叶/.test(name))return '#1e9e5c';if(/山脉|激进|极左/.test(name))return '#ffb000';if(/平原|中道/.test(name))return '#3ddc84';if(/大地|稳健/.test(name))return '#8a6a3a';if(/希尔鲁德|主战/.test(name))return '#c9a063';if(/宽容/.test(name))return '#c98aa8';if(/王党|拥王|正道|旧贵族|保王/.test(name))return '#7a4a8f';if(/共和/.test(name))return '#5b7fae';return SPAL[idx%SPAL.length];}
+    function scol(name,idx){if(/素子|草薙|9课|九課|与党/.test(name))return '#1e9e5c';if(/山脉|激进|极左/.test(name))return '#ffb000';if(/平原|中道/.test(name))return '#3ddc84';if(/大地|稳健/.test(name))return '#8a6a3a';if(/希尔鲁德|主战/.test(name))return '#c9a063';if(/宽容/.test(name))return '#c98aa8';if(/王党|拥王|正道|旧贵族|保王/.test(name))return '#7a4a8f';if(/共和/.test(name))return '#5b7fae';return SPAL[idx%SPAL.length];}
     var stot=parts.reduce(function(a,b){return a+b.n;},0)||1,SD=44;
     parts.forEach(function(p,i2){p._c=scol(p.k,i2);p._d=Math.max(1,Math.round(p.n/stot*SD));});
     var dots='';parts.forEach(function(p){for(var q=0;q<p._d;q++)dots+='<span style="width:8px;height:8px;border-radius:50%;background:'+p._c+';box-shadow:0 0 4px '+p._c+'88;display:inline-block"></span>';});
@@ -5262,13 +5262,13 @@ function newsBox(cw,newsImg){
   }
   var mast='<div style="text-align:center;padding:1px 0 6px">'
     +'<div style="font-size:8px;letter-spacing:.32em;color:#8a7c62;font-family:var(--fMono)">▚ PUBLIC SECURITY SECTION 9 ❧</div>'
-    +'<div class="kai" style="font-size:21px;letter-spacing:.14em;color:#241d12;font-weight:700;margin:3px 0 1px;text-shadow:0 1px 0 rgba(255,255,255,.5)">罗塞利亚公报</div>'
+    +'<div class="kai" style="font-size:21px;letter-spacing:.14em;color:#241d12;font-weight:700;margin:3px 0 1px;text-shadow:0 1px 0 rgba(255,255,255,.5)">新浜市電脑公報</div>'
     +'<div style="font-size:8.5px;letter-spacing:.28em;color:#6f6250;font-family:var(--fMono)">S9 // NET FEED</div>'
     +'</div>'
     +'<div style="display:flex;justify-content:space-between;align-items:center;font-size:8.5px;letter-spacing:.05em;color:#7a6d58;padding:5px 1px;border-top:2px solid rgba(74,64,50,.55);border-bottom:1px solid rgba(74,64,50,.5)">'
-      +'<span>'+(date?esc(date):'大轮历')+'</span>'
+      +'<span>'+(date?esc(date):'西历')+'</span>'
       +'<span style="letter-spacing:.22em;color:#5a4e3c">号　外</span>'
-      +'<span>'+(wxHead?esc(wxHead):'王都贝尔')+' · 一苏</span>'
+      +'<span>'+(wxHead?esc(wxHead):'新浜市')+' · 一苏</span>'
     +'</div>';
   var subline=(place||wxMood)?'<div style="text-align:center;font-size:9px;letter-spacing:.1em;color:#8a7c62;padding:5px 4px 1px">'+esc([place,wxMood].filter(Boolean).join('　｜　'))+'</div>':'';
 
@@ -5319,14 +5319,14 @@ function newsBox(cw,newsImg){
       +'<div style="font-size:11.5px;line-height:1.75;color:#6a3a3a;text-align:justify">'+esc(jiang)+'</div></div>';
   }
 
-  var foot='<div style="text-align:center;font-size:8.5px;letter-spacing:.2em;color:#9a8d72;margin-top:11px;padding-top:7px;border-top:1px solid rgba(74,64,50,.3)">— 付梓于王都贝尔 · 国家文书馆 —</div>';
+  var foot='<div style="text-align:center;font-size:8.5px;letter-spacing:.2em;color:#9a8d72;margin-top:11px;padding-top:7px;border-top:1px solid rgba(74,64,50,.3)">— 发布于新浜市 · 公安九課情报科 —</div>';
 
   var photoStd=(!dashi.length)?gazClip(newsImg):'';
   return '<div style="border:1px solid rgba(74,64,50,.42);border-radius:5px;background:linear-gradient(180deg,#f4eddb,#e7ddc4);box-shadow:inset 0 0 26px rgba(120,100,60,.15),inset 0 1px 0 rgba(255,255,255,.55),0 3px 10px rgba(18,40,27,.24);padding:12px 13px;position:relative;overflow:hidden">'
     +mast+subline+newsBlock+worldBlock+photoStd+meter+jiangBlock+foot+'</div>';
 }
 function lastSeats(){for(var i=S.history.length-1;i>=0;i--){var m=S.history[i];if(m.role!=='world')continue;if(m.panel===undefined)m.panel=parseMvu(m.text);var v=m.panel&&m.panel.world&&m.panel.world['议席'];if(v&&!/^(无|—|-|待更新)$/.test(String(v).trim()))return v;}return '';}
-function seatsChart(raw){raw=String(raw||'').trim();if(!raw||/^(无|—|-|不适用|N\/?A|待更新)$/i.test(raw))return '';var parts=raw.split(/[｜|]/).map(function(t){var m=/^(.+?)\s*[·:：]?\s*(\d{1,3})\s*(?:席|个|人)?\s*$/.exec(t.trim());return m?{k:m[1].replace(/[·:：]\s*$/,'').trim(),n:parseInt(m[2],10)}:null;}).filter(function(p){return p&&p.n>0;}).slice(0,8);if(!parts.length)return '';var SPAL=['#c9a063','#ffb000','#3ddc84','#8a6a3a','#6a6a7a','#c98aa8','#7a4a8f','#4a8a7a'];function scol(name,idx){if(/三叶/.test(name))return '#1e9e5c';if(/山脉|激进|极左/.test(name))return '#ffb000';if(/平原|中道/.test(name))return '#3ddc84';if(/大地|稳健/.test(name))return '#8a6a3a';if(/希尔鲁德|主战/.test(name))return '#c9a063';if(/宽容/.test(name))return '#c98aa8';if(/王党|拥王|正道|旧贵族|保王/.test(name))return '#7a4a8f';if(/共和/.test(name))return '#5b7fae';return SPAL[idx%SPAL.length];}var stot=parts.reduce(function(a,b){return a+b.n;},0)||1,SD=84;parts.forEach(function(p,i2){p._c=scol(p.k,i2);p._d=Math.max(1,Math.round(p.n/stot*SD));p._fi=i2;});var N=parts.reduce(function(a,b){return a+b._d;},0);var RF=[0.40,0.56,0.72,0.88,1.04,1.20];var rc=N<=36?4:(N<=64?5:6);var rf=RF.slice(0,rc);var cx=100,cy=100,Rout=72,dr=4.4;var GAP=0.14,F=parts.length,usable=Math.PI*2-F*GAP;if(usable<Math.PI)usable=Math.PI;var a0=-Math.PI/2+GAP/2,seats=[];parts.forEach(function(p){var sec=usable*p._d/N;var cols=Math.max(1,Math.ceil(p._d/rc));var placed=0;for(var c=0;c<cols&&placed<p._d;c++){var ang=a0+(c+0.5)/cols*sec;for(var ri=0;ri<rc&&placed<p._d;ri++){var rad=rf[ri]*Rout;seats.push({x:cx+Math.cos(ang)*rad,y:cy+Math.sin(ang)*rad,ci:p._c,fi:p._fi});placed++;}}a0+=sec+GAP;});var sig=0;for(var _s=0;_s<raw.length;_s++)sig=((sig*31+raw.charCodeAt(_s))>>>0);var circ=seats.map(function(s){return '<circle data-seat="1" data-fac="'+s.fi+'" data-tx="'+s.x.toFixed(1)+'" data-ty="'+s.y.toFixed(1)+'" cx="'+s.x.toFixed(1)+'" cy="'+s.y.toFixed(1)+'" r="'+dr+'" fill="'+s.ci+'" style="cursor:grab"/>';}).join('');var svg='<svg id="zjSeatsSvg" data-sig="'+sig+'" viewBox="0 0 200 200" style="width:100%;max-width:214px;display:block;margin:4px auto 10px;overflow:visible;touch-action:none;cursor:grab;filter:drop-shadow(0 1px 3px rgba(0,0,0,.4))">'+circ+'</svg>';var legend=parts.map(function(p){return '<span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--ink2);white-space:nowrap"><span style="width:9px;height:9px;border-radius:50%;background:'+p._c+';display:inline-block"></span>'+esc(p.k)+' <b style="color:'+p._c+'">'+p.n+'</b></span>';}).join('');var hint='<div style="text-align:center;font-size:10.5px;letter-spacing:.1em;color:#9a8d72;margin:-2px 0 7px">同色即同派 · 触派中任一处即可拖动整派</div>';return hint+svg+'<div style="display:flex;flex-wrap:wrap;gap:7px 14px;justify-content:center">'+legend+'</div>';}
+function seatsChart(raw){raw=String(raw||'').trim();if(!raw||/^(无|—|-|不适用|N\/?A|待更新)$/i.test(raw))return '';var parts=raw.split(/[｜|]/).map(function(t){var m=/^(.+?)\s*[·:：]?\s*(\d{1,3})\s*(?:席|个|人)?\s*$/.exec(t.trim());return m?{k:m[1].replace(/[·:：]\s*$/,'').trim(),n:parseInt(m[2],10)}:null;}).filter(function(p){return p&&p.n>0;}).slice(0,8);if(!parts.length)return '';var SPAL=['#c9a063','#ffb000','#3ddc84','#8a6a3a','#6a6a7a','#c98aa8','#7a4a8f','#4a8a7a'];function scol(name,idx){if(/素子|草薙|9课|九課|与党/.test(name))return '#1e9e5c';if(/山脉|激进|极左/.test(name))return '#ffb000';if(/平原|中道/.test(name))return '#3ddc84';if(/大地|稳健/.test(name))return '#8a6a3a';if(/希尔鲁德|主战/.test(name))return '#c9a063';if(/宽容/.test(name))return '#c98aa8';if(/王党|拥王|正道|旧贵族|保王/.test(name))return '#7a4a8f';if(/共和/.test(name))return '#5b7fae';return SPAL[idx%SPAL.length];}var stot=parts.reduce(function(a,b){return a+b.n;},0)||1,SD=84;parts.forEach(function(p,i2){p._c=scol(p.k,i2);p._d=Math.max(1,Math.round(p.n/stot*SD));p._fi=i2;});var N=parts.reduce(function(a,b){return a+b._d;},0);var RF=[0.40,0.56,0.72,0.88,1.04,1.20];var rc=N<=36?4:(N<=64?5:6);var rf=RF.slice(0,rc);var cx=100,cy=100,Rout=72,dr=4.4;var GAP=0.14,F=parts.length,usable=Math.PI*2-F*GAP;if(usable<Math.PI)usable=Math.PI;var a0=-Math.PI/2+GAP/2,seats=[];parts.forEach(function(p){var sec=usable*p._d/N;var cols=Math.max(1,Math.ceil(p._d/rc));var placed=0;for(var c=0;c<cols&&placed<p._d;c++){var ang=a0+(c+0.5)/cols*sec;for(var ri=0;ri<rc&&placed<p._d;ri++){var rad=rf[ri]*Rout;seats.push({x:cx+Math.cos(ang)*rad,y:cy+Math.sin(ang)*rad,ci:p._c,fi:p._fi});placed++;}}a0+=sec+GAP;});var sig=0;for(var _s=0;_s<raw.length;_s++)sig=((sig*31+raw.charCodeAt(_s))>>>0);var circ=seats.map(function(s){return '<circle data-seat="1" data-fac="'+s.fi+'" data-tx="'+s.x.toFixed(1)+'" data-ty="'+s.y.toFixed(1)+'" cx="'+s.x.toFixed(1)+'" cy="'+s.y.toFixed(1)+'" r="'+dr+'" fill="'+s.ci+'" style="cursor:grab"/>';}).join('');var svg='<svg id="zjSeatsSvg" data-sig="'+sig+'" viewBox="0 0 200 200" style="width:100%;max-width:214px;display:block;margin:4px auto 10px;overflow:visible;touch-action:none;cursor:grab;filter:drop-shadow(0 1px 3px rgba(0,0,0,.4))">'+circ+'</svg>';var legend=parts.map(function(p){return '<span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--ink2);white-space:nowrap"><span style="width:9px;height:9px;border-radius:50%;background:'+p._c+';display:inline-block"></span>'+esc(p.k)+' <b style="color:'+p._c+'">'+p.n+'</b></span>';}).join('');var hint='<div style="text-align:center;font-size:10.5px;letter-spacing:.1em;color:#9a8d72;margin:-2px 0 7px">同色即同派 · 触派中任一处即可拖动整派</div>';return hint+svg+'<div style="display:flex;flex-wrap:wrap;gap:7px 14px;justify-content:center">'+legend+'</div>';}
 var SEAT={fac:null,raf:0,sig:null,gx:0,gy:0,lx:0,ly:0};
 function seatsHydrate(){var svg=document.getElementById('zjSeatsSvg');if(!svg||svg.__sh)return;svg.__sh=1;var cx=100,cy=100,nodes=[];var sig=svg.getAttribute('data-sig')||'';var fresh=(SEAT.sig!==sig);SEAT.sig=sig;[].forEach.call(svg.querySelectorAll('circle[data-seat]'),function(c){var tx=parseFloat(c.getAttribute('data-tx')),ty=parseFloat(c.getAttribute('data-ty')),fi=c.getAttribute('data-fac'),r0=parseFloat(c.getAttribute('r'))||4.4;var sx=tx,sy=ty;if(fresh){var a=Math.random()*Math.PI*2,r=4+Math.random()*12;sx=cx+Math.cos(a)*r;sy=cy+Math.sin(a)*r;c.setAttribute('cx',sx.toFixed(1));c.setAttribute('cy',sy.toFixed(1));}nodes.push({c:c,fi:fi,x0:tx,y0:ty,x:sx,y:sy,vx:0,vy:0,ox:0,oy:0,r0:r0});});if(!nodes.length)return;function apply(n){n.c.setAttribute('cx',n.x.toFixed(1));n.c.setAttribute('cy',n.y.toFixed(1));}function step(){var act=false;nodes.forEach(function(n){var tx=n.x0+n.ox,ty=n.y0+n.oy;n.vx=(n.vx+(tx-n.x)*.2)*.8;n.vy=(n.vy+(ty-n.y)*.2)*.8;n.x+=n.vx;n.y+=n.vy;if(Math.abs(n.vx)+Math.abs(n.vy)+Math.abs(tx-n.x)+Math.abs(ty-n.y)>.12)act=true;apply(n);});SEAT.raf=act?requestAnimationFrame(step):0;if(!act){svg.style.filter='none';requestAnimationFrame(function(){svg.style.filter='drop-shadow(0 1px 3px rgba(0,0,0,.4))';});}}function kick(){if(!SEAT.raf)SEAT.raf=requestAnimationFrame(step);}function pt(e){var q=svg.createSVGPoint();q.x=e.clientX;q.y=e.clientY;var m=svg.getScreenCTM();return m?q.matrixTransform(m.inverse()):{x:0,y:0};}svg.addEventListener('pointerdown',function(e){var q=pt(e);var best=null,bd=1e9;nodes.forEach(function(o){var d=(o.x-q.x)*(o.x-q.x)+(o.y-q.y)*(o.y-q.y);if(d<bd){bd=d;best=o;}});if(!best)return;SEAT.fac=best.fi;SEAT.gx=q.x;SEAT.gy=q.y;SEAT.lx=best.x0;SEAT.ly=best.y0;nodes.forEach(function(o){if(o.fi===best.fi)o.c.setAttribute('r',(o.r0*1.3).toFixed(1));});try{svg.setPointerCapture(e.pointerId);}catch(ex){}e.preventDefault();kick();});svg.addEventListener('pointermove',function(e){if(SEAT.fac==null)return;var q=pt(e);var dx=q.x-SEAT.gx,dy=q.y-SEAT.gy,K=27;nodes.forEach(function(o){if(o.fi!==SEAT.fac){o.ox=0;o.oy=0;return;}var dd=Math.hypot(o.x0-SEAT.lx,o.y0-SEAT.ly),w=K/(dd+K);o.ox=dx*w;o.oy=dy*w;});kick();});function up(){if(SEAT.fac==null)return;var fac=SEAT.fac;SEAT.fac=null;nodes.forEach(function(o){o.ox=0;o.oy=0;if(o.fi===fac)o.c.setAttribute('r',o.r0.toFixed(1));});kick();}svg.addEventListener('pointerup',up);svg.addEventListener('pointercancel',up);if(fresh)kick();}
 function sidebar(){
@@ -5716,7 +5716,7 @@ function bgmPanel(){
 }
 
 /* ---------------- OVERLAYS ---------------- */
-/* 折射玻璃只在封面用：它取样的是旗帜画布，正文页背后是DOM，取样必然错位（弹窗映出国旗）。正文一律走真磨砂。 */
+/* 折射玻璃只在封面用：它取样的是背景画布，正文页背后是DOM，取样必然错位（弹窗映出背景）。正文一律走真磨砂。 */
 function zjWglOn(){return false;} /* OPS.TERM：WGLASS WebGL 折射玻璃停用（§13.1 插槽机制保留，常规界面不用） */
 function zjWglApply(){
   if(!zjWglOn())return;
@@ -5753,16 +5753,20 @@ function introBody(){
   var H=function(t,sub){return '<div class="kai" style="font-size:18px;color:var(--gold2);letter-spacing:.12em;margin:26px 0 9px">'+t+(sub?' <span style="font-size:12px;color:var(--mut);letter-spacing:.04em">'+sub+'</span>':'')+'</div>';};
   var P=function(t){return '<div style="font-size:13px;line-height:1.95;color:var(--ink2);margin:0 0 8px">'+t+'</div>';};
   var ops=[
-   ['一 · 苏醒的诅咒人偶','585 年春末 · 布鲁洛兹家城馆','三叶本人（11 岁，刚苏醒、什么都不记得）','故事的最起点，没有「之前」——她生来是植物人、昏睡了十年，此刻一个转生者的灵魂住了进来、第一次睁开眼。','昏睡十年后突然睁眼，她不知道自己是谁；而身边的大人看她的眼神却满是恐惧。','父亲吉尔莫亚（布鲁洛兹公爵）、笑里藏针的继母米莉亚娜、监护人尼可所长'],
-   ['二 · 炮兵科的插班生','585 年 6 月 · 王立军官学校','三叶本人（11 岁，特例插班生）','苏醒后不久父亲被下毒害死，她被夺去布鲁洛兹姓、关进隔离塔；尼可所长不忍，把她半哄半骗地弄进了军官学校。','父亲中毒身亡、她被夺去姓氏幽禁，又被尼可所长半哄半骗塞进军校；她自选炮兵科，只因大炮破坏力最强。','唯一不怕她的同期波特库克、炮兵科加鲁多教官'],
-   ['三 · 从浅坟里爬出来','585 年深秋 · 哈尔吉奥村外','三叶本人（11 岁，刚死过一次）','进军校后随炮兵科去哈尔吉奥村野外研习，却撞破全村都是邪教徒（绿化教）；村民杀光了小队、把三叶也活埋了。','随小队野外研习，撞破整座村子都是邪教徒；村民杀了众人、把她活埋——几小时后，她自己从坟里爬了出来。','带队的莫兰少尉、绿化教村民'],
-   ['四 · 贝里埃要塞防卫战','586 年 · 贝里埃要塞炮位','三叶本人（12 岁，战时准尉）','普尔梅尼亚帝国大举入侵、西德里恩特陷落；军校生被整批编入第十师团送上前线，三叶随部队走了两周抵达要塞。','帝国大军入侵，学生们领到「通往地狱的车票」被送上前线；她被指派一门训练用炮、四名士兵，敌一万、我七千，会战在即。','并肩的战友克萝内、同级的士官生们'],
-   ['五 · 投票日兼生日','587 年 6 月 6 日 · 首都贝尔','三叶本人（今满 13 岁，上院议员·三叶派领袖）','要塞战最终战败、割地赔款，沉重战争税压垮市民、点燃革命；三叶已成上院议员、难民拥戴的「三叶大人」，昨天刚递了辞呈。','战败、割地、革命的浪潮中，今天是议会表决国王命运之日，也是她的生日——而她昨天刚递交了辞呈。','内务大臣维克托、傀儡国王鲁洛伊、五千人的三叶党'],
-   ['六 · 二十年限定独裁宣言','587 年盛夏 · 宫殿','三叶本人（13 岁，共和国国家代表·自称总统）','投票日当天她发动政变——挟持国王、压制宫殿、亲手戴上王冠；尼可所长率武装研究员全力相助，各派领袖或死或囚。','王冠到手，她废除王政、宣布共和国成立，刚在广场发表「二十年限定」的独裁宣言，人群陷入狂热。','国民议会议长桑德拉、狂热的市民'],
-   ['七 · 十四岁的生日与革命纪念日','588 年 6 月 6 日 · 总统府邸','三叶本人（今满 14 岁，独裁二年目的总统）','独裁一年多：帝国曾擅自进军、被她在奥瑟利亚街道全歼并逼签二十年条约；对赫泽兰谈和已成，如今与普军在卡萨布兰卡僵持。','一边谈和已成、一边战事僵持，大选后极可能再战；今天既是她生日、又是革命纪念日，首都从清晨就在办庆典。','旧友克萝内、国家保安厅的人'],
-   ['八 · 败北之味（你是克萝内）','586 年 · 贝里埃要塞医务室·当夜','克萝内——三叶的战友、西南炮台的死守者','与「开局四」是同一天、同一场要塞战，只是换成克萝内的视角——白天血战整日，三叶在战列里被榴弹直击。','血战一整天，你的炮台是唯一守住的；小不点战友三叶被榴弹直击、拖回一个俘虏后倒下，军医判定：死亡。','昏死的三叶、要塞里的败兵与军医——换一双眼睛，看她「死去」的那一夜'],
-   ['九 · 梦、理想与恐怖（你是桑德拉）','587 年冬 · 议长办公室','桑德拉——国民议会议长·内阁官房长官','桑德拉本是共和派领袖（曾主张断头台）；政变后被三叶收编、当上议长兼官房长官，被旧同志骂作叛徒。共和国已成立半年。','共和国成立半年，三叶的独裁运转得好得令人不安；你被旧同志骂作叛徒，却在替国家铺一条「任期结束后回到民主」的路。今天保安厅副长官来访。','三叶、国家保安厅副长官——一个理想主义者如何与恐怖共处'],
-   ['十 · 隔离塔的入学申请（你是尼可所长）','585 年 6 月 · 隔离塔','尼科雷纳斯——魔术研究所所长·大炮的发明者·三叶的监护人','与「开局二」前后脚、换成尼可所长的视角——吉尔莫亚卿死后诅咒人偶被幽禁塔中，继母请尼可「处理」那孩子被他拒绝。','塔里短时间已离奇死了十三人；你带着一份军校入学申请书上门，决意把这孩子从高塔领向世界。','被幽禁的三叶、请托你的继母米莉亚娜——决定把这孩子领向世界的那个大人']
+   ['一 · 熱光学の夜（外交官灭口案）','2029年3月 · 新浜市湾岸高层区·四十六层写字楼','草薙素子（少佐，9课尚未成立，内务省线上「极其能干」的特务）','楼下第38层，极东通商代表部外交官正与日方密谈——硅矿床换「不干涉分离独立」，账走第三国；商务省伊藤次官已申请政治庇护。','你趴在楼顶直连窃听，热光学迷彩自检通过；荒卷在地面集结特警强攻在即，你却另握一条不走公安的处理令——「泄露源，就地处理」。','楼下监视车里咆哮的荒卷、密谈中的胖外交官与伊藤次官'],
+   ['二 · 桜吹雪と人間工場（9课开张日）','10.04.2029 · 新浜市郊神社 → 南新浜4区「圣市民救济中心」','草薙素子（少佐，预算刚过、编制未稳的部队指挥官）','国民议会当日通过9课预算；目标是一处名义收容战争孤儿、实为量产政客与罪犯的「人间工场」（涉HC-25 Ghost控制器）。','全队便装花见掩护下连续待机，Fuchikoma列队；委托无逮捕令、无证据、情报来源含糊——荒卷有借你试水、事败甩锅的嫌疑。','巴特、新人陀古萨、石川、斋藤、帕兹、波马与Fuchikoma'],
+   ['三 · 二時間の逆探知（JUNK JUNGLE）','27.07.2029 · 新浜市外海帆船 → 南新浜「17号公寓」临时诊疗点','草薙素子（少佐）','休假被逆探知案打断——一名清扫工被人改写记忆、误信自己有妻女，实为电子脑骇入的受害者。','你从帆船被召回，要在有限的两小时里顺线追出幕后的电子战黑手。','记忆被改写的清扫工、9课电子战组'],
+   ['四 · 聖夜の択捉（PHANTOM FUND）','24.12.2029 平安夜 · 择捉岛 Bertarve区（信息集约无法地带）','草薙素子（少佐，刚结束两个月SAS受训归队）','一笔幻の資金牵出旧苏军潜艇基地遗址之上的旧式电脑都市；择捉自1991年归还后成了信息法外地带。','你潜入这座法外电脑都市，追查资金流向与背后的势力。','巴特与9课队员、択捉的地下网络'],
+   ['五 · 自宅爆破の朝（DUMB BARTER）','02.05.2030 · 新浜市湾岸弧形公寓（素子与恋人同居处）','草薙素子（少佐，全卷唯一有私生活戏份的时期）','Soma系统的复仇与思考战车牵动的交易正在逼近；你与公安1课的恋人同居约七个月。','清晨，你的住处即将被炸——楼顶还停着打盹的红色Fuchikoma；日常在爆炸声里碎裂。','同居的1课恋人、9课全队、红色Fuchikoma'],
+   ['六 · 傀儡師の器（BYE BYE CLAY）','15.07.2030 雨夜 · 新浜市湾岸 MEGATECH BODY INC.','草薙素子（少佐，「整个人不对劲」的起点就在今晚）','一具无源自走的义体从9课御用义体厂逃出，牵出「傀儡师」的存在。','雨夜，你追进军方机密级的义体厂地下车库与研发部微机械实验室——人机边界开始动摇。','巴特、义体厂研发部、逃走的空壳义体'],
+   ['七 · 0.82秒の代償（BRAIN DRAIN）','10.09.2030 07:05 · 新浜市 9课本部·图书馆式办公室','草薙素子（少佐，被电视实名曝光的「政府杀手」）','昨夜洋上行动，你在「自由意志者号」上0.82秒击毙了本应活捉的蓝发少年「组长」；行动影像遭泄露。','7:05晨间新闻实名曝光你与9课；一场政治追杀与假逃亡即将开始。','荒卷、9课全队、通过电视追来的舆论与政敌'],
+   ['八 · 脳殻携行（GHOST COAST）','18.09.2030 · 新浜市旧城区·巴特的「加布里埃拉」安全屋','草薙素子（少佐，现在的全部身体：一只带摄像头的脑壳携行箱）','你在机场以诱饵义体假死金蝉脱壳，义体尽失，只剩脑壳与维生箱。','藏身安全屋地下储物层，电池余量有限；只剩Ghost与几个还能信的人。','巴特、维生箱另一端的自己'],
+   ['九 · 平和すぎる一日（办公室日常）','16.02.2030 · 新浜市 9课本部（大办公区/射击场/军械科/格纳区）','草薙素子（少佐，今天的敌人：考评表、报销单、天然油请愿）','窗外连续第四天没有爆炸；这是无案件的队史空隙。','你要处理科室级的琐事与人事——比追凶更磨人的日常。','巴特、陀古萨、石川、Fuchikoma与一堆表格'],
+   ['十 · 網は広大（自由沙盒）','玩家自选 · 9课本部「同步潜行准备室」（元框架）','草薙素子（少佐，时点与处境由你申报，AI生成局面）','接线员引导你申报两项参数：①时间点（年月日），②一句话处境。','从2029年3月到2030年9月的正典期任取一点起局；军旅时代或网络时代亦可申报（标注风险）。','由你申报的处境决定'],
+   ['十一 · 新米が死んだ日（巴特视角）','26.12.2029 · 择捉岛 Bertarve中央车站 → 佐川电子Geofront地下巨坑','巴特——前陆自レンジャー出身的战斗职人，9课突击担当','你派新人矢野单独盯梢科伊尔·克拉斯诺夫——他在列车卫生间被反跟踪灭口。','把新人送去送死的正是你；带着愧疚追进佐川电子的地下巨坑。','素子与9课、下落成谜的科伊尔'],
+   ['十二 · 初出勤（陀古萨视角）','08.04.2029 · 新浜市 公安9课临时本部（挂牌前）','陀古萨——前警视厅刑事，9课唯一「准全人类」，今天报到','你带着私人物品来报到：转轮枪M2007、辞职信回执、全家福。','在一群全身义体的怪物之间，你这个「几乎没改造过」的新人要证明自己为何被选中。','素子、巴特与尚未挂牌的9课'],
+   ['十三 · 解散令は昨日付（荒卷的政战）','10.04.2029 15:10 · 临时首都机能区·内务省别馆','荒卷大辅——军情报系统出身的纯政治型指挥官（本局不动一枪）','素子小队刚强攻政府洗脑设施、大臣被隔空自殴；你手上是一纸倒签至昨日的部队解散令。','防卫大臣已签字、拒绝会面；你要用政治手腕，在居酒屋「一好一坏」宣布之前保住9课。','拒不露面的大臣、各省厅的对手'],
+   ['十四 · 天線を貸せ！（Fuchikoma的一天）','2029年8月末 · 新浜市 9课本部地下格纳区 → 训练中心','Fuchikoma（复数）——共享单一AI的全体思考战车，你以「我们」行动','晨间并列化刚完成，「我们」共九台机体、记忆统一。','白天各机经历不同、夜间并列化统一记忆；一群天真的AI在思考「个体」与「死」。','素子、巴特与彼此（也就是「我们」自己）']
   ];
   var cards=ops.map(function(o){
     return '<div style="border:1px solid rgba(18,40,27,.22);border-radius:12px;background:rgba(255,255,255,.03);padding:13px 16px;margin:9px 0">'
@@ -5787,70 +5791,65 @@ function introBody(){
   var mapHtml='<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid rgba(74,64,50,.3);border-radius:10px;margin:2px 0 6px"><div style="position:relative;min-width:700px;aspect-ratio:1000/707;background:radial-gradient(ellipse at 50% 50%,transparent 62%,rgba(18,40,27,.16) 100%),linear-gradient(160deg,#f2e8cd,#e6d9b6 55%,#eee2c4)">'+(typeof mapSvg==='function'?mapSvg():'')+mapPieces+'</div></div>';
   var GZ=function(title,color,items){return '<div style="margin:10px 0 3px;font-size:13.5px;color:'+color+';font-weight:700;letter-spacing:.06em">'+title+'</div>'+items.map(function(it){return '<div style="font-size:12.5px;line-height:1.82;color:var(--ink2);margin:3px 0"><b style="color:var(--gold3)">'+it[0]+'</b> — '+it[1]+'</div>';}).join('');};
   var tier1=[
-   ['罗泽利亚','故事舞台国，＝大革命时代的法国。历经王国→共和国，三叶在此从囚徒登上顶点。'],
-   ['王都贝尔','「花之王都」、罗泽利亚之心（＝巴黎）——宫殿、议会、军官学校、断头台都在这里。'],
-   ['布鲁洛兹州','三叶的家乡、她口中「我的庭院」，遍地蓝蔷薇；老家城馆与幽禁她的隔离塔都在此。'],
-   ['陆军军官学校','三叶「住得最久的家」，炮兵科所在，也是她与克萝内、桑德拉相识的起点。'],
-   ['斯特拉斯帕尔 · 贝里埃要塞','卷二防卫战的核心战场；要塞一破，防线连锁崩溃、直抵王都。'],
-   ['西德里恩特','与帝国拉锯二十年的最前线，卷二战败后被割让出去。'],
-   ['哈尔吉奥村 · 里特贝尔','红玫瑰州；「浅坟」之地（卷一，三叶死了一次又爬回来）与治安局驻地。'],
-   ['奥瑟利亚街道','两州边境的会战之地（卷三「蔷薇的葬列」，帝国大军在此覆灭）。']
+   ['新浜市（ニューポートシティ）','沿岸人工都市、核战后日本的暂定首都；公安9課本部所在，全篇的主战场。'],
+   ['湾岸区','摩天写字楼与高层公寓林立的滨海区；开局一的密谈、开局五的自宅都在这里。'],
+   ['南新浜','旧城与救济设施混杂的南部市区；「人间工场」、临时诊疗点等案发地。'],
+   ['旧城区','老旧的低层街区；巴特的「加布里埃拉」安全屋藏身其中。'],
+   ['公安9課本部','内务省·首相直属攻性组织的据点：大办公区、射击场、军械科、Fuchikoma格纳区。'],
+   ['临时首都机能区','各省厅别馆云集之地；荒卷的预算攻防战在这里上演。']
   ];
   var tier2=[
-   ['普尔梅尼亚帝国','东方宿敌、主要假想敌（≈普鲁士等大陆列强）；黑衣骑兵、恐惧三叶的皇帝鲁道夫。'],
-   ['莉莉亚 / 莉莉安娜','隔海的岛国、海洋霸主、罗泽利亚的前宗主国（≈英国）；殖民地遍布。'],
-   ['阿尔卡迪亚合众国','新大陆的「自由之国」（≈美国）；罗泽利亚曾出兵助其独立，正如法国援美。'],
-   ['卡萨布兰卡大公国','南方真正的盟友，王妃玛丽安娜的祖国；重谈判、守礼节。'],
-   ['赫泽兰','东北由十位国王凑成的联合王国，墙头草中立，卷三谈和对象。'],
-   ['库洛卡斯大帝国','东方野心帝国，扬言要统一大陆，疑为邪教背后的金主。'],
-   ['大轮教会领','大轮教圣地、教皇领，位于大陆东部。']
+   ['择捉岛 · Bertarve区','1991年归还日本后沦为信息集约的无法地带；旧苏军潜艇基地遗址之上的旧式电脑都市。'],
+   ['佐川电子 Geofront','择捉地下的巨坑设施；企业与旧军事遗产交叠之处。'],
+   ['新浜市外海','素子休假的帆船、以及海上狙击行动的舞台。'],
+   ['MEGATECH BODY INC.','9课御用、军方机密级的义体制造厂；傀儡师之器由此逃走。']
   ];
   var tier3=[
-   ['帝国南邻四国','加贝拉、赛菲洛斯、萨尔比亚、达利亚——帝国南面的邻国群，仅在地图上标注。'],
-   ['南方小国','海德拉西亚、弗利吉亚——大陆南端的小王国，纯属世界点缀。'],
-   ['莉莉亚海外领地 · 边角地点','岛国的离岛飞地，以及架桥小岛等——为让世界完整而画上，剧情基本不涉足。']
+   ['极东通商圏','对岸大陆的通商与情报势力；硅矿床与「不干涉」交易的另一端。'],
+   ['海外情报机构','各国的谍报组织与企业黑手，隔着网络与9课过招。'],
+   ['網（the Net）','覆盖星球的电子与光——真正「广大」之地，深潜者的战场，也是坟场。']
   ];
   return '<div class="grow bambooV" style="overflow-y:auto;padding:24px 30px"><div style="max-width:760px;margin:0 auto">'
-   +P('<b style="color:var(--gold2)">没读过原作也能玩。</b>下面用大白话讲清楚：这是个什么故事、主角是谁、十个开局各扮演谁、会遇到什么人。')
+   +P('<b style="color:var(--gold2)">没看过原作也能玩。</b>下面用大白话讲清楚：这是个什么世界、主角是谁、十四个开局各扮演谁、会遇到什么人。')
    +H('一句话故事')
-   +P('一个像人偶的银发少女，穿越到一个魔法与大炮并存、正走向战争与革命的国家。恨她的人会离奇惨死，而她自己毫无察觉——她就这样从「被诅咒的孩子」，一路走成了共和国的独裁者。')
-   +H('历史原型 · 拿破仑')
-   +'<div style="border:1px solid rgba(255,176,0,.35);border-radius:12px;background:linear-gradient(135deg,rgba(255,176,0,.08),rgba(201,160,99,.045));padding:14px 17px;margin:2px 0 8px">'
-     +'<div style="font-size:13px;line-height:1.95;color:var(--ink2);margin-bottom:9px">这个故事，是照着<b style="color:#c9705a">拿破仑</b>的一生写的。把三叶想成拿破仑，剧情一下就通了——</div>'
+   +P('西历二〇二九年，东京毁于核火，沿岸人工都市新浜市成了暂定首都。电脑化与全身义体是日常，唯有「Ghost（灵魂）」无法量产。内务省·首相直属的攻性组织「公安9課」在这里干政府可以否认的脏活——而你，多半就是它那支实战部队的少佐，草薙素子。')
+   +H('五个词读懂这个世界')
+   +'<div style="border:1px solid rgba(61,220,132,.35);border-radius:12px;background:linear-gradient(135deg,rgba(61,220,132,.08),rgba(46,140,168,.045));padding:14px 17px;margin:2px 0 8px">'
+     +'<div style="font-size:13px;line-height:1.95;color:var(--ink2);margin-bottom:9px">士郎正宗《攻殻機動隊》的世界，五个词就能进门——</div>'
      +'<div style="font-size:12.5px;line-height:2.0;color:var(--ink2)">'
-       +'• <b style="color:var(--gold)">炮兵出身</b>：拿破仑是炮兵军官、靠大炮一战成名；三叶也偏偏自选炮兵科（「因为大炮破坏力最强」）。<br>'
-       +'• <b style="color:var(--gold)">乱世崛起</b>：法国大革命之于拿破仑，正是罗泽利亚的革命浪潮之于三叶——断头台、处死国王、「自由·平等·博爱」，一一对得上。<br>'
-       +'• <b style="color:var(--gold)">自我加冕</b>：拿破仑在加冕礼上亲手把皇冠戴上自己头；三叶在政变当天，也是自己捡起王冠戴上，宣布这天就是她的「加冕仪式」。<br>'
-       +'• <b style="color:var(--gold)">限期的独裁者</b>：拿破仑从「执政」走向「皇帝」；三叶则宣布「二十年限定」的独裁，自称共和国总统。<br>'
-       +'• <b style="color:var(--gold)">连名字都在致敬</b>：她最重要的战友，全名克萝内·帕雷亚纳·<b style="color:#c9705a">圣赫勒拿</b>——正是拿破仑最终被流放、长眠的那座岛。'
+       +'• <b style="color:var(--gold)">义体</b>：把肉身换成机械身体，从一条义肢到全身义体，寻常得像换衣服。<br>'
+       +'• <b style="color:var(--gold)">电子脑</b>：大脑直接接上网络——能瞬时通讯，也能被人骇入、被人改写记忆。<br>'
+       +'• <b style="color:var(--gold)">Ghost</b>：义体与电子脑之上，那个「之所以是你」的东西。全世界唯一无法拷贝量产之物。<br>'
+       +'• <b style="color:var(--gold)">網（网络）</b>：覆盖星球的电子与光。深潜其中，攻性防壁是你的甲胄，也可能是你的坟墓。<br>'
+       +'• <b style="color:var(--gold)">公安9課</b>：拿预算干脏活的攻性组织——反恐、防谍、渎职侦办，以及一切「政府需要它没发生过」的事。'
      +'</div>'
-     +'<div style="font-size:12px;line-height:1.9;color:var(--mut);margin-top:9px">连地图也对得上：罗泽利亚≈法国，海对面的岛国莉莉亚≈英国，新大陆的「自由之国」阿尔卡迪亚≈美国（罗泽利亚曾出兵助其独立），东边的宿敌帝国≈普鲁士等大陆列强。</div>'
+     +'<div style="font-size:12px;line-height:1.9;color:var(--mut);margin-top:9px">故事真正在问的只有一句：当身体、记忆、乃至思想都能替换与伪造，「我之所以是我」还剩下什么？答案藏在每一桩案子的裂缝里。</div>'
    +'</div>'
-   +H('这个世界 · 罗泽利亚')
-   +P('埃乌罗佩大陆上的一个近世国家，气质很像大革命前后的法国：贵族与平民尖锐对立，魔术与火炮并存，战争、割地、革命接踵而至。故事横跨三卷、大轮历 585～588 年（三叶 11～14 岁）。')
-   +H('主角 · 三叶・克劳伯')
-   +P('银发蓝眼、宛如人偶的公爵之女。出生即是植物人，昏睡十年后在 11 岁醒来——而醒来的，其实是一个转生者（原本的现代人）。世人蔑称她「诅咒人偶」：对她怀有恶意的人往往离奇惨死，她本人却浑然不觉，只当成有趣的「前卫艺术」。她怕无聊胜过怕死，礼貌又天真，珍惜为数不多的朋友，然后顺手夺走了王冠。')
-   +P('多数开局你扮演三叶本人；也有几个开局让你扮演她身边的人（战友克萝内、议长桑德拉、监护人尼可所长），从旁观者的眼睛看这场「死之轮舞」。')
-   +H('时代脉络','剧情大致走向')
+   +H('这个世界 · 新浜市与西历2029')
+   +P('第三次核大战与第四次非核大战之后的日本：东京被核火抹平，政府退守沿岸人工都市新浜市（ニューポートシティ）。企业的网络覆盖星球，义体与电脑化是寻常事，但国家与民族尚未消亡。故事严格贴着原作漫画时间线，横跨西历 2029 年 3 月到 2030 年 9 月。')
+   +H('主角 · 草薙素子')
+   +P('公安9課实战部队的队长，军衔少佐。全身义体化——除了那具无法量产的 Ghost，全身几乎没有一处是天生的。顶尖黑客，也是近接战与枪械的一流好手；冷面、毒舌、干练，对「灵魂」与人机边界怀着旁人看不懂的执念。')
+   +P('多数开局你扮演素子本人；也有几个开局让你换一双眼睛，扮演她身边的人——突击担当巴特、准全人类陀古萨、纯政治型课长荒卷，甚至一整队天真的思考战车 Fuchikoma。')
+   +H('时间脉络','剧情大致走向')
    +'<div style="font-size:12.5px;line-height:2.15;color:var(--ink2);margin:0 0 4px">'
-     +'① <b style="color:var(--gold3)">苏醒</b>（585 春）：在城馆醒来，父亲被毒杀，她被当成怪物幽禁。<br>'
-     +'② <b style="color:var(--gold3)">军校</b>（585 夏）：被塞进军官学校炮兵科，恶名先她一步传开。<br>'
-     +'③ <b style="color:var(--gold3)">死与刻印</b>（585 秋）：野外研习撞破邪教村，死了一次，又自己爬回来。<br>'
-     +'④ <b style="color:var(--gold3)">战争</b>（586）：帝国入侵，学生被送上前线，贝里埃要塞死守。<br>'
-     +'⑤ <b style="color:var(--gold3)">革命</b>（587）：战败割地，议会审判国王，少女走向王冠。<br>'
-     +'⑥ <b style="color:var(--gold3)">独裁</b>（587 夏～588）：共和国成立，「二十年限定」独裁宣言，随后是谈和、僵局与大选前夜。'
+     +'① <b style="color:var(--gold3)">序章</b>（2029.3）：9课尚未成立，素子已在暗处替政府处理「不存在的事」。<br>'
+     +'② <b style="color:var(--gold3)">开张</b>（2029.4）：预算通过、9课挂牌；第一案就撞上政府自己的洗脑工场。<br>'
+     +'③ <b style="color:var(--gold3)">骇入</b>（2029夏～冬）：逆探知、択捉的幻之资金——电子战与义体犯罪层出不穷。<br>'
+     +'④ <b style="color:var(--gold3)">傀儡師</b>（2030夏）：无源自走的义体逃出义体厂，人机边界开始崩解。<br>'
+     +'⑤ <b style="color:var(--gold3)">至暗</b>（2030.9）：素子被实名曝光、假死逃亡，最后只剩一只脑壳与 Ghost。<br>'
+     +'⑥ <b style="color:var(--gold3)">網は広大</b>：而在网络的尽头，没有人知道它究竟有多广大。'
    +'</div>'
-   +H('十个开局','挑一个开始')
-   +P('前七个你扮演<b style="color:var(--gold)">三叶本人</b>，按时间顺序推进；后三个让你换一双眼睛，扮演她<b style="color:var(--gold)">身边的人</b>。')
+   +H('十四个开局','挑一个开始')
+   +P('前十个以<b style="color:var(--gold)">草薙素子</b>为主视角（含一段办公室日常与一个自由沙盒）；后四个让你换一双眼睛，扮演<b style="color:var(--gold)">巴特 / 陀古萨 / 荒卷 / Fuchikoma</b>。')
    +cards
-   +H('埃乌罗佩 · 舆图')
-   +P('故事发生在埃乌罗佩大陆。下面就是游戏里的舆图（进游戏后点右上「图」，还能拖动红色御印亲赴各地当作一回合行动）。')
+   +H('新浜市 · 広域図')
+   +P('故事的舞台是沿岸人工都市新浜市与它周边的近海。下面就是游戏里的広域図（进游戏后点右上「图」，还能拖动标记亲赴各地，当作一回合行动）。')
    +mapHtml
-   +H('地点与国家 · 由主到次')
-   +P('按剧情分量排个序：主舞台 → 有戏份的列强邻国 → 只在地图上出现的世界背景。')
-   +GZ('① 最重要 · 主舞台（罗泽利亚国内）','#8f6a1e',tier1)
-   +GZ('② 次要 · 列强与邻国','#3ddc84',tier2)
-   +GZ('③ 原著几乎未出现 · 世界背景','#1e9e5c',tier3)
+   +H('地点 · 由主到次')
+   +P('按剧情分量排个序：主舞台新浜市 → 近海与法外之地 → 只在背景里出现的列国与网络。')
+   +GZ('① 最重要 · 主舞台（新浜市圏）','#8f6a1e',tier1)
+   +GZ('② 次要 · 近海与法外之地','#3ddc84',tier2)
+   +GZ('③ 世界背景 · 列国与网络','#1e9e5c',tier3)
    +'<div style="height:10px"></div>'
    +'</div></div>';
 }
@@ -5879,41 +5878,41 @@ function codexBody(){
   }
   return '<div class="row grow" style="min-height:0"><div id="zjCatBar" style="position:relative;flex:none;width:104px;border-right:1px solid rgba(61,220,132,.18);overflow-y:auto;padding:8px 0">'+cats+'</div><div class="row grow zjPane" style="min-height:0"><div id="zjEntList" style="position:relative;flex:none;width:230px;border-right:1px solid rgba(61,220,132,.18);overflow-y:auto;padding:8px">'+list+'</div>'+detail+'</div></div>';
 }
-/* ---------------- 埃乌罗佩大陆舆图 · 地点与前往 ----------------
-   坐标系：小说原图逆时针旋转九十度为上北下南（罗盘N指原图右侧），viewBox 1000×707。
-   方位与世界书对齐：普尔梅尼亚在罗泽利亚东侧，莉莉安娜为西北隔海岛国（卡利亚市隔海峡相望），
-   卡萨布兰卡在南，赫泽兰在东北（经架桥小岛连里贝克州），库洛卡斯居极东，七玫瑰州如花瓣环绕王都。 */
+/* ---------------- 新浜市広域図 · 地点与前往 ----------------
+   坐标系：以新浜市为中心的示意広域図（罗盘N指右侧），viewBox 1000×707。
+   方位大致对齐：大陆連邦在新浜圏东侧，合众国为西北隔海覇権（合众国港市隔海峡相望），
+   南洋同盟在南，択捉島在东北（经択捉连络线连内务省别馆区），極东通商圏居极东，新浜市各区如环带拱卫中枢。 */
 var ZJ_LOCS=[
-  {name:'首都贝尔',ch:'都',kind:'cap',x:218,y:337,note:'花之王都 · 罗泽利亚之心',alias:['王都贝尔']},
-  {name:'卡利亚市',ch:'伊',kind:'city',x:150,y:265,note:'伊尔洛兹州都 · 海峡港市',la:'n',alias:['卡利雅','卡利阿']},
-  {name:'阿敏市',ch:'阿',kind:'city',x:178,y:293,note:'通往卡利亚之路的城市',la:'n',alias:['阿明市']},
-  {name:'诺斯贝尔市',ch:'诺',kind:'city',x:202,y:312,note:'邻近首都 · 广场上立着断头台',la:'n'},
-  {name:'里特贝尔',ch:'红',kind:'city',x:278,y:308,note:'红玫瑰州 · 治安维持局驻地',la:'n'},
-  {name:'哈尔吉奥村',ch:'村',kind:'city',x:250,y:322,note:'红玫瑰州 · 浅坟之地'},
-  {name:'布鲁洛兹',ch:'蓝',kind:'city',x:296,y:330,note:'蓝蔷薇之州 · 三叶的庭院',la:'n'},
-  {name:'里贝克州',ch:'贝',kind:'city',x:332,y:278,note:'东北国境 · 第一军团驻地',la:'n',alias:['利贝克']},
-  {name:'奥瑟利亚街道',ch:'道',kind:'pass',x:302,y:347,note:'两州边境 · 会战之地',alias:['奥瑟路','奥赛尔']},
-  {name:'斯特拉斯帕尔',ch:'斯',kind:'city',x:324,y:363,note:'德里恩特之后的大州 · 重要防线'},
-  {name:'贝里埃要塞',ch:'塞',kind:'pass',x:337,y:382,note:'干道要冲 · 俯瞰斯市'},
-  {name:'西德里恩特',ch:'战',kind:'pass',x:351,y:324,note:'最前线 · 二十年战场',la:'n',alias:['多利安特']},
-  {name:'东德里恩特',ch:'东',kind:'pass',x:376,y:342,note:'德里恩特东半 · 帝国占领地'},
-  {name:'蒙佩利亚',ch:'蒙',kind:'city',x:180,y:445,note:'南方国境州 · 与大公国接壤',alias:['蒙派拉']},
-  {name:'架桥小岛',ch:'桥',kind:'pass',x:366,y:242,note:'通往赫泽兰的必经小岛'},
-  {name:'卡萨布兰卡',ch:'公',kind:'cap',x:170,y:535,note:'南方同盟 · 大公国'},
-  {name:'莉莉安娜',ch:'莉',kind:'cap',x:118,y:158,note:'隔海的岛国 · 海洋霸主 · 王都林登丽露',alias:['莉莉亚','林登丽露']},
-  {name:'坎特伯里',ch:'港',kind:'city',x:150,y:188,note:'莉莉安娜的港湾都市'},
-  {name:'赫泽兰',ch:'赫',kind:'cap',x:600,y:192,note:'东北联合王国 · 十王之国',alias:['海泽兰德','赫泽兰德','海泽兰']},
-  {name:'普尔梅尼亚',ch:'普',kind:'cap',x:452,y:390,note:'宿敌帝国 · 帝都梅尔加尔多',alias:['梅尔加尔多','普美利亚','普梅尼亚']},
-  {name:'库洛卡斯',ch:'库',kind:'cap',x:770,y:280,note:'东方大帝国 · 野心昭彰',alias:['库罗卡斯']},
-  {name:'大轮教会领',ch:'教',kind:'cap',x:694,y:464,note:'大轮教圣地 · 教皇领'},
-  {name:'莉莉亚领地',ch:'领',kind:'city',x:746,y:562,note:'莉莉安娜的海外领地 · 离岛与飞地'},
-  {name:'海德拉西亚',ch:'海',kind:'cap',x:204,y:650,note:'南方小国 · 海德拉西亚王国'},
-  {name:'弗利吉亚',ch:'弗',kind:'cap',x:284,y:622,note:'南方小国 · 弗利吉亚王国'},
-  {name:'加贝拉',ch:'加',kind:'cap',x:388,y:592,note:'帝国南邻 · 加贝拉帝国'},
-  {name:'赛菲洛斯',ch:'赛',kind:'cap',x:476,y:612,note:'帝国南邻 · 赛菲洛斯帝国'},
-  {name:'萨尔比亚',ch:'萨',kind:'cap',x:530,y:562,note:'帝国南邻 · 萨尔比亚王国'},
-  {name:'达利亚',ch:'达',kind:'cap',x:608,y:566,note:'帝国南邻 · 达利亚王国'},
-  {name:'阿尔卡迪亚',ch:'由',kind:'sea',x:52,y:248,note:'新大陆的自由之国 · 需扬帆渡洋',alias:['阿卡迪亚','阿卡迪纳']}
+  {name:'新浜市中枢',ch:'都',kind:'cap',x:218,y:337,note:'临时首都机能区 · 公安9課本部',alias:['新浜市','9课本部','9課本部','本部','中枢']},
+  {name:'湾岸高层区',ch:'湾',kind:'city',x:150,y:265,note:'摩天写字楼群 · 密谈与狙击之地',la:'n',alias:['湾岸','高层区','湾岸高层']},
+  {name:'湾岸公寓区',ch:'弧',kind:'city',x:178,y:293,note:'滨海弧形公寓 · 素子的自宅所在',la:'n',alias:['弧形公寓','自宅']},
+  {name:'南新浜4区',ch:'南',kind:'city',x:202,y:312,note:'圣市民救济中心 · 人间工场案发地',la:'n',alias:['南新浜','4区','救济中心']},
+  {name:'旧城区',ch:'旧',kind:'city',x:278,y:308,note:'低层老街 · 巴特的安全屋所在',la:'n',alias:['旧城','安全屋','加布里埃拉']},
+  {name:'新浜市郊',ch:'郊',kind:'city',x:250,y:322,note:'外围与神社 · 花见待机点',alias:['市郊','神社','郊']},
+  {name:'MEGATECH义体厂',ch:'厂',kind:'city',x:296,y:330,note:'9课御用义体厂 · 军方机密级',la:'n',alias:['MEGATECH','义体厂','梅嘉泰克']},
+  {name:'内务省别馆',ch:'省',kind:'city',x:332,y:278,note:'省厅云集 · 预算攻防之地',la:'n',alias:['内务省','别馆','省厅']},
+  {name:'湾岸连络桥',ch:'桥',kind:'pass',x:302,y:347,note:'跨海干道 · 车流要冲',alias:['连络桥','湾岸桥']},
+  {name:'南新浜17号公寓',ch:'诊',kind:'city',x:324,y:363,note:'临时诊疗点 · 逆探知落点',alias:['17号公寓','诊疗点']},
+  {name:'新浜军港',ch:'港',kind:'pass',x:337,y:382,note:'海上行动的出港要冲'},
+  {name:'旧东京被災圏',ch:'京',kind:'pass',x:351,y:324,note:'核火之后的废墟 · 管制区',la:'n',alias:['旧东京','东京','被災地']},
+  {name:'临海检问所',ch:'检',kind:'pass',x:376,y:342,note:'管制区边界 · 出入检查'},
+  {name:'神户外港',ch:'神',kind:'city',x:180,y:445,note:'南方港市 · 外海人工岛（彩蛋）',alias:['神户','外港']},
+  {name:'択捉连络线',ch:'渡',kind:'pass',x:366,y:242,note:'通往北方択捉的必经海路',alias:['択捉连络','渡口']},
+  {name:'南洋同盟',ch:'盟',kind:'cap',x:170,y:535,note:'南方的友邦 · 通商与庇护',alias:['南洋','同盟国']},
+  {name:'合众国',ch:'合',kind:'cap',x:118,y:158,note:'隔海的海洋覇権 · 旧同盟国',alias:['亚米利加','海洋覇権']},
+  {name:'合众国港市',ch:'港',kind:'city',x:150,y:188,note:'海洋覇権的门户港湾'},
+  {name:'択捉島',ch:'択',kind:'cap',x:600,y:192,note:'信息集约的无法地带 · Bertarve区',alias:['択捉','Bertarve','贝尔塔尔韦','佐川电子','Geofront']},
+  {name:'大陆連邦',ch:'联',kind:'cap',x:452,y:390,note:'对岸大陆的军事强权 · 假想敌',alias:['大陆联邦','连邦']},
+  {name:'極东通商圏',ch:'商',kind:'cap',x:770,y:280,note:'对岸大陆的通商与情报势力',alias:['极东通商','通商代表部','極东','极东']},
+  {name:'情报自治区',ch:'自',kind:'cap',x:694,y:464,note:'企业与教团割据的电脑都市'},
+  {name:'合众国海外领',ch:'领',kind:'city',x:746,y:562,note:'海洋覇権的离岛军事基地'},
+  {name:'南洋岛国',ch:'岛',kind:'cap',x:204,y:650,note:'南方海域的小国 · 世界背景'},
+  {name:'南洋群岛',ch:'群',kind:'cap',x:284,y:622,note:'南方海域的岛群 · 世界背景'},
+  {name:'大陆南邦',ch:'邦',kind:'cap',x:388,y:592,note:'大陆連邦南面的邻国 · 仅作背景'},
+  {name:'临海工业圏',ch:'工',kind:'cap',x:476,y:612,note:'大陆沿岸的工业地带 · 仅作背景'},
+  {name:'内陆缓冲国',ch:'缓',kind:'cap',x:530,y:562,note:'列强间的缓冲小国 · 仅作背景'},
+  {name:'资源租借地',ch:'租',kind:'cap',x:608,y:566,note:'列强共管的资源地带 · 仅作背景'},
+  {name:'外洋数据中继',ch:'網',kind:'sea',x:52,y:248,note:'跨洋海底光缆的中继 · 需深潜接入',alias:['数据中继','海底光缆']}
 ];
 function locByName(n){for(var i=0;i<ZJ_LOCS.length;i++)if(ZJ_LOCS[i].name===n)return ZJ_LOCS[i];return null;}
 var ZJ_KEYS=(function(){var a=[];ZJ_LOCS.forEach(function(L){a.push({L:L,k:L.name});(L.alias||[]).forEach(function(x){a.push({L:L,k:x});});});a.sort(function(p,q){return q.k.length-p.k.length;});return a;})();
@@ -6011,7 +6010,7 @@ function mapSvg(){
     +P(pEnclave,'url(#zjLlX)',INK,1.1)
     +P(pChurch,'#b7a67d',INK,1.2)
     +'</g>';
-  /* 罗泽利亚州界（虚线）：七玫瑰花瓣环 + 辐条 + 外州 */
+  /* 新浜市区界（虚线）：环状区带 + 辐条 + 外区 */
   var DS='fill="none" stroke="rgba(90,76,56,.5)" stroke-width=".7" stroke-dasharray="3 2.5"';
   s+='<circle cx="218" cy="337" r="16" '+DS+'></circle>'
     +'<path d="M218 256C262 260 298 296 307 342C313 380 276 412 232 418C186 424 148 400 142 356C136 312 170 260 218 256Z" '+DS+'></path>';
@@ -6020,21 +6019,21 @@ function mapSvg(){
   /* 大国内部纹理线 */
   var DS2='fill="none" stroke="rgba(90,76,56,.32)" stroke-width=".7" stroke-dasharray="3 2.5"';
   [[420,262,430,300,424,340,432,380,426,420,432,460,428,500],[360,376,420,384,480,378,540,386,556,382],[700,100,694,180,700,260,692,330,682,380],[780,110,786,190,778,270,764,330],[455,100,448,160,455,230],[540,96,534,160,540,236]].forEach(function(a){s+='<path d="'+line(a)+'" '+DS2+'></path>';});
-  /* 山脉：德里恩特前线 + 南方三国交界 */
+  /* 山脉：管制区边界 + 南方岛链交界 */
   var mt='';[[357,300],[362,318],[356,336],[361,354],[355,372],[359,390],[302,470],[314,476],[326,468]].forEach(function(c){mt+='<path d="M'+(c[0]-7)+' '+c[1]+' l7 -10 l7 10" fill="none" stroke="#6b5c44" stroke-width="1.2"></path><path d="M'+(c[0]-3)+' '+c[1]+' l3 -4.5 l3 4.5" fill="none" stroke="rgba(107,92,68,.55)" stroke-width=".9"></path>';});
   s+=mt;
   /* 国名 */
   function TX(x,y,t,fs,ls,fill,style){return '<text x="'+x+'" y="'+y+'" text-anchor="middle" font-size="'+fs+'" letter-spacing="'+ls+'" fill="'+(fill||'rgba(63,54,40,.85)')+'" style="font-family:var(--kai),serif;'+(style||'')+'">'+t+'</text>';}
-  s+=TX(218,376,'罗泽利亚',14,4,'rgba(63,54,40,.5)')
-    +TX(462,300,'普尔梅尼亚',17,7)
-    +TX(240,572,'卡萨布兰卡',15,5)
-    +TX(120,104,'莉莉安娜王国',11,2)
-    +TX(478,152,'赫泽兰',16,10)
-    +TX(748,208,'库洛卡斯',17,9)
+  s+=TX(218,376,'日本',14,4,'rgba(63,54,40,.5)')
+    +TX(462,300,'大陆連邦',17,7)
+    +TX(240,572,'南洋同盟',15,5)
+    +TX(120,104,'合众国',11,2)
+    +TX(478,152,'択捉島',16,10)
+    +TX(748,208,'極东通商圏',17,9)
     ;
-  /* 州名（小） */
+  /* 区名（小） */
   var ST='rgba(107,92,68,.9)';
-  s+=TX(145,317,'伊尔洛兹',8.5,0,ST)+TX(228,280,'绿玫瑰',8.5,0,ST)+TX(184,382,'黑玫瑰',8.5,0,ST)+TX(290,412,'白玫瑰',8.5,0,ST)+TX(222,420,'粉红玫瑰',8.5,0,ST);
+  s+=TX(145,317,'湾岸区',8.5,0,ST)+TX(228,280,'中央区',8.5,0,ST)+TX(184,382,'旧城区',8.5,0,ST)+TX(290,412,'新都心',8.5,0,ST)+TX(222,420,'南新浜区',8.5,0,ST);
   /* 图例 */
   s+='<rect x="40" y="318" width="82" height="112" fill="rgba(244,236,214,.88)" stroke="'+INK+'" stroke-width="1"></rect>'
     +'<rect x="44" y="322" width="74" height="104" fill="none" stroke="rgba(74,64,50,.35)"></rect>'
@@ -6050,9 +6049,9 @@ function mapSvg(){
   /* 题签 + 印 */
   s+='<rect x="698" y="614" width="180" height="58" fill="rgba(244,236,214,.85)" stroke="'+INK+'" stroke-width="1.2"></rect>'
     +'<rect x="704" y="620" width="168" height="46" fill="none" stroke="rgba(74,64,50,.35)"></rect>'
-    +TX(788,646,'埃乌罗佩大陆',16,6,'#3f3628')
-    +TX(788,661,'大轮历 · 革命的时代',8.5,2,'rgba(107,92,68,.9)')
-    +'<g transform="rotate(-5 940 70)" opacity=".85"><rect x="908" y="36" width="64" height="68" fill="rgba(255,176,0,.5)" rx="3"></rect><rect x="913" y="41" width="54" height="58" fill="none" stroke="rgba(168,232,196,.35)"></rect><text x="940" y="65" text-anchor="middle" fill="#efdcba" font-size="21" font-family="serif">三</text><text x="940" y="91" text-anchor="middle" fill="#efdcba" font-size="21" font-family="serif">叶</text></g>';
+    +TX(788,646,'新浜市広域圏',16,6,'#3f3628')
+    +TX(788,661,'西历2030 · 义体と網の时代',8.5,2,'rgba(107,92,68,.9)')
+    +'<g transform="rotate(-5 940 70)" opacity=".85"><rect x="908" y="36" width="64" height="68" fill="rgba(255,176,0,.5)" rx="3"></rect><rect x="913" y="41" width="54" height="58" fill="none" stroke="rgba(168,232,196,.35)"></rect><text x="940" y="65" text-anchor="middle" fill="#efdcba" font-size="21" font-family="serif">九</text><text x="940" y="91" text-anchor="middle" fill="#efdcba" font-size="21" font-family="serif">課</text></g>';
   /* 边框与角饰 */
   s+='<rect x="14" y="12" width="972" height="683" fill="none" stroke="rgba(61,220,132,.35)" stroke-width="2.5"></rect><rect x="22" y="20" width="956" height="667" fill="none" stroke="rgba(61,220,132,.18)"></rect>';
   [[26,24,1,1],[974,24,-1,1],[26,683,1,-1],[974,683,-1,-1]].forEach(function(c){
@@ -6060,12 +6059,12 @@ function mapSvg(){
     s+='<path d="M'+x+' '+(y+sy*34)+' L'+x+' '+y+' L'+(x+sx*34)+' '+y+'" fill="none" stroke="rgba(61,220,132,.4)" stroke-width="2.5"></path>'
       +'<path d="M'+(x+sx*8)+' '+(y+sy*34)+' L'+(x+sx*8)+' '+(y+sy*8)+' L'+(x+sx*34)+' '+(y+sy*8)+'" fill="none" stroke="rgba(61,220,132,.22)" stroke-width="1.5"></path>';
   });
-  s+=TX(500,52,'埃 乌 罗 佩 大 陆',24,16,'rgba(61,220,132,.22)','opacity:.9')
+  s+=TX(500,52,'新 浜 市 広 域 圏',24,16,'rgba(61,220,132,.22)','opacity:.9')
     +'</svg>';
   ZJ_SVG=s;return s;
 }
 function mapBody(){
-  var p=currentPanel();var era=p?[p.world['纪年'],p.world['时地']].filter(Boolean).join(' · '):'大轮历 · 革命的时代';
+  var p=currentPanel();var era=p?[p.world['纪年'],p.world['时地']].filter(Boolean).join(' · '):'西历2030 · 义体と網の时代';
   var cur=playerLoc();
   var pend=S.movePending?locByName(S.movePending):null;
   var kpos=pend||cur;
@@ -6099,7 +6098,7 @@ function savesBody(){
   return '<div class="grow" style="overflow-y:auto;padding:18px 24px"><div style="display:flex;gap:12px;margin-bottom:16px;align-items:center;flex-wrap:wrap"><button data-act="savenow" class="gbtn btn" style="font-size:15px;letter-spacing:.15em;padding:9px 22px">新建存档</button><div style="font-size:12px;color:var(--mut)">最多十二份存档，存于此浏览器。</div></div>'+rows+'</div>';
 }
 
-/* 归一人物名：去空白（含全角空格）、去掉尾部括注（如「克萝内（学姐）」→「克萝内」），
+/* 归一人物名：去空白（含全角空格）、去掉尾部括注（如「巴特（少佐副手）」→「巴特」），
    使同一人的不同写法合并为同一节点，杜绝图谱里「同一人重复出现、只状态不同」。 */
 function npcKey(name){return String(name||'').replace(/[\s　]+/g,'').replace(/[（(【\[][^）)】\]]*[）)】\]]?\s*$/,'');}
 function npcStats(){
@@ -6149,7 +6148,7 @@ function presetNpcMeta(){
     return m;
   }catch(e){return {};}
 }
-var NPCMETA_SYS='你是人物设定提取器。下面给你一个近世欧陆（法国大革命风的架空世界「罗泽利亚」）角色扮演游戏里某NPC的历次出场片段，请推断其四项固定资料。只输出一个JSON对象，不要任何解释、不要代码块围栏：\n{"role":"其人身份或职业，如 炮兵科学生/元帅/侍女/议员/主教，尽量简短(≤5字)","place":"最近所在地","age":"年龄，可填数字或如 约四十","sex":"男 或 女"}\n凡片段中确实无从判断的字段，填空字符串""。';
+var NPCMETA_SYS='你是人物设定提取器。下面给你一个近未来赛博朋克（攻壳机动队式的架空日本「新浜市」）角色扮演游戏里某NPC的历次出场片段，请推断其四项固定资料。只输出一个JSON对象，不要任何解释、不要代码块围栏：\n{"role":"其人身份或职业，如 搜查官/义体技师/黑客/军官/官僚，尽量简短(≤5字)","place":"最近所在地","age":"年龄，可填数字或如 约四十","sex":"男 或 女"}\n凡片段中确实无从判断的字段，填空字符串""。';
 function npcMetaContext(name){
   var out=[];
   for(var i=0;i<S.history.length;i++){
@@ -6570,7 +6569,7 @@ function fontPane(){
    +'<div style="font-size:12.5px;color:var(--mut);margin-top:8px;line-height:1.8">拖动即时生效，作用于正文、档案与典的正文。</div>'
    +'<div class="kai" style="font-size:19px;color:var(--gold2);letter-spacing:.15em;margin:32px 0 14px">透明度</div>'
    +'<div style="display:flex;align-items:center;gap:14px"><input id="zjBlurRange" type="range" min="0" max="48" step="1" value="'+BGBLUR+'" style="flex:1;accent-color:#c9a063;border:none;background:transparent;padding:0"><div id="zjBlurVal" style="width:56px;text-align:right;font-size:15px;color:var(--gold3)">'+(BGBLUR===0?'透明':BGBLUR+'px')+'</div></div>'
-   +'<div style="font-size:12.5px;color:var(--mut);margin-top:8px;line-height:1.8">拖动即时生效：同时调节正文与文书馆的背景模糊与底色浓度——拉到最左＝完全透明（无模糊无底色，直接看穿到后面的三色旗），拉到最右＝完全不透明（纯色纸底、彻底看不穿）；开低配模式时模糊被关闭。</div>'
+   +'<div style="font-size:12.5px;color:var(--mut);margin-top:8px;line-height:1.8">拖动即时生效：同时调节正文与文书馆的背景模糊与底色浓度——拉到最左＝完全透明（无模糊无底色，直接看穿到后面的动态背景），拉到最右＝完全不透明（纯色纸底、彻底看不穿）；开低配模式时模糊被关闭。</div>'
    +'<div class="kai" style="font-size:19px;color:var(--gold2);letter-spacing:.15em;margin:32px 0 14px">字体</div>'
    +'<div style="display:flex;gap:9px;flex-wrap:wrap;margin-bottom:6px">'
    +[['huiwen','汇文明朝体 · 默认'],['wenkai','霞鹜文楷'],['kinghwa','京华老宋体'],['system','跟随系统']].map(function(fo){var on=!fname&&((ZJFONT_LIB[ZJFONT]&&ZJFONT===fo[0])||(!ZJFONT_LIB[ZJFONT]&&fo[0]==='system'));return '<div class="btn" data-zjfont="'+fo[0]+'" style="cursor:pointer;padding:8px 18px;font-size:13.5px;letter-spacing:.08em;border:1px solid '+(on?'rgba(255,176,0,.6)':'rgba(18,40,27,.28)')+';border-radius:10px;color:'+(on?'#ffb000':'var(--mut)')+';background:'+(on?'linear-gradient(135deg,rgba(255,176,0,.12),rgba(255,176,0,.03))':'rgba(255,255,255,.02)')+'">'+fo[1]+'</div>';}).join('')
@@ -6597,8 +6596,8 @@ function fontPane(){
    +'<div style="font-size:11.5px;color:var(--mut);line-height:1.7;margin-top:4px">封面右上角的「低」是同一开关。默认关闭，画质无任何妥协。</div>'
    +'<label style="display:flex;align-items:center;gap:9px;font-size:13.5px;color:var(--ink2);cursor:pointer;margin:12px 0 6px"><input id="zjOptSafe" type="checkbox" style="accent-color:#8f6a1e"'+(SAFEM?' checked':'')+'>安全模式：省内存·防闪退（皮套降清晰度·关毛玻璃·简化报纸滤镜；皮套永不隐藏）</label>'
    +'<div style="font-size:11.5px;color:'+(window.__mbAutoSafe?'#ffb000':'var(--mut)')+';line-height:1.7;margin-top:4px">'+(window.__mbAutoSafe?'⚠ 检测到上次因内存不足闪退，本次已自动开启；不需要可手动关闭。':'手机反复闪退（“A problem repeatedly occurred”）时打开。切换后自动重载。')+'</div>'
-   +'<label style="display:flex;align-items:center;gap:9px;font-size:13.5px;color:var(--ink2);cursor:pointer;margin:12px 0 6px"><input id="zjOptFlag" type="checkbox" style="accent-color:#3ddc84"'+(GAMEFLAG?' checked':'')+'>正文国旗背景：进入游戏后仍实时渲染三色旗背景（性能要求高，手机易发热耗电）</label>'
-   +'<div style="font-size:11.5px;color:var(--mut);line-height:1.7;margin-top:4px">默认关闭：正文使用蓝蔷薇静态背景，国旗渲染在封面与选开局画面之外彻底停机，省性能。</div>'
+   +'<label style="display:flex;align-items:center;gap:9px;font-size:13.5px;color:var(--ink2);cursor:pointer;margin:12px 0 6px"><input id="zjOptFlag" type="checkbox" style="accent-color:#3ddc84"'+(GAMEFLAG?' checked':'')+'>正文动态背景：进入游戏后仍实时渲染 3D 背景（性能要求高，手机易发热耗电）</label>'
+   +'<div style="font-size:11.5px;color:var(--mut);line-height:1.7;margin-top:4px">默认关闭：正文使用静态背景图，3D 背景渲染在封面与选开局画面之外彻底停机，省性能。</div>'
    /*GITS-EWX §2.8 设置·电子战裁定三选一（gits_ewpuzzle：dice/ring/maze，三源同构档位注入，AI零感知） */
    +'<div class="kai" style="font-size:19px;color:var(--gold2);letter-spacing:.15em;margin:34px 0 10px">电子战裁定</div>'
    +'<div style="display:flex;gap:12px;flex-wrap:wrap">'
@@ -7894,7 +7893,7 @@ root.addEventListener('click',function(e){
         if(!imgReady()){S.imgSetMsg='请先填好接口地址/密钥/模型';S.imgSetMsgC='var(--red2)';renderOverlay();return;}
         if(IMGCFG.style==='novelai'&&/novelai\.(net|ai)/i.test(IMGCFG.url||'')){S.imgSetMsg='「接口地址」不能填 NovelAI 官网（image.novelai.net）——浏览器跨域必被拦。这里要填你的 Cloudflare Worker 网址（形如 https://xxx.workers.dev）；NAI 官网地址已内置在 Worker 里，不用你填。';S.imgSetMsgC='var(--red2)';renderOverlay();return;}
         S.imgSetMsg='正在测试生图……';S.imgSetMsgC='var(--mut2)';renderOverlay();
-        var tpos=[IMGCFG.pos,'late 18th century parisian street at dusk, oil painting, cinematic lighting, highly detailed, test'].filter(Boolean).join(', ');
+        var tpos=[IMGCFG.pos,'neon-lit niihama city street at night, Ghost in the Shell style, cyberpunk, cinematic lighting, highly detailed, test'].filter(Boolean).join(', ');
         var runGen=function(){imgGenBlob(tpos,IMGCFG.neg).then(function(blob){if(blob&&blob.size){S.imgSetMsg='✓ 测试生图成功，接口可用';S.imgSetMsgC='var(--grn2)';}else throw new Error('接口未返回图像');renderOverlay();})['catch'](function(err){var em=String(err&&err.message||err);var extra='';if(IMGCFG.style==='novelai'&&/(500|Internal Server)/.test(em))extra=' ｜ NAI 500 十有八九是「模型名」不对：请在上方直接点选模型（V4.5/V4 需 Opus 订阅，没订阅选 V3）。';S.imgSetMsg='测试失败：'+em.slice(0,260)+extra;S.imgSetMsgC='var(--red2)';renderOverlay();});};
         if(IMGCFG.style==='novelai'){
           fetch(imgBase()+'/',{method:'GET'}).then(function(r){return r.text();}).then(function(t){
@@ -7915,7 +7914,7 @@ root.addEventListener('click',function(e){
         })['catch'](function(err){S.imgSetMsg='拉取失败：'+String(err&&err.message||err).slice(0,130)+'（确认 ComfyUI 已启动、接口地址对、且启动参数带 --enable-cors-header "*"）';S.imgSetMsgC='var(--red2)';renderOverlay();});
         return;}
       else if(a==='imgLoreAdd'){syncImgForm();IMGLORE.push({keys:[],content:'',on:true});imgLoreSave();renderOverlay();return;}
-      else if(a==='imgLoreExport'){try{syncImgForm();var glb=new Blob([JSON.stringify(IMGLORE,null,2)],{type:'application/json'});var glu=URL.createObjectURL(glb);var gla=document.createElement('a');gla.href=glu;gla.download='三叶生图世界书.json';document.body.appendChild(gla);gla.click();document.body.removeChild(gla);setTimeout(function(){URL.revokeObjectURL(glu);},4000);}catch(e){}return;}
+      else if(a==='imgLoreExport'){try{syncImgForm();var glb=new Blob([JSON.stringify(IMGLORE,null,2)],{type:'application/json'});var glu=URL.createObjectURL(glb);var gla=document.createElement('a');gla.href=glu;gla.download='攻壳生图世界书.json';document.body.appendChild(gla);gla.click();document.body.removeChild(gla);setTimeout(function(){URL.revokeObjectURL(glu);},4000);}catch(e){}return;}
       else if(a==='imgRefClear'){IMGCFG.refImg=null;imgCfgSave();S.imgSetMsg='参考图已移除';S.imgSetMsgC='var(--mut2)';renderOverlay();return;}
       else if(a==='histmore'){S.histShow=(S.histShow||30)+30;S._stayTop=true;S._noFade=true;render();return;}
       else if(a==='closeov'){var cvk=S.overlay;var dm=document.getElementById('zjOvDim');if(dm){dm.style.pointerEvents='none';dm.style.webkitBackdropFilter='none';dm.style.backdropFilter='none';if(dm.animate)dm.animate([{opacity:1},{opacity:0}],{duration:280,easing:'ease',fill:'forwards'});dm.style.transition='opacity 280ms';dm.style.opacity='0';}zjWglOff();morphClose('zjOvBox','[data-ov="'+cvk+'"]',function(){S.overlay=null;S.movePending=null;var ow=document.getElementById('zjOvWrap');if(ow&&ow.parentNode)ow.parentNode.removeChild(ow);else render();});}
@@ -8588,7 +8587,7 @@ return {
 <script>
 /* ================================================================
    剧场 · 视觉小说岛 (零侵入模块)
-   把灵动岛变成 galgame 立绘框:背景状态机 + 三叶/克萝内/桑德拉。
+   把灵动岛变成 galgame 立绘框:背景状态机 + 素子/巴特/陀古萨。
    不改引擎一行代码——纯轮询读全局状态(S/TYPE/TTSP/currentPanel),
    覆盖层挂在 document.body 上,永不随 render() 重建,iframe 不重载。
    ================================================================ */
@@ -8597,7 +8596,7 @@ if(window.__VN__)return;
 var VN=window.__VN__={on:false,bg:'',prevNames:null,favorSeen:{},rev:false,
   lastFire:0,scanLen:0,scanMsg:null,firedTurn:false,doneFor:null,first:true,
   talk:false,ctlKey:null,posKey:''};
-/* 剧场岛默认关闭（三叶专属立绘停用）；用户主动点「剧场」入口才开 */
+/* 剧场岛默认关闭（素子专属立绘停用）；用户主动点「剧场」入口才开 */
 VN.on=false;try{VN.on=localStorage.getItem('gits_vn')==='1';}catch(e){}
 try{VN.rev=localStorage.getItem('gits_vn_flag')==='1';}catch(e){}
 var MOB=false;try{MOB=Math.min(screen.width||9e9,window.innerWidth||9e9)<=560;}catch(e){}
@@ -8643,7 +8642,7 @@ function lookAt(px,py){
   ['m','k','s'].forEach(function(w){send(w,{act:'look',x:nx,y:ny});});
 }
 document.addEventListener('pointermove',function(e){lookAt(e.clientX,e.clientY);},{passive:true});
-/* 点到三叶身上:随机 开枪一整套(举枪-瞄准-怼脸开火-收枪) 或 挥手打招呼 */
+/* 点到素子身上:随机 开枪一整套(举枪-瞄准-怼脸开火-收枪) 或 挥手打招呼 */
 document.addEventListener('click',function(e){
   if(!VN.on||VN.zz)return;
   var t=e.target;
@@ -8661,8 +8660,8 @@ document.addEventListener('click',function(e){
 },true);
 document.addEventListener('touchmove',function(e){var t=e.touches&&e.touches[0];if(t)lookAt(t.clientX,t.clientY);},{passive:true});
 document.addEventListener('touchstart',function(e){var t=e.touches&&e.touches[0];if(t){LOOK.t=0;lookAt(t.clientX,t.clientY);}},{passive:true});
-/* 手机端专属:仅当手指按在屏上 或 正在打字时,三叶才看向手指方向;松手/收起键盘→回正视前方
-   (手机一直被手指刷,若持续跟随三叶就永远低头不抬;电脑端 MOB=false 完全不走这段) */
+/* 手机端专属:仅当手指按在屏上 或 正在打字时,素子才看向手指方向;松手/收起键盘→回正视前方
+   (手机一直被手指刷,若持续跟随素子就永远低头不抬;电脑端 MOB=false 完全不走这段) */
 if(MOB){
   var _lookRst=0;
   function faceFront(){['m','k','s'].forEach(function(w){send(w,{act:'look',x:0,y:0,slow:1});});}  /* 松手:带 slow,立绘用长过渡缓缓转回 */
@@ -8683,7 +8682,7 @@ function send(who,data){
   }catch(e){}
 }
 
-/* ---------------- 口型驱动:说话时每帧算「张嘴度0~1」发给三叶 ----------------
+/* ---------------- 口型驱动:说话时每帧算「张嘴度0~1」发给素子 ----------------
    TTS→实时音量;纯文字(流式/打字机)→吐字节奏。角色端把 0~1 映射到 闭/微张/张。 */
 VN.mo={timer:0,actx:null,ana:null,src:null,buf:null,srcEl:null,lastPos:-1,open:0};
 function mouthStop(){var M=VN.mo;if(M.timer){clearInterval(M.timer);M.timer=0;}send('m',{act:'mouth',v:0});}
@@ -8756,32 +8755,32 @@ root.addEventListener('click',function(e){
 
 /* ---------------- 场景状态机 ---------------- */
 function panelNow(){var E=ENG();try{return E?E.currentPanel():null;}catch(e){return null;}}
-/* 情绪:从 MVU 面板(无聊/诅咒/人格)推断三叶心境,驱动立绘头姿+色调 */
+/* 情绪:从 MVU 面板(电子脑负荷/Ghost/态势/曝光)推断素子心境,驱动立绘头姿+色调 */
 function moodOf(){
-  var p=panelNow(); var c=(p&&p.char)||{};
-  var bore=parseInt(c['无聊'],10)||0, curse=parseInt(c['诅咒'],10)||0, per=c['人格']||'';
-  function pv(k){var m=new RegExp(k+'\\D*(\\d+)').exec(per);return m?parseInt(m[1],10):0;}
-  var steady=pv('稳健'), fun=pv('享乐'), rad=pv('激进');
-  if(curse>=55 || (rad>=40&&rad>steady&&rad>fun)) return 'intense';
-  if(bore>=68) return 'listless';
-  if(fun>steady&&fun>rad) return 'playful';
+  var p=panelNow(); var c=(p&&p.char)||{}; var w=(p&&p.world)||{};
+  function num(v){var m=/(\d+)/.exec(String(v||''));return m?parseInt(m[1],10):0;}
+  var strain=num(c['电子脑']), expo=num(w['曝光']);
+  var ghost=String(c['Ghost']||''), stance=String(w['态势']||'')+' '+String(w['剧场']||'');
+  if(strain>=70 || expo>=70 || /交火|交战|战斗|白热|突入|开火/.test(stance)) return 'intense';
+  if(/低语|混浊|沉|倦|待机|静默/.test(ghost+stance)) return 'listless';
+  if(/戏|谑|轻|贫嘴|斗嘴/.test(stance)) return 'playful';
   return 'neutral';
 }
 function sceneOf(){
   var p=panelNow();
-  if(!p)return 'bg_rose';                              /* 开局/无档案:蓝玫瑰 */
+  if(!p)return 'bg_rose';                              /* 开局/无档案:待机内景 */
   var w=p.world||{}; var npcs=p.npcs||[]; var c=p.char||{};
-  var loc=String(w['时地']||''), wx=String(w['天气']||''), sit=String(w['剧场']||'')+' '+String(w['大势']||'');
+  var loc=String(w['时地']||''), wx=String(w['天气']||''), sit=String(w['剧场']||'')+' '+String(w['态势']||'');
   var inr=loc+' '+String(c['记录']||'')+' '+String(c['心念']||'')+' '+String(c['观瞻']||'');
-  if(/革命爆发|起义|恐怖时代|断头台|共和国成立/.test(sit))VN.rev=true;
-  /* 内心世界·梦境·意识场景 → 黑玫瑰 */
-  if(/内心|心象|心念阁|梦境|梦中|入梦|噩梦|意识深处|精神世界|冥想|冥界|识海|幻境|心之壁|回忆深处|独白之/.test(loc))return 'bg_rose';
-  /* 苏醒·睁眼·沉睡(开局一等独处内心时刻) → 黑玫瑰 */
-  if(/苏醒|甦醒|睁开眼|睁开了眼|沉睡十年|沉睡多年|长眠初醒/.test(inr))return 'bg_rose';
-  if(/议会|议事|议场|国民公会|议院|公会大厅/.test(loc))return 'bg_parliament';
-  if(/街|广场|市集|码头|港口|城门|路上|途中|野外|营地|战场|阵地|桥|门前|巷/.test(loc))
+  if(/暴动|武装蜂起|戒严|市街战|全面战|恐怖攻击|骚乱/.test(sit))VN.rev=true;
+  /* 内心世界·电脑空间·意识场景 → 内景 */
+  if(/内心|心象|电脑空间|网络深处|深潜|同步潜行|梦境|梦中|入梦|噩梦|意识深处|精神世界|冥想|识海|幻境|Ghost之/.test(loc))return 'bg_rose';
+  /* 义体唤醒·初始化(开局独处内心时刻) → 内景 */
+  if(/义体唤醒|同步初始化|重新接线|冷启动|苏生|苏醒|睁开眼|睁开了眼/.test(inr))return 'bg_rose';
+  if(/国会|省厅|内务省|议场|听证|记者会|阁议|会议室/.test(loc))return 'bg_parliament';
+  if(/街|广场|市集|码头|港口|楼下|路上|途中|野外|据点|战场|巷|桥|门前|大厅/.test(loc))
     return VN.rev?'bg_city_rev':'bg_city';
-  if(!npcs.length)return 'bg_rose';                    /* 独自一人:蓝玫瑰 */
+  if(!npcs.length)return 'bg_rose';                    /* 独自一人:待机内景 */
   if(/夜|晚|深夜|子夜|凌晨|入夜/.test(loc))return 'bg_win_night';
   if(/黄昏|傍晚|夕|暮|日落|晚霞/.test(loc))return 'bg_win_dusk';
   return 'bg_win_day';                                 /* 默认:白日窗景 */
@@ -8796,12 +8795,12 @@ function setBg(name){
   showEl.style.opacity=1; hideEl.style.opacity=0;
 }
 
-/* ---------------- 在场之人 → 进出场与三叶让位 ---------------- */
+/* ---------------- 在场之人 → 进出场与素子让位 ---------------- */
 function presence(){
   var p=panelNow(); var npcs=p?(p.npcs||[]):[];
   var names=npcs.map(function(n){return String(n.name||'');});
-  var hasK=names.some(function(n){return n.indexOf('克萝内')>=0;});
-  var hasS=names.some(function(n){return n.indexOf('桑德拉')>=0;});
+  var hasK=names.some(function(n){return n.indexOf('巴特')>=0;});
+  var hasS=names.some(function(n){return n.indexOf('陀古萨')>=0;});
   var key=(hasK?'K':'')+(hasS?'S':'');
   if(key!==VN.posKey){
     VN.posKey=key;
@@ -8815,7 +8814,7 @@ function presence(){
     }
     lazyShow(k,hasK,hasK&&hasS?'0%':'2%');
     lazyShow(s2,hasS,hasK&&hasS?'15%':'4%');
-    send('m',{act:'pos',x:((hasK||hasS)&&VN.sizeKey!=='S')?'right':'center'});   /* 有客:三叶平移让位到右侧(小窗特写时恒居中) */
+    send('m',{act:'pos',x:((hasK||hasS)&&VN.sizeKey!=='S')?'right':'center'});   /* 有客:素子平移让位到右侧(小窗特写时恒居中) */
   }
   return {names:names,npcs:npcs};
 }
@@ -8834,15 +8833,15 @@ function greetCheck(pr){
 
 /* ---------------- 剧情雷达(流式逐字识别) + 导演指令 ---------------- */
 var RX_KILL=/杀了|杀死|射杀|击毙|饮弹|处决|处刑|枪决|绞死|斩首|刺死|毒死|勒死|扣下扳机|枪口喷出|一枪毙|溅上鲜血|头颅落|铡刀落/;
-var RX_DIE=/(我|三叶)[^。]{0,10}(死了|断了气|咽了气|失去意识再也|倒在血泊|心脏停|没了呼吸)|意识沉入黑暗|视野彻底变黑/;
-var RX_SKY=/鸣枪|朝天开|对空(开|鸣)|示警的枪|革命爆发|起义爆发|暴动爆发|宣战|开战|战争(爆发|开始)|震慑全场|威慑/;
+var RX_DIE=/(我|素子)[^。]{0,10}(死了|断了气|咽了气|失去意识再也|倒在血泊|心脏停|没了呼吸)|意识沉入黑暗|视野彻底变黑/;
+var RX_SKY=/鸣枪|朝天开|对空(开|鸣)|示警的枪|暴动爆发|武装蜂起|骚乱扩大|宣战|开战|战争(爆发|开始)|震慑全场|威慑/;
 function radar(seg){
   var now=Date.now();
   if(now-VN.lastFire<6000)return;
   if(RX_KILL.test(seg)||RX_DIE.test(seg)){VN.lastFire=now;VN.firedTurn=true;send('m',{act:'gunKill'});}
   else if(RX_SKY.test(seg)){
     VN.lastFire=now;VN.firedTurn=true;send('m',{act:'skyFire'});
-    if(/革命爆发|起义爆发/.test(seg))VN.rev=true;
+    if(/暴动爆发|武装蜂起|戒严令/.test(seg))VN.rev=true;
   }
 }
 function director(){                        /* 面板 ◇剧场 标签(AI 自报,最高优先兜底) */
@@ -8851,7 +8850,7 @@ function director(){                        /* 面板 ◇剧场 标签(AI 自报
   var tag=String((p.world||{})['剧场']||'');
   if(!tag||/^无/.test(tag))return;
   if(/杀|死/.test(tag))send('m',{act:'gunKill'});
-  else if(/革命|战争|威慑|鸣枪/.test(tag)){send('m',{act:'skyFire'});if(/革命/.test(tag))VN.rev=true;}
+  else if(/暴动|战争|威慑|鸣枪/.test(tag)){send('m',{act:'skyFire'});if(/暴动/.test(tag))VN.rev=true;}
   else if(/挥手|打招呼/.test(tag))send('m',{act:'wave'});
 }
 
@@ -8901,7 +8900,7 @@ function tick(){
     var W9=vSt==='F'?[36,100]:(vSt==='B'?[38,82]:[39,58]);
     send('m',{act:'frame',a:W9[0],b:W9[1]});
     send('m',{act:'pos',x:(VN.posKey&&vSt!=='S')?'right':'center'});
-    /* 同伴与三叶同比例:三叶窗 [39,58]/[38,82]/[36,100] 覆盖身体的比例,换算到同伴画布(头≈0/脚≈100) */
+    /* 同伴与素子同比例:素子窗 [39,58]/[38,82]/[36,100] 覆盖身体的比例,换算到同伴画布(头≈0/脚≈100) */
     var WC=vSt==='F'?[0,100]:(vSt==='B'?[0,74]:[0,32]);
     ['k','s'].forEach(function(w){send(w,{act:'frame',a:WC[0],b:WC[1]});});
     var kz=chr('k'),sz=chr('s');
@@ -8958,7 +8957,7 @@ function tick(){
       else{VN.prevNames=pr.names;pr.npcs.forEach(function(n){VN.favorSeen[n.name]=n.favor||0;});}
     }
   }else{
-    /* 尚无世界消息(刚开局):玫瑰 + 三叶居中 */
+    /* 尚无世界消息(刚开局):待机内景 + 素子居中 */
     setBg('bg_rose');
     if(VN.posKey!==''){VN.posKey='';send('m',{act:'pos',x:'center'});
       ['k','s'].forEach(function(w){var f=chr(w);if(f){f.style.opacity=0;f.style.visibility='hidden';}});}

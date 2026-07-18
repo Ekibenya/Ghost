@@ -3260,11 +3260,13 @@ function giEqSysLine(history){
     var inv=GI.state.eqInv;
     if(inv){
       var bits=[];
-      if(inv.bag&&inv.bag.length)bits.push('背包:'+inv.bag.slice(0,8).map(function(b){return b.nm+(b.n>1?'×'+b.n:'');}).join('、'));
+      if(inv.bag&&inv.bag.length)bits.push('背包:'+inv.bag.slice(0,14).map(function(b){return b.nm+(b.n>1?'×'+b.n:'');}).join('、')+(inv.bag.length>14?'等'+inv.bag.length+'件':'')); /* 覆盖丰配版全量 */
       if(inv.aug&&inv.aug.length)bits.push('义体挂载:'+inv.aug.map(function(g){return EQ_BY_ID[g]?EQ_BY_ID[g][1]:g;}).join('、'));
+      if(inv.wear&&EQ_BY_ID[inv.wear])bits.push('着装:'+EQ_BY_ID[inv.wear][1]);
       if(bits.length)out+='\n【引擎库存】'+bits.join('｜')+'（不在◆武装列表=不在手上；开包取用耗1拍且须正文动作；本清单为引擎账实，不得凭空增删）';
     }
   }catch(e){}
+  try{window.__EQLINE=out;}catch(e){} /* 可观测:本轮注入的装备段 */
   return out;
 }
 /* ---- 侧栏◆武装行渲染升级（任务5）：文本行内联16px精灵图标 ---- */

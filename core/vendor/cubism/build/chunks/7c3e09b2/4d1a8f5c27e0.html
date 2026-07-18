@@ -4719,7 +4719,7 @@ function gmCss(){
 function gmBuildCity(T){
   var rnd=gmRng(2029),i,j;
   var wirePos=[],wireCol=[],gridPos=[],facePos=[],faceIdx=[],darkPos=[],darkIdx=[];
-  var CW={r:0x1e/255,g:0x9e/255,b:0x5c/255},CH={r:0x3d/255,g:0xdc/255,b:0x84/255},CWt={r:0xcf/255,g:0xe6/255,b:0xd8/255};
+  var CW={r:0x1e/255,g:0x9e/255,b:0x5c/255},CH={r:0x3d/255,g:0xdc/255,b:0x84/255},CWt={r:0xff/255,g:0xb8/255,b:0x1e/255};
   var segN=0,bldN=0,MAXB=(GM.mob?420:880)>>(GM.low?1:0),MAXSEG=50000; /* zjLow低配旗：楼块减半（降级链§4.6，接线任务8） */
   function edge(ax,ay,az,bx,by,bz,c,f){
     if(segN>=MAXSEG)return;
@@ -4865,8 +4865,8 @@ function gmBuildCity(T){
     ge.setIndex(idx);return new T.Mesh(ge,mat);
   }
   var mGrid=new T.LineBasicMaterial({color:0x0e2b18,transparent:true,opacity:0.6});
-  var mWire=new T.LineBasicMaterial({vertexColors:true,transparent:true,opacity:0.95,blending:T.AdditiveBlending,depthWrite:false});
-  var mHalo=new T.LineBasicMaterial({vertexColors:true,transparent:true,opacity:0.28,blending:T.AdditiveBlending,depthWrite:false});
+  var mWire=new T.LineBasicMaterial({vertexColors:true,transparent:true,opacity:0.46,blending:T.AdditiveBlending,depthWrite:false});
+  var mHalo=new T.LineBasicMaterial({vertexColors:true,transparent:true,opacity:0.13,blending:T.AdditiveBlending,depthWrite:false});
   var mFace=new T.MeshBasicMaterial({color:0x1e9e5c,transparent:true,opacity:0.10,depthWrite:false,side:T.DoubleSide});
   var mRoad=new T.MeshBasicMaterial({color:0x35d17a,transparent:true,opacity:0.85,blending:T.AdditiveBlending,depthWrite:false,side:T.DoubleSide});
   var mRoute=new T.MeshBasicMaterial({color:0xa8e05a,transparent:true,opacity:0.95,blending:T.AdditiveBlending,depthWrite:false,side:T.DoubleSide});

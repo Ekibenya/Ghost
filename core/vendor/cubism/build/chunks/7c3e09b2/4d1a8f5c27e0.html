@@ -2561,7 +2561,7 @@ if(S.screen==='game'&&!TH.available&&S.history.length>=3&&pref.last&&(Date.now()
   },2600);
 }
 
-function isMobile(){ if(S.device==='mobile')return true; if(S.device==='desktop')return false; return window.innerWidth<920; }
+function isMobile(){ if(S.device==='mobile')return true; if(S.device==='desktop')return false; var coarse=false;try{coarse=window.matchMedia&&matchMedia('(pointer: coarse)').matches;}catch(e){} /* 触屏<920=手机布局;鼠标设备方形/窄窗一律桌面布局(顶栏MAP/EQP兜底),仅极窄≤560兜到手机布局 */ return coarse?window.innerWidth<920:window.innerWidth<=560; }
 
 /* ---------------- ST CHAT SYNC ---------------- */
 function normalizeMsg(m){

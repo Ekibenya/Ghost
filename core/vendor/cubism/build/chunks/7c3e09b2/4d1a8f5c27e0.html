@@ -10851,10 +10851,10 @@ function setBg(name){
 }
 
 /* ---------------- 在场之人 → 立绘进出场(导演AI) ---------------- */
-function presence(){
+/* 主角视角判定:开局【你是谁】段含素子(排除无躯体开局)→静态立绘常驻入cast;自定义开局回退customRole */ function povMotoko(){try{var E=ENG();var st=E&&E.S;if(!st)return false;var h0=st.history&&st.history[0];var t=String((h0&&h0.text)||'');var sig=String(st.openingId==null?'?':st.openingId)+':'+t.length;if(VN._povSig===sig)return!!VN._povChk;VN._povSig=sig;var ok=false;var i=t.indexOf('【你是谁】');if(i>=0){var j=t.indexOf('【',i+5);var seg=t.slice(i,j>0?j:i+220);ok=/草薙素子|少佐/.test(seg)&&!/没有身体|只剩一颗大脑|没有躯体/.test(seg);}else if(st.customRole){ok=st.customRole==='motoko';}else{ok=/草薙素子|少佐/.test(t.slice(0,400));}VN._povChk=ok;return ok;}catch(e){return false;}} function presence(){
   var p=panelNow(); var npcs=p?(p.npcs||[]):[];
   var names=npcs.map(function(n){return String(n.name||'');});
-  var cast=[],seen={};
+  var cast=[],seen={};if(povMotoko()){var mo0=chrOf('素子');if(mo0){seen['motoko']=1;cast.push(mo0);}}
   /* 素子由常驻交互iframe(vnMitsu)独占呈现——非素子开局她以NPC进◈link时不得再建静态立绘,防同屏双身 */
   for(var i=0;i<names.length&&cast.length<3;i++){var c=chrOf(names[i]);if(c&&!seen[c.slug]){seen[c.slug]=1;cast.push(c);}}
   var key=cast.map(function(c){return c.slug;}).join('+');

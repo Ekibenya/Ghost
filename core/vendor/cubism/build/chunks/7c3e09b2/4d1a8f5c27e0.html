@@ -2988,6 +2988,9 @@ function giEqSync(){
   });
   if(inv.sent&&tn>inv.sent.t)inv.sent=null; /* 注入行的兑现窗口=一轮 */
   if(!inv.camo&&eff.char['迷彩']!=null&&!/^(无|—|-)/.test(String(eff.char['迷彩'])))inv.camo='thermoptic-camo-2902'; /* AI叙事里穿上了迷彩→补持有账 */
+  if(inv.camo&&eff.char['迷彩']!=null&&/^(无|—|-)/.test(String(eff.char['迷彩'])))inv.camo=null; /* 面板写回「无」→CAMO熄灭（审计死角c：只增不减） */
+  var _wr=(/[(（]([^)）]*)[)）]/.exec(String(eff.char['躯壳']||''))||[])[1]||''; /* ◆躯壳注记→服装ATTIRE每轮跟随（审计死角c：只播种不更新） */
+  if(_wr){var _wri=eqFind(_wr);if(_wri&&_wri[3]==='c'&&inv.wear!==_wri[0])inv.wear=_wri[0];}
   inv.lastArms=cur.map(function(a){return {id:a.id,nm:a.nm,n:a.n,note:a.note};});
   inv.turn=tn;giSave();
   return inv;
@@ -5551,6 +5554,28 @@ function sbgPick(){
 window.SCENEBG={pick:sbgPick,data:SBG_DATA};
 })();
 /* ---- /GITS-SCENEBG ---- */
+/* ---- GITS-SDBUS 每轮定稿总线 ----------------------------------------------
+   世界消息面板闭合(</gits_diag>落定)且引擎空闲时，按消息节点去重发射一次
+   「本轮定稿」事件。订阅者：影像岛导演AI（即时结算背景/立绘/情绪，免除250ms
+   轮询延迟）；后续任何子系统可挂 window.SDBUS.on(fn)。MFD/地图/装备/案件盘
+   已在render管线内每轮吃 effUpTo，无需重复订阅。 ---- */
+(function(){
+var BUS={subs:[],last:null};
+window.SDBUS={on:function(f){if(typeof f==='function')BUS.subs.push(f);},
+  emit:function(p){for(var i=0;i<BUS.subs.length;i++){try{BUS.subs[i](p);}catch(e){}}}};
+function busCheck(){
+  if(typeof S==='undefined'||!S||S.screen!=='game')return;
+  if(S.thinking||S._stream)return;
+  var lw=null;for(var i=S.history.length-1;i>=0;i--){if(S.history[i].role==='world'){lw=S.history[i];break;}}
+  if(!lw||!lw.panel||!lw.panel.closed)return;
+  if(BUS.last===lw)return;
+  BUS.last=lw;
+  window.SDBUS.emit(currentPanel());
+}
+var _busR0=render;
+render=function(){_busR0.apply(this,arguments);try{busCheck();}catch(e){}};
+})();
+/* ---- /GITS-SDBUS ---- */
 /* ---- GITS-MAP3D·WIRE B+C 玩法全接线 ----------------------------------------
    ①入口恒3D(2D舆图已废除) ②ZJ_LOCS→setNodes(含Cxx区块编号)
    ③◇时地 ZJ_KEYS最长匹配→setPlayer(render管线钩子=giCaseWatch同款挂法)
@@ -6206,11 +6231,12 @@ function loadSave(rec){
 function delSave(id){S.saves=S.saves.filter(function(x){return x.id!==id;});savePref();render();}
 
 /* ---------------- SCENE MOOD ---------------- */
+function sdWeatherOf(td){var m=/(暴雨|大雨|小雨|雨夹雪|雷雨|阵雨|雨|大雪|小雪|雪|浓雾|雾|沙尘|阴天|阴|晴朗|晴|台风|强风|大风)/.exec(String(td||''));return m?m[1]:'';}
 function mood(){
   var p=currentPanel(); var cw=p?p.world:{};
   var place=cw['时地']||'', layer=cw['现实层']||'';
   return {
-    place:place, wx:cw['天气']||'',
+    place:place, wx:cw['天气']||sdWeatherOf(place), /* 协议无◇天气键：从◇时地注记提取（审计死角b修复） */
     night:/夜|晚|夜半|入夜/.test(place),
     rain:/雨/.test(place),
     neon:/霓虹|下町|夜市/.test(place),
@@ -10327,6 +10353,7 @@ function tick(){
   }
 }
 window.DIRECTOR={cast:function(){return VN.castKey;},chrOf:chrOf,n:function(){return CHR_DATA.length;},apply:function(a){castApply(a||[]);}};
+try{if(window.SDBUS)window.SDBUS.on(function(){try{tick();}catch(e){}});}catch(e){} /* 定稿总线→导演AI即时结算（轮询仅作打字直播/兜底） */
 setInterval(function(){try{tick();}catch(e){}},250);
 })();
 </script>

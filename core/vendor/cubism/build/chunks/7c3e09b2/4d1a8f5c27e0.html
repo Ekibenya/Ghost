@@ -3039,26 +3039,26 @@ function giEqParseArms(v){
 }
 function eqArmRaw(a){return a.nm+(a.n!=null?'×'+a.n:'')+(a.note?'('+a.note+')':'');}
 /* ---- 库存（gits_interact_v1 持久化；bag=背包/aug=义体挂载/pend=待注入操作） ---- */
-var OPENING_INV={ /* 各开局初始持有（剧情对应）：bag=[[目录id,数量]] aug=[义体挂载id] wear=服装id
+var OPENING_INV={ /* 各开局初始持有（剧情对应·丰配版）：bag=[[目录id,数量]] aug=[义体挂载id] wear=服装id
   躯壳注记播种的服装优先于本表；玩家改动后按sig持久化不重播 */
- 0:{bag:[['hv-magazine',1],['interface-cable',1],['coffee',1]],aug:['audio-implant'],wear:null},
- 1:{bag:[['hv-magazine',2],['marker-rounds',1],['rappel-grapple',1],['interface-cable',1],['stim-spray',1]],aug:['cyber-eye','audio-implant'],wear:'combat-bodysuit'},
- 2:{bag:[['hv-magazine',3],['ew-goggles',1],['handcuffs',1],['section9-badge',1],['hanami-sake',1]],aug:['audio-implant'],wear:'motoko-civvies'},
- 3:{bag:[['cyberbrain-scanner',1],['interface-cable',1],['search-terminal',1],['marker-rounds',1],['coffee',1]],aug:['audio-implant','qrs-jack'],wear:'vacation-shirt'},
- 4:{bag:[['fiber-optic-spool',1],['e-binoculars',1],['decoy-beacon',1],['repair-patch',1],['cash-bundle',1]],aug:['cyber-eye','audio-implant'],wear:'white-longcoat'},
- 5:{bag:[['seburo-snab',1],['handcuffs',1],['case-files',1],['coffee',1]],aug:['audio-implant'],wear:null},
- 6:{bag:[['cyberbrain-scanner',1],['interface-cable',1],['ew-goggles',1],['repair-toolkit',1],['marker-rounds',1]],aug:['audio-implant'],wear:'motoko-civvies'},
- 7:{bag:[['case-files',1],['news-clipping',1],['informant-card',1],['coffee',1]],aug:['audio-implant'],wear:'motoko-civvies'},
- 8:{bag:[['external-memory',1],['interface-cable',1],['repair-patch',1]],aug:[],wear:null},
- 9:{bag:[['coffee',2],['sundae',1],['case-files',1],['fried-orion',1]],aug:['audio-implant'],wear:'motoko-civvies'},
- 10:{bag:[['hv-magazine',1],['interface-cable',1],['coffee',1]],aug:['audio-implant'],wear:null},
- 11:{bag:[['hv-magazine',2],['e-binoculars',1],['natural-oil',1],['repair-patch',1]],aug:['cyber-eye','audio-implant'],wear:'batou-white-coat'},
- 12:{bag:[['case-files',1],['section9-badge',1],['coffee',1],['news-clipping',1]],aug:[],wear:null},
- 13:{bag:[['case-files',2],['aramaki-flask',1],['informant-card',1]],aug:[],wear:null},
- 14:{bag:[['natural-oil',1],['fuchikoma-camo-module',1],['fuchikoma-ballast',1],['repair-patch',1]],aug:[],wear:null}
+ 0:{bag:[['hv-magazine',2],['interface-cable',1],['coffee',2],['stim-spray',1],['repair-patch',1],['section9-badge',1],['handheld-terminal',1]],aug:['audio-implant'],wear:null},
+ 1:{bag:[['hv-magazine',2],['marker-rounds',2],['rappel-grapple',1],['interface-cable',1],['stim-spray',1],['ew-goggles',1],['micro-bug',1],['decoy-beacon',1],['e-binoculars',1],['cigarettes',1]],aug:['cyber-eye','audio-implant','qrs-jack'],wear:'combat-bodysuit'},
+ 2:{bag:[['hv-magazine',3],['ew-goggles',1],['handcuffs',1],['section9-badge',1],['hanami-sake',2],['coffee',2],['marker-rounds',1],['tactical-vest',1],['micro-bug',1],['sniffer',1],['stim-spray',1]],aug:['audio-implant','cyber-eye'],wear:'motoko-civvies'},
+ 3:{bag:[['cyberbrain-scanner',1],['interface-cable',2],['search-terminal',1],['marker-rounds',1],['coffee',1],['handheld-terminal',1],['micro-bug',1],['fiber-optic-spool',1],['stim-spray',1],['case-files',1]],aug:['audio-implant','qrs-jack','external-memory'],wear:'vacation-shirt'},
+ 4:{bag:[['fiber-optic-spool',2],['e-binoculars',1],['decoy-beacon',1],['repair-patch',1],['cash-bundle',2],['camo-hood',1],['handheld-terminal',1],['coffee',1],['cigarettes',1],['hv-magazine',2]],aug:['cyber-eye','audio-implant'],wear:'white-longcoat'},
+ 5:{bag:[['seburo-snab',1],['handcuffs',1],['case-files',1],['coffee',2],['section9-badge',1],['stim-spray',1],['repair-patch',1],['news-clipping',1],['sundae',1]],aug:['audio-implant','qrs-jack'],wear:null},
+ 6:{bag:[['cyberbrain-scanner',1],['interface-cable',2],['ew-goggles',1],['repair-toolkit',1],['marker-rounds',1],['sniffer',1],['micro-bug',1],['handheld-terminal',1],['coffee',1],['stim-spray',1]],aug:['audio-implant','cyber-eye'],wear:'motoko-civvies'},
+ 7:{bag:[['case-files',2],['news-clipping',2],['informant-card',2],['coffee',2],['cigarettes',1],['cash-bundle',1],['micro-bug',1],['handheld-terminal',1]],aug:['audio-implant'],wear:'motoko-civvies'},
+ 8:{bag:[['external-memory',2],['interface-cable',2],['repair-patch',2],['stim-spray',1],['spare-retina',1]],aug:[],wear:null},
+ 9:{bag:[['coffee',3],['sundae',2],['case-files',2],['fried-orion',2],['cigarettes',1],['hanami-sake',1],['news-clipping',1],['repair-patch',1]],aug:['audio-implant'],wear:'motoko-civvies'},
+ 10:{bag:[['hv-magazine',2],['interface-cable',1],['coffee',2],['stim-spray',1],['repair-patch',1],['section9-badge',1],['handheld-terminal',1]],aug:['audio-implant'],wear:null},
+ 11:{bag:[['hv-magazine',3],['e-binoculars',1],['natural-oil',2],['repair-patch',2],['cigarettes',2],['combat-knife',1],['tactical-vest',1],['fiber-optic-spool',1],['coffee',1]],aug:['cyber-eye','audio-implant','prosthetic-arm'],wear:'batou-white-coat'},
+ 12:{bag:[['case-files',2],['section9-badge',1],['coffee',2],['news-clipping',1],['handcuffs',1],['micro-bug',1],['e-binoculars',1],['sundae',1]],aug:[],wear:null},
+ 13:{bag:[['case-files',3],['aramaki-flask',1],['informant-card',2],['news-clipping',2],['cash-bundle',1],['handheld-terminal',1],['coffee',1]],aug:[],wear:null},
+ 14:{bag:[['natural-oil',3],['fuchikoma-camo-module',1],['fuchikoma-ballast',1],['repair-patch',2],['fuchikoma-manipulator',1],['repair-toolkit',1],['fuchikoma-gatling',1]],aug:[],wear:null}
 };
 function giEqSeed(){
-  var sig='';try{var h0=S.history[0];sig='v2:'+String(S.openingId==null?'?':S.openingId)+':'+String(h0&&h0.text||'').length;}catch(e){} /* v2:开局初始持有上线,旧空背包缓存作废重播 */
+  var sig='';try{var h0=S.history[0];sig='v3:'+String(S.openingId==null?'?':S.openingId)+':'+String(h0&&h0.text||'').length;}catch(e){} /* v2:开局初始持有上线,旧空背包缓存作废重播 */
   var inv=GI.state.eqInv;
   if(inv&&inv.sig===sig)return inv;
   inv=GI.state.eqInv={sig:sig,bag:[],aug:[],pend:[],camo:null,wear:null,turn:-1,lastArms:[]};

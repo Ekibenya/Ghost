@@ -4716,8 +4716,8 @@ function gmCss(){
   document.head.appendChild(st);
 }
 /* ---- 程序化线框城市（massing→街块→楼块 分层，threejs-procedural-architecture法；§4.4管线） ---- */
-function gmBuildCity(T){
-  var rnd=gmRng(2029),i,j;
+function gmBuildCity(T,opt){ /* opt={seed,bare}：GMENU选局页背景复用同一builder——随机种子+bare裸件返回（不碰GM状态） */
+  var rnd=gmRng((opt&&opt.seed)||2029),i,j;
   var wirePos=[],wireCol=[],gridPos=[],facePos=[],faceIdx=[],darkPos=[],darkIdx=[];
   var CW={r:0xb0/255,g:0x74/255,b:0x14/255},CH={r:0xff/255,g:0xb8/255,b:0x1e/255},CWt={r:0xff/255,g:0xd7/255,b:0x6e/255};
   var segN=0,bldN=0,MAXB=(GM.mob?420:880)>>(GM.low?1:0),MAXSEG=50000; /* zjLow低配旗：楼块减半（降级链§4.6，接线任务8） */
@@ -4850,7 +4850,6 @@ function gmBuildCity(T){
   }
   /* 主路线实心亮带（抬高0.5防z-fight，§2.2-L3） */
   ribbon([A('湾岸高层区'),A('湾岸公寓区'),A('新浜市中枢'),A('湾岸连络桥'),A('新浜军港')],9,0.5,routePos,routeIdx);
-  GM.stats.bld=bldN;GM.stats.seg=segN;GM.roadAdj=adj;
   /* ---- 合并建 buffer（draw calls：grid/wire/halo/face/road/route/dark ≤7，§4.6） ---- */
   var g=new T.Group();
   function lineMesh(pos,col,mat){
@@ -4871,15 +4870,21 @@ function gmBuildCity(T){
   var mRoad=new T.MeshBasicMaterial({color:0x35d17a,transparent:true,opacity:0.85,blending:T.AdditiveBlending,depthWrite:false,side:T.DoubleSide});
   var mRoute=new T.MeshBasicMaterial({color:0xa8e05a,transparent:true,opacity:0.95,blending:T.AdditiveBlending,depthWrite:false,side:T.DoubleSide});
   var mDark=new T.MeshBasicMaterial({color:0x02120a});
-  g.add(triMesh(darkPos,darkIdx,mDark));
-  g.add(lineMesh(gridPos,null,mGrid));
+  var darkM=triMesh(darkPos,darkIdx,mDark);g.add(darkM);
+  var gridM=lineMesh(gridPos,null,mGrid);g.add(gridM);
   var wire=lineMesh(wirePos,wireCol,mWire);g.add(wire);
   var draws=4; /* dark/grid/wire/faces */
-  if(!GM.mob&&!GM.low){var halo=new T.LineSegments(wire.geometry,mHalo);g.add(halo);draws++;} /* 加性复线辉光（§4.2主方案，零RT） */
+  var halo=null;
+  if(!GM.mob&&!GM.low){halo=new T.LineSegments(wire.geometry,mHalo);g.add(halo);draws++;} /* 加性复线辉光（§4.2主方案，零RT） */
   else{mWire.opacity=0.9;}
   var faces=triMesh(facePos,faceIdx,mFace);g.add(faces);
-  g.add(triMesh(roadPos,roadIdx,mRoad));
-  g.add(triMesh(routePos,routeIdx,mRoute));draws+=2;
+  var roadM=triMesh(roadPos,roadIdx,mRoad);g.add(roadM);
+  var routeM=triMesh(routePos,routeIdx,mRoute);g.add(routeM);draws+=2;
+  if(opt&&opt.bare) /* GMENU裸件：句柄全交出（drawRange建造动画用），GM 状态零污染 */
+    return {g:g,wire:wire,halo:halo,grid:gridM,faces:faces,road:roadM,route:routeM,dark:darkM,
+      mats:{grid:mGrid,wire:mWire,halo:mHalo,face:mFace,road:mRoad,route:mRoute,dark:mDark},
+      stats:{bld:bldN,seg:segN,draws:draws}};
+  GM.stats.bld=bldN;GM.stats.seg=segN;GM.roadAdj=adj;
   GM.stats.draws=draws;
   GM.lineMats=[mGrid,mWire,mHalo];GM.roadMats=[mRoad,mRoute,mFace];
   GM.faceMesh=faces;GM.anchors=anchors;
@@ -5358,6 +5363,127 @@ var GMAP={
     topo:(GM.topoMarks||[]).length,adj:GM.roadAdj?Object.keys(GM.roadAdj).length:0};}
 };
 window.GMAP=GMAP;
+/* ---- GITS-MAP3D·GMENU 选局页背景：3D城市从零建成循环动画 ------------------
+   复用同一 gmBuildCity（随机种子+bare裸件），独立 renderer/scene/canvas(#gmenuBG，z=0
+   在 #zj(z=1) 之下)，与游戏内 GMAP dock 挂载零冲突。时间线：底盘即现→网格0.8s淡入→
+   线框 setDrawRange 0→全段 10s 缓动生长(halo共享geometry同步)→60%后半透明面 0→.10
+   淡入→85%后道路/主路带 drawRange 生长→建成停 6s→整层 1s 渐隐→换新种子重建循环。
+   相机全程慢速倾斜环绕。降级：SAFEM/WebGL失败=保持纯黑；RM=建成静帧不循环不运镜；
+   zjLow=建一次静止(楼块经 GM.low 天然减半)。离开选局页立即停 rAF+dispose 释放。 */
+var GMENU={on:false,fail:false,raf:0,cv:null,rd:null,scene:null,cam:null,P:null,t0:0,lastT:0,yaw:0,seed:0,stat:false,wireN:0,roadN:0,routeN:0,_v:null};
+function gmenuEase(u){return u<.5?4*u*u*u:1-Math.pow(-2*u+2,3)/2;}
+function gmenuResize(){
+  if(!GMENU.rd||!GMENU.cam)return;
+  var w=window.innerWidth||800,h=window.innerHeight||600;
+  try{GMENU.rd.setSize(w,h,false);}catch(e){}
+  GMENU.cam.aspect=w/h;GMENU.cam.updateProjectionMatrix();
+}
+function gmenuFree(){ /* 卸当前城：geometry/material 全 dispose（halo 共享 wire.geometry，二次 dispose 为 no-op） */
+  var P=GMENU.P;if(!P)return;
+  try{if(GMENU.scene)GMENU.scene.remove(P.g);}catch(e){}
+  try{P.g.traverse(function(o){if(o.geometry&&o.geometry.dispose)o.geometry.dispose();});}catch(e){}
+  try{var M=P.mats;for(var k in M)if(M[k]&&M[k].dispose)M[k].dispose();}catch(e){}
+  GMENU.P=null;
+}
+function gmenuBuild(){ /* 新种子建城并归零建造进度 */
+  var T=window.THREE;if(!T||!GMENU.scene)return false;
+  gmenuFree();
+  GMENU.seed=1+Math.floor(Math.random()*0x7ffffffe);
+  GM.low=gmLow();GM.mob=gmMob();
+  var P=null;
+  try{P=gmBuildCity(T,{seed:GMENU.seed,bare:1});}catch(e){return false;}
+  GMENU.P=P;GMENU.scene.add(P.g);
+  P.mats.grid.opacity=0;
+  P.mats.face.opacity=0;
+  P.wire.geometry.setDrawRange(0,0);
+  P.road.geometry.setDrawRange(0,0);P.route.geometry.setDrawRange(0,0);
+  GMENU.wireN=P.wire.geometry.getAttribute('position').count;
+  GMENU.roadN=P.road.geometry.index?P.road.geometry.index.count:0;
+  GMENU.routeN=P.route.geometry.index?P.route.geometry.index.count:0;
+  GMENU.t0=performance.now();GMENU.lastT=0;GMENU.yaw=Math.random()*6.283;
+  return true;
+}
+function gmenuFinish(){ /* 建成终态（RM/zjLow 静帧用） */
+  var P=GMENU.P;if(!P)return;
+  P.mats.grid.opacity=0.6;P.mats.face.opacity=0.10;
+  P.wire.geometry.setDrawRange(0,GMENU.wireN);
+  P.road.geometry.setDrawRange(0,GMENU.roadN);P.route.geometry.setDrawRange(0,GMENU.routeN);
+}
+function gmenuCamSet(){
+  var d=780,pt=0.72;
+  GMENU.cam.position.set(Math.sin(GMENU.yaw)*Math.cos(pt)*d,Math.sin(pt)*d,Math.cos(GMENU.yaw)*Math.cos(pt)*d);
+  GMENU.cam.lookAt(GMENU._v.set(0,12,0));
+}
+function gmenuFrame(ts){
+  GMENU.raf=0;
+  if(!GMENU.on||!GMENU.rd||!GMENU.P)return;
+  var P=GMENU.P,t=(ts-GMENU.t0)/1000;
+  var dt=GMENU.lastT?Math.min(.1,(ts-GMENU.lastT)/1000):0.016;GMENU.lastT=ts;
+  if(t<16){ /* 0-10s建造+10-16s停留 */
+    P.mats.grid.opacity=0.6*Math.min(1,t/0.8);
+    var u=gmenuEase(Math.min(1,t/10));
+    P.wire.geometry.setDrawRange(0,Math.floor(GMENU.wireN*u/2)*2); /* 线段=偶数顶点对齐；halo共享geometry同步生长 */
+    if(t>6)P.mats.face.opacity=0.10*Math.min(1,(t-6)/2.5);
+    if(t>8.5){var r=Math.min(1,(t-8.5)/1.5);
+      P.road.geometry.setDrawRange(0,Math.floor(GMENU.roadN*r/3)*3);
+      P.route.geometry.setDrawRange(0,Math.floor(GMENU.routeN*r/3)*3);}
+    if(GMENU.cv.style.opacity!=='1')GMENU.cv.style.opacity='1';
+  }else if(t<17){ /* 整体渐隐1s */
+    GMENU.cv.style.opacity=String(Math.max(0,1-(t-16)));
+  }else{ /* 换新种子重建，无限循环 */
+    if(!gmenuBuild()){gmenuDispose();return;}
+    GMENU.cv.style.opacity='1';
+  }
+  GMENU.yaw+=dt*0.045; /* idle慢速环绕 */
+  gmenuCamSet();
+  try{GMENU.rd.render(GMENU.scene,GMENU.cam);}catch(e){gmenuDispose();return;}
+  GMENU.raf=requestAnimationFrame(gmenuFrame);
+}
+function gmenuMount(){
+  if(GMENU.on||GMENU.fail||GMENU.cv)return;
+  if(gmOff()){GMENU.fail=true;return;} /* SAFEM/3d_off：保持纯黑现状 */
+  GMENU.on=true;
+  gmapEnsureThree(function(ok){
+    if(!ok){GMENU.fail=true;GMENU.on=false;return;} /* three加载失败=纯黑 */
+    if(!GMENU.on)return;
+    if(typeof S!=='undefined'&&S&&S.screen!=='select'){GMENU.on=false;return;} /* 载入期间已离开 */
+    var T=window.THREE;
+    var cv=document.createElement('canvas');cv.id='gmenuBG';
+    cv.style.cssText='position:fixed;inset:0;width:100%;height:100%;z-index:0;display:block;pointer-events:none;background:#030d07';
+    document.body.appendChild(cv);GMENU.cv=cv;
+    try{GMENU.rd=new T.WebGLRenderer({canvas:cv,antialias:false,alpha:false,powerPreference:'low-power'});}catch(e){GMENU.fail=true;gmenuDispose();return;}
+    if(!GMENU.rd){GMENU.fail=true;gmenuDispose();return;}
+    try{GMENU.rd.setPixelRatio(Math.min(window.devicePixelRatio||1,1.5));GMENU.rd.setClearColor(0x030d07,1);if('toneMapping' in GMENU.rd)GMENU.rd.toneMapping=T.NoToneMapping;}catch(e){}
+    GMENU.scene=new T.Scene();
+    GMENU.cam=new T.PerspectiveCamera(58,1,1,4000);GMENU._v=new T.Vector3();
+    try{window.addEventListener('resize',gmenuResize);}catch(e){}
+    gmenuResize();
+    if(!gmenuBuild()){gmenuDispose();return;}
+    GMENU.stat=gmRM()||gmLow();
+    if(GMENU.stat){gmenuFinish();gmenuCamSet();try{GMENU.rd.render(GMENU.scene,GMENU.cam);}catch(e){}return;} /* RM/低配=建成静帧 */
+    GMENU.raf=requestAnimationFrame(gmenuFrame);
+  });
+}
+function gmenuDispose(){ /* 离开选局页：停rAF+dispose renderer/geometry+撤canvas，全量释放 */
+  if(GMENU.raf){try{cancelAnimationFrame(GMENU.raf);}catch(e){}GMENU.raf=0;}
+  gmenuFree();
+  try{if(GMENU.rd)GMENU.rd.dispose();}catch(e){}
+  try{if(GMENU.rd&&GMENU.rd.forceContextLoss)GMENU.rd.forceContextLoss();}catch(e){}
+  try{if(GMENU.cv&&GMENU.cv.parentNode)GMENU.cv.parentNode.removeChild(GMENU.cv);}catch(e){}
+  try{window.removeEventListener('resize',gmenuResize);}catch(e){}
+  GMENU.rd=null;GMENU.scene=null;GMENU.cam=null;GMENU.cv=null;GMENU._v=null;GMENU.on=false;GMENU.lastT=0;GMENU.stat=false;
+}
+function gmenuSync(){
+  var want=false;
+  try{want=(typeof S!=='undefined'&&S&&S.screen==='select');}catch(e){}
+  if(want&&!GMENU.on&&!GMENU.cv)gmenuMount();
+  else if(!want&&(GMENU.on||GMENU.cv))gmenuDispose();
+}
+var _gmenuR0=render;
+render=function(){_gmenuR0.apply(this,arguments);try{gmenuSync();}catch(e){}};
+window.GMENU={sync:gmenuSync,dispose:gmenuDispose,
+  __debug:function(){return {on:GMENU.on,fail:GMENU.fail,seed:GMENU.seed,stat:GMENU.stat,raf:!!GMENU.raf,cv:!!GMENU.cv,wireN:GMENU.wireN};}};
+/* ---- /GMENU ---- */
 })();
 /* ---- GITS-MAP3D·WIRE B+C 玩法全接线 ----------------------------------------
    ①入口恒3D(2D舆图已废除) ②ZJ_LOCS→setNodes(含Cxx区块编号)
@@ -6267,7 +6393,7 @@ function selectView(){
     +'<input id="zjOpCode" placeholder="粘贴友人分享的开局码或链接，即可开同一局…" style="flex:1;min-width:200px;background:rgba(255,255,255,.03);border:1px solid rgba(61,220,132,.3);border-radius:9px;color:var(--ink);padding:9px 12px;font-size:13px" autocomplete="off" spellcheck="false">'
     +'<button data-act="opImport" class="obtn btn" style="flex:none;font-size:13px;letter-spacing:.15em;padding:9px 18px">导 入</button>'
     +(S.opMsg?'<div style="width:100%;font-size:12px;color:var(--gold3)">'+esc(S.opMsg)+'</div>':'')+'</div>'):'';
-  return '<div class="col">'
+  return '<div class="col" style="position:relative;z-index:1;background:rgba(1,6,4,.55)">' /*GMENU 选局页：底衬半透明遮罩，露出 #gmenuBG 建城动画并保卡片可读*/
     +'<div class="grow" style="overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain">'
     +'<div style="position:sticky;top:0;z-index:6;pointer-events:none;margin-bottom:-26px;padding-bottom:26px">'+'<div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(12,26,18,'+(mob?'.99':'.95')+') 0%,rgba(12,26,18,'+(mob?'.93':'.76')+') 56%,rgba(12,26,18,0) 100%);'+(mob?'':';')+'-webkit-mask-image:linear-gradient(180deg,#000 54%,transparent);mask-image:linear-gradient(180deg,#000 54%,transparent)"></div>'+'<div style="position:relative;pointer-events:auto;display:flex;align-items:baseline;gap:16px;padding:18px 28px 10px;flex-wrap:wrap">'
     +'<button data-act="totitle" class="obtn btn" style="font-size:12px;letter-spacing:.2em;padding:6px 14px">〈 封面</button>'

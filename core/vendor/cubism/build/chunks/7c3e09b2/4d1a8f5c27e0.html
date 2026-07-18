@@ -9901,6 +9901,23 @@ var VNV='18';
 function vnUrl(f){return f.getAttribute('data-vnsrc')+'&v='+VNV+(MOB?'&m=1':'');}
 var DIR='core/res/vn/';
 var DIRT='core/tex/';                     /* 实景背景库(43张,◇时地匹配) */
+/* ---- DIRECTOR·导演AI:纯规则弱AI,零API ----
+   ①角色表 CHR_DATA(官网立绘,建成后注入) ②在场之人→立绘进出场/站位
+   ③背景滞回:◇时地文本不变不重选图 ④多级回退见 sceneOf ---- */
+var CHR_DATA=[
+{"slug":"motoko","name_zh":"草薙素子","aliases":["素子","少佐","草薙","草薙素子","モトコ","草薙少佐","Motoko","Major"],"file":"core/res/vn/chr/motoko.webp","alpha":true,"kind":"full"},
+{"slug":"aramaki","name_zh":"荒卷大辅","aliases":["荒卷","荒卷大辅","荒巻","荒巻大輔","課長","课长","大輔","大辅","アラマキ","Aramaki"],"file":"core/res/vn/chr/aramaki.webp","alpha":true,"kind":"full"},
+{"slug":"batou","name_zh":"巴特","aliases":["巴特","バトー","Batou"],"file":"core/res/vn/chr/batou.webp","alpha":true,"kind":"full"},
+{"slug":"togusa","name_zh":"陀古萨","aliases":["陀古萨","トグサ","Togusa"],"file":"core/res/vn/chr/togusa.webp","alpha":true,"kind":"full"},
+{"slug":"ishikawa","name_zh":"石川","aliases":["石川","イシカワ","Ishikawa"],"file":"core/res/vn/chr/ishikawa.webp","alpha":true,"kind":"full"},
+{"slug":"saito","name_zh":"斋藤","aliases":["斋藤","サイトー","Saito"],"file":"core/res/vn/chr/saito.webp","alpha":true,"kind":"full"},
+{"slug":"borma","name_zh":"波马","aliases":["波马","ボーマ","Borma"],"file":"core/res/vn/chr/borma.webp","alpha":true,"kind":"full"},
+{"slug":"paz","name_zh":"帕兹","aliases":["帕兹","パズ","Paz"],"file":"core/res/vn/chr/paz.webp","alpha":true,"kind":"full"},
+{"slug":"operator","name_zh":"操作员","aliases":["操作员","オペレーター","Operator","操作员机器人"],"file":"core/res/vn/chr/operator.webp","alpha":true,"kind":"full"},
+{"slug":"fuchikoma","name_zh":"攻壳车","aliases":["フチコマ","攻壳车","攻殻車","攻壳机动车","思考战车","Fuchikoma"],"file":"core/res/vn/chr/fuchikoma.webp","alpha":true,"kind":"full"}
+];
+var CHR_IDX=(function(){var a=[];CHR_DATA.forEach(function(c){(c.aliases||[]).concat([c.name_zh||'',c.slug]).forEach(function(k){if(k)a.push({k:k,c:c});});});a.sort(function(p,q){return q.k.length-p.k.length;});return a;})();
+function chrOf(name){name=String(name||'');if(!name)return null;for(var i=0;i<CHR_IDX.length;i++)if(name.indexOf(CHR_IDX[i].k)>=0)return CHR_IDX[i].c;return null;}
 function ENG(){try{return window.__VNB?window.__VNB():null;}catch(e){return null;}}
 
 /* ---------------- 覆盖层 DOM(一次性) ---------------- */
@@ -9911,6 +9928,7 @@ root.innerHTML=
   '<img id="vnBgA" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:1;transition:opacity 1s ease">'
  +'<img id="vnBgB" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 1s ease">'
  +'<div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.12),transparent 30%,transparent 72%,rgba(0,0,0,.3))"></div>'
+ +'<div id="vnCast" style="position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden"></div>'
  +'<iframe id="vnBatou" data-vnsrc="'+DIR+'batou.html?vn=1" allowtransparency="true" scrolling="no" style="position:absolute;left:1%;bottom:0;height:86%;width:30%;border:0;background:transparent;opacity:0;visibility:hidden;transition:opacity .8s ease,left .9s cubic-bezier(.3,.1,.25,1),height .9s cubic-bezier(.3,.1,.25,1),bottom .9s cubic-bezier(.3,.1,.25,1)"></iframe>'
  +'<iframe id="vnTogusa" data-vnsrc="'+DIR+'togusa.html?vn=1" allowtransparency="true" scrolling="no" style="position:absolute;left:14%;bottom:0;height:86%;width:30%;border:0;background:transparent;opacity:0;visibility:hidden;transition:opacity .8s ease,left .9s cubic-bezier(.3,.1,.25,1),height .9s cubic-bezier(.3,.1,.25,1),bottom .9s cubic-bezier(.3,.1,.25,1)"></iframe>'
  +'<iframe id="vnMitsu" data-vnsrc="'+DIR+'gits_chr.html?vn=1&r=6" allowtransparency="true" scrolling="no" style="position:absolute;inset:0;width:100%;height:100%;border:0;background:transparent"></iframe>'
@@ -10088,28 +10106,65 @@ function setBg(name){
   showEl.style.opacity=1; hideEl.style.opacity=0;
 }
 
-/* ---------------- 在场之人 → 进出场与素子让位 ---------------- */
+/* ---------------- 在场之人 → 立绘进出场(导演AI) ---------------- */
 function presence(){
   var p=panelNow(); var npcs=p?(p.npcs||[]):[];
   var names=npcs.map(function(n){return String(n.name||'');});
-  var hasK=names.some(function(n){return n.indexOf('巴特')>=0;});
-  var hasS=names.some(function(n){return n.indexOf('陀古萨')>=0;});
-  var key=(hasK?'K':'')+(hasS?'S':'');
-  if(key!==VN.posKey){
-    VN.posKey=key;
-    var k=chr('k'),s2=chr('s'),m3=chr('m');
-    function lazyShow(f,on,lx){
-      if(!f)return;
-      if(on&&!f.getAttribute('src'))f.setAttribute('src',vnUrl(f));
-      f.style.opacity=on?1:0;
-      f.style.visibility=on?'visible':'hidden';
-      if(lx!=null)f.style.left=lx;
-    }
-    lazyShow(k,hasK,hasK&&hasS?'0%':'2%');
-    lazyShow(s2,hasS,hasK&&hasS?'15%':'4%');
-    send('m',{act:'pos',x:((hasK||hasS)&&VN.sizeKey!=='S')?'right':'center'});   /* 有客:素子平移让位到右侧(小窗特写时恒居中) */
-  }
+  var cast=[],seen={};
+  for(var i=0;i<names.length&&cast.length<3;i++){var c=chrOf(names[i]);if(c&&!seen[c.slug]){seen[c.slug]=1;cast.push(c);}}
+  var key=cast.map(function(c){return c.slug;}).join('+');
+  if(key!==VN.castKey){VN.castKey=key;castApply(cast);}
   return {names:names,npcs:npcs};
+}
+/* 像素显形:官网同款参数(解剖报告fx_pixel_reveal.md)——
+   64×64格(窄屏32)/0.5s/power1.in(t²,先零星后大片)/0.2s延迟/纯随机序/格子整块出现 */
+function pixelReveal(cv,img,opts){
+  opts=opts||{};
+  var cols=opts.cols||(MOB?32:64),dur=opts.dur||500,delay=opts.delay==null?200:opts.delay;
+  var iw=img.naturalWidth||img.width,ih=img.naturalHeight||img.height;
+  if(!iw||!ih)return;
+  cv.width=iw;cv.height=ih;
+  var ctx=cv.getContext('2d');if(!ctx)return;
+  var tw=Math.ceil(iw/cols),rows=Math.ceil(ih/tw),total=cols*rows;
+  var order=[],i;for(i=0;i<total;i++)order.push(i);
+  for(i=total-1;i>0;i--){var k=(Math.random()*(i+1))|0;var t=order[i];order[i]=order[k];order[k]=t;}
+  var t0=null,shown=0;
+  function fr(ts){
+    if(!t0)t0=ts;
+    var e=ts-t0-delay;
+    if(e<0){requestAnimationFrame(fr);return;}
+    var u=Math.min(1,e/dur);u=u*u; /* power1.in */
+    var n=u>=1?total:Math.floor(total*u);
+    for(;shown<n;shown++){var id=order[shown],x=(id%cols)*tw,y=((id/cols)|0)*tw;
+      ctx.drawImage(img,x,y,tw,tw,x,y,tw,tw);}
+    if(shown<total)requestAnimationFrame(fr);
+  }
+  requestAnimationFrame(fr);
+}
+function castApply(cast){
+  var host=$id('vnCast');if(!host)return;
+  var POS=cast.length<=1?['50%']:cast.length===2?['30%','70%']:['18%','50%','82%'];
+  var want={};cast.forEach(function(c,i){want[c.slug]=POS[i];});
+  [].slice.call(host.children).forEach(function(el){
+    var sl=el.getAttribute('data-chr');
+    if(!want[sl]){el.style.opacity='0';el.style.transform='translate(-50%,14px)';
+      setTimeout(function(){if(el.parentNode&&el.style.opacity==='0')el.parentNode.removeChild(el);},950);}
+  });
+  cast.forEach(function(c){
+    var el=host.querySelector('[data-chr="'+c.slug+'"]');
+    if(!el){
+      el=document.createElement('canvas');el.setAttribute('data-chr',c.slug);
+      el.style.cssText='position:absolute;bottom:0;left:'+want[c.slug]+';transform:translate(-50%,0);height:'+(c.kind==='full'?'94%':'80%')+';max-width:46%;object-fit:contain;object-position:bottom center;opacity:1;transition:opacity .8s ease,left .9s cubic-bezier(.3,.1,.25,1),transform .8s ease;filter:drop-shadow(0 6px 18px rgba(3,8,6,.65))';
+      if(!c.alpha){ /* 无透明通道=终端画框卡呈现 */
+        el.style.height='74%';el.style.width='30%';el.style.maxWidth='38%';
+        el.style.objectFit='cover';el.style.border='1px solid rgba(61,220,132,.4)';
+        el.style.boxShadow='0 8px 22px rgba(3,8,6,.7)';}
+      host.appendChild(el);
+      var im=new Image();
+      im.onload=function(){if(el.parentNode)pixelReveal(el,im);};
+      im.src=c.file;
+    }else{el.style.left=want[c.slug];el.style.opacity='1';el.style.transform='translate(-50%,0)';}
+  });
 }
 
 /* ---------------- 挥手:新人到场 / 心向≥80 ---------------- */
@@ -10244,7 +10299,8 @@ function tick(){
       var isFirst=(VN.doneFor===null&&VN.first);
       VN.doneFor=lw;VN.first=false;
       var pr=presence();
-      setBg(sceneOf());
+      var locNow=(function(){var pp=panelNow();return pp&&pp.world?String(pp.world['时地']||''):'';})();
+      if(locNow!==VN.lastLoc||!VN.bg){VN.lastLoc=locNow;setBg(sceneOf());} /* 滞回:时地未变不换图 */
       var em=moodOf(); if(em!==VN.moodCur){VN.moodCur=em;send('m',{act:'mood',e:em});}
       if(!isFirst){greetCheck(pr);director();}
       else{VN.prevNames=pr.names;pr.npcs.forEach(function(n){VN.favorSeen[n.name]=n.favor||0;});}
@@ -10252,10 +10308,10 @@ function tick(){
   }else{
     /* 尚无世界消息(刚开局):待机内景 + 素子居中 */
     setBg(DIRT+'s9_office_aquarium.jpg');
-    if(VN.posKey!==''){VN.posKey='';send('m',{act:'pos',x:'center'});
-      ['k','s'].forEach(function(w){var f=chr(w);if(f){f.style.opacity=0;f.style.visibility='hidden';}});}
+    if(VN.castKey){VN.castKey='';castApply([]);}
   }
 }
+window.DIRECTOR={cast:function(){return VN.castKey;},chrOf:chrOf,n:function(){return CHR_DATA.length;}};
 setInterval(function(){try{tick();}catch(e){}},250);
 })();
 </script>

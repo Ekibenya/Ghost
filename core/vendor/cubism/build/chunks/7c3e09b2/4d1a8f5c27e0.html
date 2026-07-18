@@ -6180,7 +6180,7 @@ function pgCss(){
   if(document.getElementById('pgDockCss'))return;
   var st=document.createElement('style');st.id='pgDockCss';
   st.textContent=[
-  '.pg-leftcol{flex:none;width:320px;display:flex;flex-direction:column;min-height:0;position:relative;border-right:1px solid var(--t-grid,rgba(61,220,132,.18));padding-top:62px;background:rgba(7,18,12,.35)}',
+  '.pg-leftcol{flex:none;width:clamp(180px,24vw,320px);display:flex;flex-direction:column;min-height:0;position:relative;border-right:1px solid var(--t-grid,rgba(61,220,132,.18));padding-top:62px;background:rgba(7,18,12,.35)}',
   '@media (min-width:1600px){.pg-leftcol{width:340px}}',
   '.pg-leftcol,.pg-mapdock,.pg-mapdock *,.pg-eqdock,.pg-gear,.pg-expbtn{border-radius:0!important;box-sizing:border-box}',
   '.pg-mapdock{position:relative;flex:none;height:46%;min-height:210px;overflow:hidden;background:#041008;border-bottom:1px solid var(--t-grid,rgba(61,220,132,.18))}',
@@ -7894,10 +7894,7 @@ function gameView(){
     +'<button data-act="mute" class="tb-key btn" title="声音">'+(S.muted?'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5.5 6.5 9H3.5v6h3L11 18.5z"/><path d="M16.2 9.7l4.6 4.6M20.8 9.7l-4.6 4.6"/></svg>':'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5.5 6.5 9H3.5v6h3L11 18.5z"/><path d="M14.8 9.2a4 4 0 0 1 0 5.6"/><path d="M17.6 6.8a7.6 7.6 0 0 1 0 10.4"/></svg>')+'<span class="tb-en">SND</span></button>'
     +'<button data-act="bgm" class="tb-key btn'+((S.bgmOpen||BGM.playing)?' tb-on':'')+'" title="幕间音乐"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M20 2.6 8.8 4.9v10.9a3.5 3.5 0 1 0 1.7 3V9.5l7.8-1.6v4.9a3.5 3.5 0 1 0 1.7 3V2.6z"/></svg><span class="tb-en">BGM</span></button>'
     +'<button data-ov="codex" class="tb-key btn" title="世界书图鉴"><span class="tb-en">BOOK</span></button>'
-    /*GITS-DOCK：顶栏「图」「装」入口已移除（手机=第3页「地図・装備」，电脑=左侧停靠栏）；
-      920~1199px死区补票:桌面布局但停靠栏未达阈值时,MAP/EQP走兼容路由(map=3D浮层,equip=装备舱overlay) */
-    +((window.innerWidth>560&&window.innerWidth<1200)?'<button data-ov="map" class="tb-key btn" title="三维地图"><span class="tb-en">MAP</span></button>'
-      +'<button data-ov="equip" class="tb-key btn" title="装备舱"><span class="tb-en">EQP</span></button>':'')
+    /*GITS-DOCK：顶栏「图」「装」入口已移除——桌面恒三栏停靠栏,手机=第3页「地図・装備」;overlay 路由保留作兼容跳转 */
     +'<button data-ov="saves" class="tb-key btn" title="存档"><span class="tb-en">SAVE</span></button>'
     +'<button data-act="toselect" class="tb-key btn tb-amber" title="另择开局"><span class="tb-en">EXIT</span></button>';
   var logo='<svg viewBox="0 0 512 512" width="28" height="28" style="flex:none;display:block;box-shadow:0 1px 4px rgba(18,40,27,.35)"><rect width="512" height="512" fill="#0c1a12"/><rect x="16" y="16" width="480" height="480" fill="none" stroke="#12583a" stroke-width="14"/><circle cx="256" cy="256" r="148" fill="none" stroke="#3ddc84" stroke-width="20"/><path d="M256 62v72M256 378v72M62 256h72M378 256h72" stroke="#3ddc84" stroke-width="20"/><circle cx="256" cy="256" r="50" fill="#ffb81e"/></svg>';
@@ -7971,8 +7968,8 @@ function gameView(){
       +'</div>';
   }else{
     /*GITS-DOCK 三栏：左=地図・装備停靠栏(≥1200px)，中=正文，右=既有MVU sidebar；窄屏自动回两栏 */
-    var _lc=(window.PGDOCK&&window.innerWidth>=1200)?window.PGDOCK.leftColHtml():'';
-    body='<div class="row grow">'+_lc+storyPane()+'<div id="zjSideCol" style="flex:none;width:300px;position:relative">'+sidebar()+'</div></div>';
+    var _lc=window.PGDOCK?window.PGDOCK.leftColHtml():''; /* 桌面恒三栏:窄窗左右栏clamp收缩,不再有两栏中间态 */
+    body='<div class="row grow">'+_lc+storyPane()+'<div id="zjSideCol" style="flex:none;width:clamp(200px,26vw,300px);position:relative">'+sidebar()+'</div></div>';
   }
   if(S.zen){
     /* 全屏内的灵动岛：滚动显示年代·地点，点它开合沙盒；退出全屏点正文即可 */

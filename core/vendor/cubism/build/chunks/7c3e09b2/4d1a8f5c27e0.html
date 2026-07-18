@@ -6865,19 +6865,50 @@ function d95Snd(k){
   else if(k==='menu')d95Beep([[523,.05]]);
   else if(k==='go')d95Beep([[523,.07],[659,.07,.075],[784,.07,.15],[1047,.18,.225]]);
 }
+function deskCtxOpen(t9,cx,cy){
+  if(typeof S==='undefined'||!S||S.screen!=='select')return;
+  if(!t9||!t9.closest)return;
+  if(!t9.closest('.d95-desk'))return;
+  var fo9=t9.closest('[data-dirx]'),dr9=t9.closest('[data-drag]');
+  S.deskCtx={x:Math.max(4,Math.min(cx,window.innerWidth-166)),y:Math.max(4,Math.min(cy,window.innerHeight-190)),
+    idx:fo9?parseInt(fo9.getAttribute('data-dirx'),10):null,
+    drag:dr9?dr9.getAttribute('data-drag'):null};
+  S.deskMenu=false;S._noFade=true;render();
+}
 document.addEventListener('contextmenu',function(e){
   try{
     if(typeof S==='undefined'||!S||S.screen!=='select')return;
-    var t9=e.target;if(!t9||!t9.closest)return;
-    if(!t9.closest('.d95-desk'))return;
+    var t9=e.target;if(!t9||!t9.closest||!t9.closest('.d95-desk'))return;
     e.preventDefault();
-    var fo9=t9.closest('[data-dirx]'),dr9=t9.closest('[data-drag]');
-    S.deskCtx={x:Math.max(4,Math.min(e.clientX,window.innerWidth-166)),y:Math.max(4,Math.min(e.clientY,window.innerHeight-190)),
-      idx:fo9?parseInt(fo9.getAttribute('data-dirx'),10):null,
-      drag:dr9?dr9.getAttribute('data-drag'):null};
-    S.deskMenu=false;S._noFade=true;render();
+    deskCtxOpen(t9,e.clientX,e.clientY);
   }catch(e2){}
 },true);
+/* 手机长按=右键：550ms按住不动即弹桌面菜单，navigator.vibrate 震动回执；移动>10px或松手即取消 */
+(function(){
+  var LP={id:null,x:0,y:0,tg:null};
+  function lpCancel(){if(LP.id){clearTimeout(LP.id);LP.id=null;}}
+  document.addEventListener('touchstart',function(e){
+    try{
+      if(typeof S==='undefined'||!S||S.screen!=='select')return;
+      if(e.touches.length!==1)return;
+      var t9=e.target;if(!t9||!t9.closest||!t9.closest('.d95-desk'))return;
+      if(t9.closest('#d95Ctx,.d95-win,.d95-mi'))return;
+      var tt=e.touches[0];LP.x=tt.clientX;LP.y=tt.clientY;LP.tg=t9;
+      lpCancel();
+      LP.id=setTimeout(function(){LP.id=null;
+        try{if(navigator.vibrate)navigator.vibrate(18);}catch(ev){}
+        S._lpGrd=Date.now();
+        deskCtxOpen(LP.tg,LP.x,LP.y);
+      },550);
+    }catch(e2){}
+  },{passive:true,capture:true});
+  document.addEventListener('touchmove',function(e){
+    if(!LP.id)return;var tt=e.touches[0];
+    if(Math.abs(tt.clientX-LP.x)>10||Math.abs(tt.clientY-LP.y)>10)lpCancel();
+  },{passive:true,capture:true});
+  document.addEventListener('touchend',lpCancel,{passive:true,capture:true});
+  document.addEventListener('touchcancel',lpCancel,{passive:true,capture:true});
+})();
 /* 桌面拖拽删除：把用户文件拖到回收站图标(data-drop=bin)放手即删 */
 document.addEventListener('dragstart',function(e){
   try{var t=e.target;if(!t||!t.closest)return;var d=t.closest('[data-drag]');
@@ -6929,7 +6960,7 @@ function deskDelete(ref){
 }
 function d95Css(mob){
     var CSS='<style>'
-    +'.d95-desk{position:absolute;left:0;right:0;top:0;bottom:'+(mob?'44px':'42px')+';overflow:auto;-webkit-overflow-scrolling:touch;display:grid;'
+    +'.d95-desk{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;position:absolute;left:0;right:0;top:0;bottom:'+(mob?'44px':'42px')+';overflow:auto;-webkit-overflow-scrolling:touch;display:grid;'
     +(mob?'grid-auto-flow:row;grid-template-columns:repeat(4,1fr);grid-auto-rows:96px;padding:10px 6px;'
          :'grid-auto-flow:column;grid-template-rows:repeat(auto-fill,96px);grid-auto-columns:100px;padding:14px;')
     +'gap:2px;align-content:start}'
@@ -9646,7 +9677,7 @@ root.addEventListener('click',function(e){
   if(!BGM.started){BGM.started=true;if(!S.muted){if(S.screen==='title'){BGM.t0=0;bgmPlay(0);}else bgmPlay();}}
   var t=e.target;
   if(S._zenClkGrd&&Date.now()-S._zenClkGrd<450){S._zenClkGrd=0;if(t&&t.closest&&t.closest('#zjStory'))return;}
-  if(S.deskCtx&&!(t&&t.closest&&t.closest('#d95Ctx'))){S.deskCtx=null;S._noFade=true;render();return;} /* 桌面右键菜单：点外即收（Win95式吞击） */
+  if(S.deskCtx&&!(t&&t.closest&&t.closest('#d95Ctx'))){if(S._lpGrd&&Date.now()-S._lpGrd<650){S._lpGrd=0;}else{S.deskCtx=null;S._noFade=true;render();return;}} /* 桌面右键菜单：点外即收（Win95式吞击） */
   while(t&&t!==root){
     var a=t.getAttribute&&t.getAttribute('data-act');
     if(t.getAttribute){

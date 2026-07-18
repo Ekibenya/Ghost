@@ -10507,6 +10507,7 @@ function tick(){
   }else pill.style.display='none';
   var E9=ENG();
   if(E9&&E9.S&&(E9.S.overlay||E9.S.bgmOpen)){root.style.display='none';pill.style.display='none';setZZ(true);return;}  /* 弹窗(世界书/设置/地图/音乐…)打开:影像层让位 */
+  try{if(document.querySelector('.gm-layer.gm-open:not(.gm-docked),#pgMapDock.pg-expanded')){root.style.display='none';pill.style.display='none';setZZ(true);return;}}catch(eGm){} /* 3D地图全屏展开:影像层让位(岛挂body z5,会压住#zj内部的z55地图层) */
   if(!VN.on||!isle){root.style.display='none';setZZ(true);return;}
   var r=isle.getBoundingClientRect();
   if(r.width<60||r.height<60){root.style.display='none';setZZ(true);return;}

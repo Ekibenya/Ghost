@@ -9924,8 +9924,7 @@ var root=document.createElement('div');
 root.id='vnRoot';
 root.style.cssText='position:fixed;left:0;top:0;width:0;height:0;z-index:5;display:none;overflow:hidden;border-radius:16px;background:#0b0906;pointer-events:none;box-shadow:0 10px 28px rgba(18,40,27,.45),inset 0 1px 0 rgba(255,255,255,.1)';
 root.innerHTML=
-  '<img id="vnBgFill" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:blur(16px) saturate(.85) brightness(.5);transform:scale(1.12)">'
- +'<img id="vnBgA" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:1;transition:opacity 1s ease">'
+  '<img id="vnBgA" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:1;transition:opacity 1s ease">'
  +'<img id="vnBgB" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 1s ease">'
  +'<div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.12),transparent 30%,transparent 72%,rgba(0,0,0,.3))"></div>'
  +'<div id="vnCast" style="position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden"></div>'
@@ -10048,7 +10047,6 @@ function ctlRefresh(){
   var E=ENG(); var s=(E&&E.S)||{};
   var key=(s.worldFull?'F':'')+(s.isleBig?'B':'');
   if(key===VN.ctlKey)return; VN.ctlKey=key;
-  try{bgFit();}catch(e){}
   try{var _ch=$id('vnCast');if(_ch){var _n=_ch.children.length;[].forEach.call(_ch.children,function(el){if(el._c)setSprite(el,el._c,_n);else castSize(el);});}}catch(e){} /* 取景档随岛状态切换,单人小窗换横图 */
   function b(act,txt){return '<div data-vnact="'+act+'" style="'+PILLCSS+'">'+txt+'</div>';}
   var h='';
@@ -10099,18 +10097,13 @@ function sceneOf(){
   return DIRT+'s9_office_aquarium.jpg';                  /* 默认:本部办公室 */
 }
 var bgFlip=false;
-function bgFit(){ /* 小窗:背景整图contain+模糊同图补两侧(不再是裁切缩略感);展开/全屏:cover铺满 */
-  var small=(castFrame()==='S');
-  ['vnBgA','vnBgB'].forEach(function(id){var el=$id(id);if(el)el.style.objectFit=small?'contain':'cover';});
-}
+
 function setBg(name){
   if(VN.bg===name)return; VN.bg=name;
   try{localStorage.setItem('gits_vn_flag',VN.rev?'1':'0');}catch(e){}
   var a=$id('vnBgA'),b=$id('vnBgB');if(!a||!b)return;
   var showEl=bgFlip?a:b, hideEl=bgFlip?b:a; bgFlip=!bgFlip;
   showEl.src=name;
-  var fl=$id('vnBgFill');if(fl&&fl.getAttribute('src')!==name)fl.src=name;
-  bgFit();
   showEl.style.opacity=1; hideEl.style.opacity=0;
 }
 

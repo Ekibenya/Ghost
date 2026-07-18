@@ -10889,7 +10889,7 @@ function ENG(){try{return window.__VNB?window.__VNB():null;}catch(e){return null
 /* ---------------- 覆盖层 DOM(一次性) ---------------- */
 var root=document.createElement('div');
 root.id='vnRoot';
-root.style.cssText='position:fixed;left:0;top:0;width:0;height:0;z-index:5;display:none;overflow:hidden;border-radius:16px;background:#0b0906;pointer-events:none;box-shadow:0 10px 28px rgba(18,40,27,.45),inset 0 1px 0 rgba(255,255,255,.1)';
+root.style.cssText='position:absolute;inset:0;z-index:20;display:none;overflow:hidden;border-radius:16px;background:#0b0906;pointer-events:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.1)'; /* 单层化:影像层是岛的子元素脸面,不再是body级贴片 */
 root.innerHTML=
   '<img id="vnBgA" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:1;transition:opacity 1s ease">'
  +'<img id="vnBgB" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 1s ease">'
@@ -11221,21 +11221,14 @@ function tick(){
     pill.style.display='block';
     pill.style.left=(r0.left+10)+'px'; pill.style.top=(r0.top+6)+'px';
   }else pill.style.display='none';
-  var E9=ENG();
-  if(E9&&E9.S&&(E9.S.overlay||E9.S.bgmOpen)){root.style.display='none';pill.style.display='none';setZZ(true);return;}  /* 弹窗(世界书/设置/地图/音乐…)打开:影像层让位 */
-  try{if(document.querySelector('.gm-layer.gm-open:not(.gm-docked),#pgMapDock.pg-expanded')){root.style.display='none';pill.style.display='none';setZZ(true);return;}}catch(eGm){} /* 3D地图全屏展开:影像层让位(岛挂body z5,会压住#zj内部的z55地图层) */
   if(!VN.on||!isle){root.style.display='none';setZZ(true);return;}
   var r=isle.getBoundingClientRect();
   if(r.width<60||r.height<60){root.style.display='none';setZZ(true);return;}
+  /* 单层化:认领为岛的子元素——岛的移动/拖拽/展开/全屏物理同步,零追赶零露底;弹窗盖在上层,无需让位 */
+  if(root.parentNode!==isle){isle.appendChild(root);try{root.style.borderRadius=getComputedStyle(isle).borderRadius;}catch(e){}}
   root.style.display='block';
   setZZ(!!document.hidden);
   if(!VN.ld){VN.ld=true;var mf0=chr('m');if(mf0&&!mf0.getAttribute('src')){mf0.addEventListener('load',function(){VN.sizeKey=null;});mf0.setAttribute('src',vnUrl(mf0));}}
-  var _rk=r.left+','+r.top+','+r.width+','+r.height;
-  if(VN._rk!==_rk){VN._rk=_rk;
-    root.style.left=r.left+'px';root.style.top=r.top+'px';
-    root.style.width=r.width+'px';root.style.height=r.height+'px';
-    try{root.style.borderRadius=getComputedStyle(isle).borderRadius;}catch(e){}
-  }
   ctlRefresh();
 
   /* galgame 取景三档(画布高度百分比,头顶≈40/胸≈58/膝·靴口≈82/足≈99):

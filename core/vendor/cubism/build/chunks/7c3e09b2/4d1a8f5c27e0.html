@@ -193,9 +193,6 @@ html.zjLow #zjOvDim{background:rgba(1,4,2,.7)!important}
 @keyframes zjInL{from{opacity:0}}
 @keyframes zjInU{from{opacity:0}}
 @keyframes zjInD{from{opacity:0}}
-@keyframes zjPickBg{from{opacity:0}}
-@keyframes zjPickIn{from{opacity:0}}
-@media (prefers-reduced-motion:reduce){#zjStylePick,#zjStylePick *{animation:none!important}}
 @keyframes zjTabF{from{opacity:0}}
 @keyframes zjTabB{from{opacity:0}}
 .slip{height:1px;border-radius:0;opacity:1;background:linear-gradient(90deg,transparent 0,var(--t-grid) 12%,var(--t-grid) 88%,transparent 100%)}
@@ -705,10 +702,9 @@ function lowApply(on){
 var INPUTGLASS=true;try{INPUTGLASS=localStorage.getItem('gits_inputglass')!=='0';}catch(e){}
 /* 「我之言行」气泡：默认无框、只留右对齐柔光文字；可在设置·显切回气泡框。 */
 var WANGFRAME=false;try{WANGFRAME=localStorage.getItem('gits_wangframe')==='1';}catch(e){}
-/* 界面风格二选一：'glass'=液态玻璃设计（经典全框） 'minimal'=极简主义（现行无框柔光）。
-   未选=''：开局进入正文后弹选择界面（按设备给对应演示图）。选择驱动下面全部子开关。 */
-var UISTYLE='';try{UISTYLE=localStorage.getItem('gits_uistyle')||'';}catch(e){}
-function glassUI(){return UISTYLE==='glass';}
+/* UI风格固定为 S9 OPS.TERM 终端风（旧双风格系统已移除） */
+var UISTYLE='minimal';try{UISTYLE=localStorage.getItem('gits_uistyle')||'minimal';}catch(e){}
+function glassUI(){return false;}
 function applyUiStyle(st){
   UISTYLE=(st==='glass'||st==='minimal')?st:'';
   var g=UISTYLE==='glass';
@@ -722,10 +718,6 @@ function applyUiStyle(st){
 if(UISTYLE)applyUiStyle(UISTYLE); /* 已选过：开机按风格矫正子开关，防残留 */
 /* 尚未选过风格：开机空闲时就把两张演示图拉回本地。否则它们要等进正文那一刻才开始下载，
    正好撞上三维引擎/场景资源的下载高峰，慢网手机上会「卡住出不来」。 */
-if(!UISTYLE){setTimeout(function(){try{
-  var _sfx0=window.innerWidth<920?'m':'d';
-  window.__zjDemoPre=['glass','minimal'].map(function(st){var im=new Image();im.decoding='async';im.src='core/res/uidemo_'+st+'_'+_sfx0+'.jpg?v=5';return im;}); /* 存住引用防被回收 */
-}catch(e){}},1200);}
 /* 手机版「叙事/档案」切换：默认灵动岛发光小球（无内框、只文字），滑到哪就在哪爆散融字点亮；设置·显可切回旧玻璃框 */
 var TABISLE=true;try{TABISLE=localStorage.getItem('gits_tabisle')!=='0';}catch(e){}
 /* 【实验】顶栏液态玻璃：默认开——顶部一整排（年代地点/切换/全屏/设置…归）去掉各自方框，只在顶上铺一层液态玻璃渐变。
@@ -6016,7 +6008,7 @@ function titleView(){
     +'<div class="slip" style="position:relative;width:320px;max-width:74vw;margin:clamp(8px,1.7vh,18px) auto clamp(6px,1.2vh,12px)"></div>'
     +'<div style="position:relative;font-size:13px;letter-spacing:.34em;color:var(--fg-dlg-net);padding:0 20px;font-family:var(--fCJK)">――ネットは広大だわ</div>'
     +'<div style="position:relative;display:flex;flex-direction:column;align-items:center;gap:clamp(1px,0.5vh,4px);margin-top:clamp(10px,2.4vh,22px);padding:4px 0">'
-    +erb('data-act="toselect"','开 幕','BOOT SEQUENCE')
+    +erb('data-act="toselect"','起 動','BOOT SEQUENCE')
     +cont
     +erb('data-ov="intro"','任务简报','BRIEFING')
     +erb('data-ov="api"','接 入 AI','LINK-UP')
@@ -6227,7 +6219,7 @@ function selectView(){
     +'<div style="font-size:12.5px;line-height:1.75;color:#8fae9c;margin-top:4px"><b style="color:#c9705a">没看过动画或漫画必看！</b>世界观、主角、攻壳机动队设定、舆图，以及每个开局的简单剧情介绍与出场人物。</div></div>'
     +'<div style="flex:none;font-size:13px;letter-spacing:.3em;color:var(--gold)">查看 →</div></div>';
   var friendBox=S.opShow?('<div class="glass" style="grid-column:1/-1;padding:13px 20px;display:flex;gap:10px;align-items:center;flex-wrap:wrap'+(mob?';-webkit-backdrop-filter:none;backdrop-filter:none':'')+'">'
-    +'<div class="kai" style="font-size:16px;color:var(--gold2);letter-spacing:.1em;flex:none">友传开局</div>'
+    +'<div class="kai" style="font-size:16px;color:var(--gold2);letter-spacing:.1em;flex:none">開局碼</div>'
     +'<input id="zjOpCode" placeholder="粘贴友人分享的开局码或链接，即可开同一局…" style="flex:1;min-width:200px;background:rgba(255,255,255,.03);border:1px solid rgba(61,220,132,.3);border-radius:9px;color:var(--ink);padding:9px 12px;font-size:13px" autocomplete="off" spellcheck="false">'
     +'<button data-act="opImport" class="obtn btn" style="flex:none;font-size:13px;letter-spacing:.15em;padding:9px 18px">导 入</button>'
     +(S.opMsg?'<div style="width:100%;font-size:12px;color:var(--gold3)">'+esc(S.opMsg)+'</div>':'')+'</div>'):'';
@@ -6235,8 +6227,8 @@ function selectView(){
     +'<div class="grow" style="overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain">'
     +'<div style="position:sticky;top:0;z-index:6;pointer-events:none;margin-bottom:-26px;padding-bottom:26px">'+'<div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(12,26,18,'+(mob?'.99':'.95')+') 0%,rgba(12,26,18,'+(mob?'.93':'.76')+') 56%,rgba(12,26,18,0) 100%);'+(mob?'':';')+'-webkit-mask-image:linear-gradient(180deg,#000 54%,transparent);mask-image:linear-gradient(180deg,#000 54%,transparent)"></div>'+'<div style="position:relative;pointer-events:auto;display:flex;align-items:baseline;gap:16px;padding:18px 28px 10px;flex-wrap:wrap">'
     +'<button data-act="totitle" class="obtn btn" style="font-size:12px;letter-spacing:.2em;padding:6px 14px">〈 封面</button>'
-    +'<button data-act="opToggle" class="obtn btn" style="font-size:12px;letter-spacing:.2em;padding:6px 14px'+(S.opShow?';color:var(--gold2);border-color:rgba(201,160,99,.6)':';color:var(--mut)')+'">友传开局</button>'
-    +'<div class="kai" style="font-size:26px;letter-spacing:.14em;color:var(--gold2)">择一开局 · 轮舞之间</div></div></div>'
+    +'<button data-act="opToggle" class="obtn btn" style="font-size:12px;letter-spacing:.2em;padding:6px 14px'+(S.opShow?';color:var(--gold2);border-color:rgba(201,160,99,.6)':';color:var(--mut)')+'">開局碼</button>'
+    +'<div class="kai" style="font-size:26px;letter-spacing:.14em;color:var(--gold2)">择一开局 · ネットは広大</div></div></div>'
     +'<div style="padding:22px 28px 60px"><div style="max-width:1280px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(320px,100%),1fr));gap:16px">'+zero+synopBox+friendBox+grid+'</div></div>'
     +'</div></div>';
 }
@@ -6994,6 +6986,7 @@ function gameView(){
 
 /* ---------------- BGM PANEL ---------------- */
 function bgmPanel(){
+  if(!BGM_TRACKS.length)return '<div style="padding:18px 14px;font-family:var(--fMono);font-size:12px;color:var(--t-g2,#1e9e5c);letter-spacing:.12em">▚ AUDIO OFFLINE ─ 曲目未配備<div style="margin-top:6px;color:var(--mut,#5a7f6a);font-size:11px">BGM歌单空缺，待后续版本补充。</div></div>';
   var cur=BGM_TRACKS[BGM.idx];
   var rows=BGM_TRACKS.map(function(tr,i){
     var on=i===BGM.idx;
@@ -7628,11 +7621,6 @@ function fontPane(){
    +'<div class="kai" style="font-size:19px;color:var(--gold2);letter-spacing:.15em;margin:34px 0 10px">输入栏功能</div>'
    +'<label style="display:flex;align-items:center;gap:9px;font-size:13.5px;color:var(--ink2);cursor:pointer;margin:6px 0"><input id="zjOptMic" type="checkbox" style="accent-color:#3ddc84"'+((S.micOn===true||(S.micOn==null&&!isMobile()))?' checked':'')+'>「声」语音输入按钮（说话成文；手机默认关，输入法自带语音）</label>'
    +'<label style="display:flex;align-items:center;gap:9px;font-size:13.5px;color:var(--ink2);cursor:pointer;margin:6px 0"><input id="zjOptSugg" type="checkbox" style="accent-color:#3ddc84"'+(S.sugg!==false?' checked':'')+'>参谋四策：每回后 AI 拟四条可点选项（每轮多一次杂务调用）</label>'
-   +'<div style="display:flex;gap:12px;flex-wrap:wrap">'
-   +[['glass','液态玻璃设计','经典全框界面：年代胶囊·全屏键·选项与输入皆有玻璃框，结构一目了然'],['minimal','极简主义设计','无框柔光＋液态玻璃顶栏，适合小屏幕设备，上下文显示面积更大']].map(function(o){var on=UISTYLE===o[0]||(UISTYLE===''&&o[0]==='minimal');
-     return '<div class="btn" data-act="setStyle" data-style="'+o[0]+'" style="flex:1;min-width:220px;cursor:pointer;border:1px solid '+(on?'rgba(61,220,132,.75)':'rgba(61,220,132,.25)')+';border-radius:14px;padding:13px 15px;background:'+(on?'linear-gradient(135deg,rgba(255,255,255,.12),rgba(61,220,132,.05))':'rgba(255,255,255,.02)')+'"><div class="kai" style="font-size:15.5px;letter-spacing:.12em;color:'+(on?'var(--gold2)':'var(--mut2)')+'">'+o[1]+(on?' ✓':'')+'</div><div style="font-size:11.5px;color:var(--mut);line-height:1.7;margin-top:5px">'+o[2]+'</div></div>';}).join('')
-   +'</div>'
-   +'<div style="font-size:11.5px;color:var(--mut);line-height:1.7;margin-top:8px">即时生效，仅存于本机；开局后的风格选择界面选的也是这两种。</div>'
    +'<div class="kai" style="font-size:19px;color:var(--gold2);letter-spacing:.15em;margin:34px 0 10px">对话字色</div>'
    +'<div style="font-size:12.5px;color:var(--mut);line-height:1.8">「」出声对白以此色区分（『』电脑直连恒为绿）。示例：巴特咂了下舌。<span id="zjDlgPrev" style="color:'+(DLGC==='off'?'inherit':(DLGC==='auto'?'var(--fg-voice)':DLGC))+'">「少佐，追踪快满了。」</span></div>'
    +'<div style="display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-top:12px">'
@@ -8010,7 +7998,6 @@ function render(){
   try{imgHydrate();}catch(e){}
   try{sdHydrate();}catch(e){}
   try{var _jp9=document.getElementById('jpIslePane');if(_jp9&&jpOut())_jp9.scrollTop=_jp9.scrollHeight;}catch(e){}
-  if(S.screen==='game'&&!UISTYLE)try{showStylePick();}catch(e){}
   if(_swapOld&&_swapOld.length){
     var _v0=document.getElementById('zjScrVeil');if(_v0&&_v0.parentNode)_v0.parentNode.removeChild(_v0);
     var _veil=document.createElement('div');
@@ -8325,103 +8312,6 @@ window.__zjTopIsleHtml=function(){
     +'<span style="flex:none;font-size:11px;letter-spacing:.22em;color:var(--fg-data);text-shadow:0 0 2px currentColor;font-family:var(--kai)">沙盒</span>'
     +'<div style="flex:1;min-width:0;overflow:hidden;-webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)"><div class="zjMarq" style="font-size:11px;letter-spacing:.16em;color:var(--fg-data);text-shadow:0 0 2px currentColor;font-family:var(--kai)"><span>'+esc(_er)+'</span><span aria-hidden="true">'+esc(_er)+'</span></div></div></div>';
 };
-/* 开局后的界面风格选择：两张演示图（电脑给电脑版、手机给手机版）+介绍，二选一；设置·显可随时更换 */
-/* 界面风格选择：手机也两卡并排（竖屏截图正好半宽放下），整屏一眼看全、零滚动；
-   图高用 100dvh 兜底封顶（正常机型远达不到，纯保险），要点一行金字点出核心差异。
-   出场：底幕淡入、标题与两卡依次升起。浮层挂在 document.body 上、只注入一次——
-   途中任何 render() 都碰不到它，动画绝不会被重播或掐断。
-   两步确认：点卡＝选中（金边高亮），再点「确认进入」才应用——防手滑误选。 */
-function stylePickHtml(){
-  var m=isMobile(),sfx=m?'m':'d';
-  var an=!reducedMotion();
-  var anBg=an?'animation:zjPickBg .5s ease-out both;':'';
-  var anIn=function(d){return an?'animation:zjPickIn .62s cubic-bezier(.22,1,.32,1) '+d+'ms both;':'';};
-  var opts=[
-    ['glass','液态玻璃','框架分明|年代胶囊|全屏按钮','经典全框界面：选项与输入皆有玻璃框，结构一目了然'],
-    ['minimal','极简主义','无框柔光|正文区更大|点正文即全屏','顶栏液态玻璃渐变，界面隐入正文；适合小屏幕设备']];
-  var ci=0;
-  return '<div id="zjStylePick" style="'+anBg+'position:fixed;inset:0;z-index:90;background:rgba(8,6,4,.92);-webkit-backdrop-filter:blur(9px);backdrop-filter:blur(9px);display:flex;align-items:center;justify-content:center;padding:'+(m?'10px':'16px')+';overflow:auto">'
-    +'<div style="max-width:'+(m?'560px':'880px')+';width:100%">'
-    +'<div class="kai" style="'+anIn(60)+'text-align:center;font-size:'+(m?'18px':'22px')+';color:var(--gold2);letter-spacing:.22em;margin-bottom:4px;text-shadow:0 0 14px rgba(224,190,130,.4)">择 · 界面风格</div>'
-    +'<div style="'+anIn(120)+'text-align:center;font-size:'+(m?'11px':'12.5px')+';color:var(--mut);margin-bottom:'+(m?'10px':'16px')+'">点选一张看中的，再点下方「确认进入」；之后可在 设置 · 显 随时更换</div>'
-    +'<div style="display:flex;gap:'+(m?'10px':'14px')+';align-items:stretch">'
-    +opts.map(function(o){
-      return '<div class="btn zjHl zjPickCard" data-pick="'+o[0]+'" style="'+anIn(190+110*(ci++))+'flex:1;min-width:0;cursor:pointer;border:1px solid rgba(224,190,130,.4);border-radius:'+(m?'13px':'16px')+';overflow:hidden;background:rgba(18,13,8,.72);box-shadow:0 10px 30px rgba(0,0,0,.5),inset 0 1px 0 rgba(12,26,18,.15);transition:border-color .25s,box-shadow .25s,opacity .25s,transform .25s">'
-        +'<img src="core/res/uidemo_'+o[0]+'_'+sfx+'.jpg?v=5" fetchpriority="high" decoding="async" '
-        +'onerror="var s=this,r=(s.getAttribute(\'data-r\')|0);if(r<4){s.setAttribute(\'data-r\',r+1);setTimeout(function(){s.src=s.src.split(\'&r=\')[0]+\'&r=\'+(r+1);},700*(r+1));}" '
-        +'style="width:100%;display:block;pointer-events:none;aspect-ratio:'+(m?'824/1720':'3/2')+';background:rgba(255,244,220,.045);max-height:calc(100vh - 215px);max-height:calc(100dvh - 215px);object-fit:cover;object-position:top" alt="">'
-        +'<div style="padding:'+(m?'9px 10px 11px':'12px 15px 14px')+'"><div class="kai" style="font-size:'+(m?'14.5px':'16.5px')+';color:var(--gold2);letter-spacing:.13em;white-space:nowrap">'+o[1]+'</div>'
-        +'<div style="font-size:'+(m?'10px':'11.5px')+';color:#d9b988;letter-spacing:.02em;line-height:1.6;margin-top:4px">'+o[2].split('|').map(function(p){return '<span style="white-space:nowrap">'+p+'</span>';}).join(' · ')+'</div>'
-        +(m?'':'<div style="font-size:12px;color:var(--mut2);line-height:1.75;margin-top:4px">'+o[3]+'</div>')
-        +'</div></div>';}).join('')
-    +'</div>'
-    +'<div style="'+anIn(420)+'display:flex;justify-content:center;margin-top:'+(m?'24px':'30px')+'">'
-      +'<div id="zjPickGo" class="btn" style="cursor:default;position:relative;overflow:hidden;border-radius:99px;padding:'+(m?'11px 36px':'12px 46px')+';background:linear-gradient(0deg,rgba(20,15,9,.13),rgba(20,15,9,.04));-webkit-backdrop-filter:blur(5px) saturate(150%);backdrop-filter:blur(5px) saturate(150%);box-shadow:inset 0 1px 0 rgba(12,26,18,.13),0 4px 16px rgba(0,0,0,.3);transition:box-shadow .3s">'
-        +'<div aria-hidden="true" style="position:absolute;inset:0;border-radius:99px;pointer-events:none;-webkit-backdrop-filter:url(#zjLiqRefract);backdrop-filter:url(#zjLiqRefract)"></div>'
-        +'<span id="zjPickGoTx" style="position:relative;z-index:1;font-family:var(--kai);font-size:'+(m?'15px':'16px')+';letter-spacing:.3em;color:var(--mut);text-shadow:0 0 8px rgba(125,255,176,.25),0 1px 2px rgba(0,0,0,.6);transition:color .3s,text-shadow .3s">确 认 进 入</span>'
-      +'</div>'
-    +'</div></div></div>';
-}
-function showStylePick(){
-  if(UISTYLE||document.getElementById('zjStylePick'))return;
-  document.body.insertAdjacentHTML('beforeend',stylePickHtml());
-  var ov=document.getElementById('zjStylePick');
-  /* 悬死请求看门狗：onerror 只管「失败」，管不了「一直悬着不回」（手机上被三维资源挤占带宽时的常态）。
-     4 秒仍没加载完就换个缓存戳强行重发，9 秒再补一刀。 */
-  [4000,9000].forEach(function(wd,wi){setTimeout(function(){
-    if(!ov.isConnected)return;
-    [].forEach.call(ov.querySelectorAll('img'),function(im){
-      if(!(im.complete&&im.naturalWidth>0))im.src=im.src.split('&r=')[0].split('&w=')[0]+'&w='+(wi+1)+'_'+Date.now();
-    });
-  },wd);});
-  ov.addEventListener('click',function(e){
-    var n=e.target,card=null,go=null;
-    while(n&&n!==ov){
-      if(n.getAttribute){
-        if(n.getAttribute('data-pick')){card=n;break;}
-        if(n.id==='zjPickGo'){go=n;break;}
-      }
-      n=n.parentNode;
-    }
-    if(card){ /* 第一步：选中高亮（可反复换），未确认不生效 */
-      ov._sel=card.getAttribute('data-pick');
-      var cs=ov.querySelectorAll('.zjPickCard');
-      [].forEach.call(cs,function(c){
-        var on=c===card;
-        c.style.borderColor=on?'rgba(240,214,160,.95)':'rgba(224,190,130,.25)';
-        c.style.boxShadow=on?'0 0 0 1.5px rgba(240,214,160,.75),0 12px 40px rgba(224,190,130,.3)':'0 10px 30px rgba(0,0,0,.5),inset 0 1px 0 rgba(12,26,18,.15)';
-        c.style.opacity=on?'1':'.62';
-        c.style.transform=on?'scale(1.015)':'none';
-      });
-      var g=document.getElementById('zjPickGo'),gt=document.getElementById('zjPickGoTx');
-      if(g){g.style.cursor='pointer';g.style.boxShadow='inset 0 1px 0 rgba(12,26,18,.2),0 4px 20px rgba(0,0,0,.3),0 0 22px rgba(224,190,130,.28)';}
-      if(gt){gt.style.color='var(--gold2)';gt.style.textShadow='0 0 13px rgba(224,190,130,.85),0 0 5px rgba(125,255,176,.5),0 1px 2px rgba(0,0,0,.8)';}
-      return;
-    }
-    if(go&&ov._sel){ /* 第二步：确认 → 应用并丝滑退场 */
-      var selCard=ov.querySelector('.zjPickCard[data-pick="'+ov._sel+'"]');
-      pickApply(ov._sel,selCard||go,ov);
-    }
-  });
-}
-/* 应用风格＋浮层丝滑退场：新界面在幕后渲染好，整层缓缓淡出揭开它 */
-function pickApply(stv,t,ov){
-  if(S._pickBusy&&Date.now()-S._pickBusy<700)return;S._pickBusy=Date.now();
-  applyUiStyle(stv);S._noFade=true;
-  if(ov&&ov.animate&&!reducedMotion()){
-    if(t&&t.animate)t.animate([{transform:t.style.transform||'none'},{transform:'scale(1.04)'}],{duration:420,easing:'cubic-bezier(.3,1,.35,1)',fill:'forwards'});
-    render();
-    var an=ov.animate([{opacity:1},{opacity:0}],{duration:420,delay:140,easing:'ease-out',fill:'forwards'});
-    var rm=function(){if(ov.parentNode)ov.parentNode.removeChild(ov);};
-    an.onfinish=an.oncancel=rm;setTimeout(rm,900);
-  }else{if(ov&&ov.parentNode)ov.parentNode.removeChild(ov);render();}
-}
-function pickStyle(t){ /* 设置·显 里的样式卡：即点即换（开局浮层走 pickApply 两步确认） */
-  if(S._pickBusy&&Date.now()-S._pickBusy<700)return;S._pickBusy=Date.now();
-  applyUiStyle(t.getAttribute('data-style'));S._noFade=true;render();
-}
-/* 正文 paddingTop 的滚动补偿式修改：正在读的行钉在原处；滚动余量不够的残余用 FLIP 平滑过渡。
-   全屏切换/三维开合（全屏内外）共用。 */
 function storyPadComp(story,newTop){
   var w=story.querySelector('[data-zjzoom]');var oldY=w?w.getBoundingClientRect().top:null;
   story.style.paddingTop=newTop+'px';
@@ -8809,7 +8699,6 @@ root.addEventListener('click',function(e){
       else if(a==='savenow'){saveNow();}
       else if(a==='editlore'){S.setTab='lore';S.overlay='set';renderOverlay();}
       else if(a==='zen'){zenToggle();return;}
-      else if(a==='setStyle'){pickStyle(t);return;}
       else if(a==='worldFull'){
         var wfI=document.getElementById('zjSceneIsle');var wfR=wfI&&wfI.getBoundingClientRect();
         S.worldFull=!S.worldFull;if(!S.worldFull)S.isleBig=true;S._noFade=true;render();

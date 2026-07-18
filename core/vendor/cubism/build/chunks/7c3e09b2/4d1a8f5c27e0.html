@@ -10882,16 +10882,27 @@ function ctlRefresh(){
   var key=(s.worldFull?'F':'')+(s.isleBig?'B':'');
   if(key===VN.ctlKey)return; VN.ctlKey=key;
   try{var _ch=$id('vnCast');if(_ch){var _n=_ch.children.length;[].forEach.call(_ch.children,function(el){if(el._c)setSprite(el,el._c,_n);else castSize(el);});}}catch(e){} /* 取景档随岛状态切换,单人小窗换横图 */
-  function b(act,txt){return '<div data-vnact="'+act+'" style="'+PILLCSS+'">'+txt+'</div>';}
+  /* 赛博HUD图标钮:纯图形无文字,title留悬停说明;svg pointer-events:none保证点击命中pill本体 */
+  var PILLICO='padding:4px 7px;background:rgba(12,9,6,.62);border:1px solid rgba(61,220,132,.45);cursor:pointer;border-radius:8px;display:inline-flex;align-items:center;justify-content:center';
+  function bi(act,ti,pa){return '<div data-vnact="'+act+'" class="btn" title="'+ti+'" style="'+PILLICO+'"><svg viewBox="0 0 12 12" width="13" height="13" fill="none" stroke="#7dffb0" stroke-width="1.3" stroke-linecap="square" style="display:block;pointer-events:none;filter:drop-shadow(0 0 4px rgba(125,255,176,.65))">'+pa+'</svg></div>';}
+  var VNIC={
+    full:'<path d="M1 4V1h3M8 1h3v3M11 8v3H8M4 11H1V8"/><rect x="4.2" y="4.2" width="3.6" height="3.6"/>',
+    unfull:'<path d="M4 1v3H1M11 4H8V1M8 11V8h3M1 8h3v3"/>',
+    big:'<path d="M7 1h4v4M11 1 7 5M5 11H1V7M1 11l4-4"/>',
+    small:'<path d="M11 5H7V1M7 5l4-4M1 7h4v4M5 7l-4 4"/>',
+    gear:'<path d="M1 3h10M1 6h10M1 9h10"/><rect x="7" y="2" width="2" height="2" fill="#7dffb0" stroke="none"/><rect x="3" y="5" width="2" height="2" fill="#7dffb0" stroke="none"/><rect x="8" y="8" width="2" height="2" fill="#7dffb0" stroke="none"/>',
+    x:'<path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/>'
+  };
   var h='';
-  if(s.worldFull){ h+= b('worldFull','退出全屏'); }
-  else h+= s.isleBig ? b('worldFull','全屏')+b('isleSmall','收起') : b('isleBig','展开');
-  h+=b('jpsb','设置');
-  if(!s.worldFull) h+=b('isleHide','✕');
+  if(s.worldFull){ h+= bi('worldFull','退出全屏',VNIC.unfull); }
+  else h+= s.isleBig ? bi('worldFull','全屏铺开',VNIC.full)+bi('isleSmall','收起为小窗',VNIC.small) : bi('isleBig','展开放大',VNIC.big);
+  h+=bi('jpsb','设置',VNIC.gear);
+  if(!s.worldFull) h+=bi('isleHide','收起到顶栏',VNIC.x);
   var c=$id('vnCtl'); if(c)c.innerHTML=h;
 }
 root.addEventListener('click',function(e){
-  var t=e.target&&e.target.getAttribute?e.target.getAttribute('data-vnact'):null;
+  var _ve=e.target&&e.target.closest?e.target.closest('[data-vnact]'):null;
+  var t=_ve?_ve.getAttribute('data-vnact'):null;
   if(!t)return;
   if(t==='jpsb'){var ov=document.querySelector('#zjSceneIsle [data-ov="jpsb"]');if(ov)ov.click();return;}
   /* 阶段操作直接驱动引擎状态并重渲染——最稳,不依赖被立绘层遮住/不存在的 DOM 按钮 */

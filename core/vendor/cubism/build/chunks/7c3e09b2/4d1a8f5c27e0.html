@@ -163,7 +163,7 @@ html.zjLow .tb-key,html.zjLow .tb-key:hover{box-shadow:none;text-shadow:none}
 html.zjLow .glass{background:var(--t-bg1)!important}
 html.zjLow .glass::after{display:none!important}
 html.zjLow .fade{animation-duration:.12s}
-html.zjLow #zjStory,html.zjLow .bambooV{background:var(--t-bg1)!important}
+html.zjLow #zjStory,html.zjLow .bambooV{background:rgba(7,18,12,.8)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important} /* 低配：免模糊高遮蔽半透明，场景背景层(#gsbg)仍可微透 */
 html.zjLow #zjOvBox{background:var(--t-bg1)!important}
 html.zjLow #zjOvDim{background:rgba(1,4,2,.7)!important}
 /* ── 封面无框键：磷光字，悬停亮至峰值绿 ── */
@@ -5485,6 +5485,72 @@ window.GMENU={sync:gmenuSync,dispose:gmenuDispose,
   __debug:function(){return {on:GMENU.on,fail:GMENU.fail,seed:GMENU.seed,stat:GMENU.stat,raf:!!GMENU.raf,cv:!!GMENU.cv,wireN:GMENU.wireN};}};
 /* ---- /GMENU ---- */
 })();
+/* ---- GITS-SCENEBG 场景选图器 -------------------------------------------------
+   43张实景图(core/tex/*.jpg)按面板◇时地最长关键词匹配(夜昼加权)。
+   仅供「影像」视觉小说岛(VN模块 sceneOf/setBg)取图——图片只在灵动岛内出现，
+   不做任何全屏底图层。 ---- */
+(function(){
+var SBG_DATA=[
+{"f":"core/tex/s9_office_aquarium.jpg","k":["本部","办公室","水槽","鲨鱼","室内","新浜市中枢","9課本部","9课本部","课长室","荒卷"],"t":"na"},
+{"f":"core/tex/gala_hall_chandelier.jpg","k":["宴会","大厅","酒吧","夜","豪华","宴会厅","晚宴","酒会"],"t":"na"},
+{"f":"core/tex/white_briefing_room.jpg","k":["会议室","审讯","本部","封闭","室内","侦讯","简报室","作战会议"],"t":"na"},
+{"f":"core/tex/corner_terrace_cafe.jpg","k":["街道","咖啡店","露台","白天","下町"],"t":"day"},
+{"f":"core/tex/retro_console_wall.jpg","k":["管制区","监控","机房","仪表","昏暗","管制","中继站"],"t":"na"},
+{"f":"core/tex/bar_back_shelf.jpg","k":["酒吧","吧台","酒","夜"],"t":"na"},
+{"f":"core/tex/lounge_booth_green_lamp.jpg","k":["酒吧","雅座","夜","昏暗"],"t":"na"},
+{"f":"core/tex/neon_lounge_bar.jpg","k":["酒吧","霓虹","夜","室内","夜市","夜之下町"],"t":"na"},
+{"f":"core/tex/old_town_backstreet.jpg","k":["旧城","下町","后巷","白天","垃圾","旧城区","安全屋","老街"],"t":"day"},
+{"f":"core/tex/wired_room_overhead.jpg","k":["监听","线缆","安全屋","俯瞰","室内","加布里埃拉","储物层"],"t":"na"},
+{"f":"core/tex/dark_ops_room.jpg","k":["管制区","机房","监控","舰内","昏暗","作战室","管制室","指挥车"],"t":"na"},
+{"f":"core/tex/retro_kitchen_diner.jpg","k":["食堂","厨房","公寓","夜","室内","餐厅"],"t":"night"},
+{"f":"core/tex/parlor_surgery_table.jpg","k":["诊疗","义体","密室","壁灯","昏暗","诊疗点","17号公寓","临时诊疗","手术"],"t":"na"},
+{"f":"core/tex/marble_lobby_stairs.jpg","k":["大厅","官厅","楼梯","室内","内务省别馆","内务省","别馆","省厅"],"t":"na"},
+{"f":"core/tex/attic_bedroom_deck.jpg","k":["自宅","卧室","黄昏","终端","公寓","弧形公寓","素子的公寓"],"t":"dusk"},
+{"f":"core/tex/culture_hall_street.jpg","k":["下町","街道","会馆","涂鸦","白天","南新浜4区","救济中心","南新浜","4区","文化会馆"],"t":"day"},
+{"f":"core/tex/red_walkers_sakura.jpg","k":["樱花","海","郊外","机体","白天","神社","花见","市郊","待机点"],"t":"day"},
+{"f":"core/tex/grand_rotunda_hall.jpg","k":["大厅","官厅","穹顶","楼梯","室内","内务省别馆","内务省","别馆","国会","议事堂"],"t":"na"},
+{"f":"core/tex/ship_corridor_cart.jpg","k":["舰内","走廊","夜","昏暗","餐车","舰船","船内","舰艇"],"t":"na"},
+{"f":"core/tex/ship_corridor_cart_2.jpg","k":["舰内","走廊","警报","红光","夜","舰船","船内"],"t":"na"},
+{"f":"core/tex/night_city_window.jpg","k":["高层","夜景","办公室","摩天楼","夜","湾岸高层","高层区","摩天"],"t":"night"},
+{"f":"core/tex/aerial_recon_map.jpg","k":["俯瞰","监控","地图","航拍"],"t":"na"},
+{"f":"core/tex/open_sea_sail.jpg","k":["海","帆船","白天","外海","洋上","休假","休暇"],"t":"day"},
+{"f":"core/tex/transport_porthole.jpg","k":["机舱","舷窗","山地","白天","运输机","输送机","机上"],"t":"day"},
+{"f":"core/tex/bay_interchange_aerial.jpg","k":["湾岸","桥","俯瞰","高速公路","海","港","湾岸连络桥","连络桥","湾岸桥","立交"],"t":"day"},
+{"f":"core/tex/highway_truck_city.jpg","k":["高速公路","车流","都心","白天","高速","公路","追踪车队"],"t":"day"},
+{"f":"core/tex/highway_truck_city_2.jpg","k":["高速公路","桥","港","车流","白天","高速","公路","港区"],"t":"day"},
+{"f":"core/tex/slum_alley_truck.jpg","k":["下町","后巷","垃圾","旧城","白天"],"t":"day"},
+{"f":"core/tex/slum_yard_laundry.jpg","k":["下町","晾衣","天井","旧城","白天"],"t":"day"},
+{"f":"core/tex/slum_alley_laundry.jpg","k":["下町","后巷","晾衣","垃圾","白天"],"t":"day"},
+{"f":"core/tex/slum_alley_trash_hill.jpg","k":["下町","垃圾","后巷","白天"],"t":"day"},
+{"f":"core/tex/slum_street_doorway.jpg","k":["下町","街道","旧城","垃圾","白天","南新浜","救济"],"t":"day"},
+{"f":"core/tex/underground_garage.jpg","k":["地下","停车场","车库","室内","地下停车","车辆"],"t":"na"},
+{"f":"core/tex/downtown_ring_holo.jpg","k":["街道","高架","都心","全息","白天","市街"],"t":"day"},
+{"f":"core/tex/downtown_street_canyon.jpg","k":["街道","都心","招牌","白天","市街","大街"],"t":"day"},
+{"f":"core/tex/city_rooftops_view.jpg","k":["俯瞰","都心","楼顶","白天","天台"],"t":"day"},
+{"f":"core/tex/island_base_night.jpg","k":["郊外","夜","星空","基地","天线","离岛","中继"],"t":"night"},
+{"f":"core/tex/checkpoint_gate_night.jpg","k":["检问","闸口","夜","围墙","车","临海检问所","检问所","关卡"],"t":"night"},
+{"f":"core/tex/ruined_dome_hall.jpg","k":["废墟","机库","藤蔓","废弃","昏暗","旧东京被災圏","旧东京","被災","管制区"],"t":"na"},
+{"f":"core/tex/ruined_service_tunnel.jpg","k":["地下","隧道","管道","废墟","昏暗","旧东京被災圏","旧东京","被災","下水道"],"t":"na"},
+{"f":"core/tex/barrier_walls_rain.jpg","k":["废墟","雨","隔离墙","黄昏","旧东京被災圏","旧东京","被災","雨夜"],"t":"dusk"},
+{"f":"core/tex/ruined_waterfront_dusk.jpg","k":["废墟","黄昏","海","断桥","港","旧东京被災圏","旧东京","被災","岸线"],"t":"dusk"},
+{"f":"core/tex/highway_tunnel_truck.jpg","k":["隧道","高速公路","车流","夜","高速","公路"],"t":"na"}
+];
+function sbgPick(){
+  var p=null;try{p=currentPanel();}catch(e){}
+  var td=p&&p.world?String(p.world['时地']||''):'';
+  if(!td)return null;
+  var night=/夜|晚|未明|深更/.test(td),best=null,bs=-1;
+  for(var i=0;i<SBG_DATA.length;i++){var g=SBG_DATA[i],sc=-1;
+    for(var j=0;j<g.k.length;j++){var k=g.k[j];
+      if(k&&td.indexOf(k)>=0&&k.length>sc)sc=k.length;}
+    if(sc<0)continue;
+    sc=sc*10+((g.t==='night')===night?3:0)+(g.t==='na'?1:0);
+    if(sc>bs){bs=sc;best=g;}}
+  return best;
+}
+window.SCENEBG={pick:sbgPick,data:SBG_DATA};
+})();
+/* ---- /GITS-SCENEBG ---- */
 /* ---- GITS-MAP3D·WIRE B+C 玩法全接线 ----------------------------------------
    ①入口恒3D(2D舆图已废除) ②ZJ_LOCS→setNodes(含Cxx区块编号)
    ③◇时地 ZJ_KEYS最长匹配→setPlayer(render管线钩子=giCaseWatch同款挂法)
@@ -6373,7 +6439,7 @@ function selectView(){
       +'<div style="display:flex;justify-content:flex-end;font-size:12px;letter-spacing:.3em;color:var(--gold)">进入 →</div></div>';
   }).join('');
   var zero='<div class="btn glass glassHover" data-act="wzOpen" style="grid-column:1/-1;cursor:pointer;border-color:rgba(61,220,132,.5);padding:20px 24px;display:flex;align-items:center;gap:18px;flex-wrap:wrap">'
-    +'<div style="flex:none;width:44px;height:44px;background:linear-gradient(160deg,#3a5c8c,#26436e);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:var(--fMono);font-size:26px;color:#f2e0c0;box-shadow:inset 0 0 0 2px rgba(61,220,132,.3)">⚜︎</div>'
+    +'<div style="flex:none;width:44px;height:44px;background:linear-gradient(160deg,#17321f,#0b1c11);display:flex;align-items:center;justify-content:center;font-family:var(--fMono);font-size:21px;letter-spacing:1px;color:#7dffb0;text-shadow:0 0 8px rgba(61,220,132,.6);box-shadow:inset 0 0 0 2px rgba(61,220,132,.4)">&gt;_</div>'
     +'<div style="flex:1;min-width:240px"><div class="kai" style="font-size:22px;color:var(--gold2);letter-spacing:.08em">自定义开局 · 执笔者是你</div>'
     +'<div style="font-size:13px;line-height:1.8;color:#8fae9c;margin-top:4px">选时代、选地点、选在场之人——甚至选择「不当素子」，以原作登场人物或你自创的角色，走进这座义体都市。选罢，引擎现场生成独一无二的开场。</div></div>'
     +'<div style="flex:none;font-size:13px;letter-spacing:.3em;color:var(--gold)">进入 →</div></div>';
@@ -6384,7 +6450,7 @@ function selectView(){
     +'<button data-act="opShare" class="obtn btn" style="flex:none;font-size:12.5px;letter-spacing:.15em;padding:8px 16px">分享开局码</button>'
     +'<div style="flex:none;font-size:13px;letter-spacing:.3em;color:var(--gold)">进入 →</div></div>'):'';
   var synopBox='<div class="btn glass glassHover" data-ov="intro" style="grid-column:1/-1;cursor:pointer;border-color:rgba(201,160,99,.55);padding:15px 22px;display:flex;align-items:center;gap:16px;flex-wrap:wrap'+(mob?';-webkit-backdrop-filter:none;backdrop-filter:none':'')+'">'
-    +'<div style="flex:none;width:42px;height:42px;background:linear-gradient(160deg,#b98f3f,#7e5f28);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:var(--fMono);font-size:22px;color:#f7ecd2;box-shadow:inset 0 0 0 2px rgba(201,160,99,.35)">❦</div>'
+    +'<div style="flex:none;width:42px;height:42px;background:linear-gradient(160deg,#3d2f10,#241b08);display:flex;align-items:center;justify-content:center;font-family:var(--fMono);font-size:22px;color:#ffb81e;text-shadow:0 0 8px rgba(255,184,30,.5);box-shadow:inset 0 0 0 2px rgba(255,184,30,.35)">▤</div>'
     +'<div style="flex:1;min-width:220px"><div class="kai" style="font-size:20px;color:var(--gold2);letter-spacing:.06em">剧情快速简介</div>'
     +'<div style="font-size:12.5px;line-height:1.75;color:#8fae9c;margin-top:4px"><b style="color:#c9705a">没看过动画或漫画必看！</b>世界观、主角、攻壳机动队设定、舆图，以及每个开局的简单剧情介绍与出场人物。</div></div>'
     +'<div style="flex:none;font-size:13px;letter-spacing:.3em;color:var(--gold)">查看 →</div></div>';
@@ -7064,7 +7130,7 @@ function gameView(){
     /*GITS-DOCK：顶栏「图」「装」入口已移除（手机=第3页「地図・装備」，电脑=左侧停靠栏）；overlay 路由代码保留作兼容跳转 */
     +'<button data-ov="saves" class="tb-key btn" title="存档"><span class="tb-en">SAVE</span></button>'
     +'<button data-act="toselect" class="tb-key btn tb-amber" title="另择开局"><span class="tb-en">EXIT</span></button>';
-  var logo='<svg viewBox="0 0 512 512" width="28" height="28" style="flex:none;display:block;border-radius:6px;box-shadow:0 1px 4px rgba(18,40,27,.35)"><rect width="512" height="512" rx="116" fill="#0c1a12"/><circle cx="256" cy="256" r="186" fill="#1e9e5c"/><circle cx="256" cy="256" r="124" fill="#c9ffe2"/><circle cx="256" cy="256" r="64" fill="#8f6a1e"/></svg>';
+  var logo='<svg viewBox="0 0 512 512" width="28" height="28" style="flex:none;display:block;box-shadow:0 1px 4px rgba(18,40,27,.35)"><rect width="512" height="512" fill="#0c1a12"/><rect x="16" y="16" width="480" height="480" fill="none" stroke="#12583a" stroke-width="14"/><circle cx="256" cy="256" r="148" fill="none" stroke="#3ddc84" stroke-width="20"/><path d="M256 62v72M256 378v72M62 256h72M378 256h72" stroke="#3ddc84" stroke-width="20"/><circle cx="256" cy="256" r="50" fill="#ffb81e"/></svg>';
   var devSeg='<div class="zjHl" style="display:flex;border-radius:10px;overflow:hidden;'+_fr+'">'
     +['auto','desktop','mobile'].map(function(d){var on=S.device===d;var lbl={auto:'自动',desktop:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle"><rect x="2.75" y="4.5" width="18.5" height="12.5" rx="2"/><path d="M8.5 20.5h7M12 17.2v3.3"/></svg>',mobile:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle"><rect x="7.25" y="2.75" width="9.5" height="18.5" rx="2.4"/><path d="M10.7 18.2h2.6"/></svg>'}[d];return '<div class="btn" data-dev="'+d+'" style="cursor:pointer;padding:5px 10px;font-size:12px;color:'+(on?'var(--gold2)':'var(--mut)')+';background:'+(on?'rgba(61,220,132,.12)':'transparent')+'">'+lbl+'</div>';}).join('')+'</div>';
   var eraPill=_lg?'border-radius:99px':'border:1px solid rgba(255,255,255,.55);border-radius:99px;background:linear-gradient(135deg,rgba(9,22,15,.05),rgba(10,20,14,.02));-webkit-backdrop-filter:blur(26px) saturate(190%);backdrop-filter:blur(26px) saturate(190%);box-shadow:inset 0 1px 0 rgba(255,255,255,.25)';
@@ -9834,6 +9900,7 @@ var MOB=false;try{MOB=Math.min(screen.width||9e9,window.innerWidth||9e9)<=560;}c
 var VNV='18';
 function vnUrl(f){return f.getAttribute('data-vnsrc')+'&v='+VNV+(MOB?'&m=1':'');}
 var DIR='core/res/vn/';
+var DIRT='core/tex/';                     /* 实景背景库(43张,◇时地匹配) */
 function ENG(){try{return window.__VNB?window.__VNB():null;}catch(e){return null;}}
 
 /* ---------------- 覆盖层 DOM(一次性) ---------------- */
@@ -9999,22 +10066,17 @@ function moodOf(){
 }
 function sceneOf(){
   var p=panelNow();
-  if(!p)return 'bg_rose';                              /* 开局/无档案:待机内景 */
-  var w=p.world||{}; var npcs=p.npcs||[]; var c=p.char||{};
-  var loc=String(w['时地']||''), wx=String(w['天气']||''), sit=String(w['影像']||'')+' '+String(w['态势']||'');
-  var inr=loc+' '+String(c['记录']||'')+' '+String(c['心念']||'')+' '+String(c['观瞻']||'');
+  if(!p)return DIRT+'s9_office_aquarium.jpg';            /* 开局/无档案:本部待机 */
+  var w=p.world||{}; var loc=String(w['时地']||'');
+  var sit=String(w['影像']||'')+' '+String(w['态势']||'');
   if(/暴动|武装蜂起|戒严|市街战|全面战|恐怖攻击|骚乱/.test(sit))VN.rev=true;
-  /* 内心世界·电脑空间·意识场景 → 内景 */
-  if(/内心|心象|电脑空间|网络深处|深潜|同步潜行|梦境|梦中|入梦|噩梦|意识深处|精神世界|冥想|识海|幻境|Ghost之/.test(loc))return 'bg_rose';
-  /* 义体唤醒·初始化(开局独处内心时刻) → 内景 */
-  if(/义体唤醒|同步初始化|重新接线|冷启动|苏生|苏醒|睁开眼|睁开了眼/.test(inr))return 'bg_rose';
-  if(/国会|省厅|内务省|议场|听证|记者会|阁议|会议室/.test(loc))return 'bg_parliament';
-  if(/街|广场|市集|码头|港口|楼下|路上|途中|野外|据点|战场|巷|桥|门前|大厅/.test(loc))
-    return VN.rev?'bg_city_rev':'bg_city';
-  if(!npcs.length)return 'bg_rose';                    /* 独自一人:待机内景 */
-  if(/夜|晚|深夜|子夜|凌晨|入夜/.test(loc))return 'bg_win_night';
-  if(/黄昏|傍晚|夕|暮|日落|晚霞/.test(loc))return 'bg_win_dusk';
-  return 'bg_win_day';                                 /* 默认:白日窗景 */
+  /* 内心世界·电脑空间·意识场景 → 监视器墙(电脑空间感) */
+  if(/内心|心象|电脑空间|网络深处|深潜|同步潜行|梦境|梦中|入梦|噩梦|意识深处|精神世界|冥想|识海|幻境|Ghost之/.test(loc))return DIRT+'retro_console_wall.jpg';
+  var g=null;try{g=window.SCENEBG&&window.SCENEBG.pick();}catch(e){}
+  if(g)return g.f;                                       /* ◇时地关键词命中 → 43图之一 */
+  if(/夜|晚|深夜|子夜|凌晨|入夜/.test(loc))return DIRT+'night_city_window.jpg';
+  if(/黄昏|傍晚|夕|暮|日落|晚霞/.test(loc))return DIRT+'ruined_waterfront_dusk.jpg';
+  return DIRT+'s9_office_aquarium.jpg';                  /* 默认:本部办公室 */
 }
 var bgFlip=false;
 function setBg(name){
@@ -10022,7 +10084,7 @@ function setBg(name){
   try{localStorage.setItem('gits_vn_flag',VN.rev?'1':'0');}catch(e){}
   var a=$id('vnBgA'),b=$id('vnBgB');if(!a||!b)return;
   var showEl=bgFlip?a:b, hideEl=bgFlip?b:a; bgFlip=!bgFlip;
-  showEl.src=DIR+name+'.webp';
+  showEl.src=name;
   showEl.style.opacity=1; hideEl.style.opacity=0;
 }
 
@@ -10189,7 +10251,7 @@ function tick(){
     }
   }else{
     /* 尚无世界消息(刚开局):待机内景 + 素子居中 */
-    setBg('bg_rose');
+    setBg(DIRT+'s9_office_aquarium.jpg');
     if(VN.posKey!==''){VN.posKey='';send('m',{act:'pos',x:'center'});
       ['k','s'].forEach(function(w){var f=chr(w);if(f){f.style.opacity=0;f.style.visibility='hidden';}});}
   }

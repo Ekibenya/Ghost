@@ -1073,7 +1073,9 @@ function scanLore(recent,budget,history,userInput){
 var LORESYN=[['老狐狸','荒卷'],['老头子','荒卷'],['猿脸','荒卷'],['狸猫','荒卷'],
   ['少佐','素子'],['Major','素子'],['义眼','巴特'],['菜鸟','陀古萨'],['新人','陀古萨'],
   ['人形使い','傀儡师'],['2501','傀儡师'],['思考战车','Fuchikoma'],['攻壳车','Fuchikoma'],
-  ['洗脑机','HC-25'],['洗脑工厂','人间工场'],['救济中心','人间工场']];
+  ['洗脑机','HC-25'],['洗脑工厂','人间工场'],['救济中心','人间工场'],
+  ['択捉','择捉岛'],['Bertarve','择捉岛'],['貝爾塔爾韋','择捉岛'],['新浜','新浜市']];
+var LOREctx={prevCast:'',prevLoc:''};
 var _scanLore0=scanLore;
 scanLore=function(recent,budget,history,userInput){
   var ext='';
@@ -1103,6 +1105,56 @@ scanLore=function(recent,budget,history,userInput){
         for(var c2=0;c2<cand.length&&c2<2;c2++)out.push(cand[c2]);
       }
     }
+  }catch(e){}
+  try{ /* —— 局面感知注入（弱AI）：读面板结构而非文字重合，补关键词匹配的盲区 ——
+        ①在场人物保底 ③新进场瞬时加权(首登场轮×2条) ②地点保底(新地点×2条)
+        ④模式偏置(潜入→网络/交战→装备) ⑤意图路由(查→人物/前往→地理/开火→装备)
+        总追加≤3600字封顶，全部过时间锁，不挤占常规预算 */
+    var pc=currentPanel&&currentPanel();
+    var w0=pc&&pc.world?pc.world:{};
+    var opx=currentOpening();var nowx=(opx&&typeof opx.year==='number')?opx.year:null;
+    var addChars=0;
+    function futureE(e){return nowx!==null&&typeof e.from==='number'&&e.from>nowx;}
+    function adopt(e,cap){if(!e||out.indexOf(e)>=0)return false;
+      var L=String(e.content||'').length;
+      if(L>(cap||1200)||addChars+L>3600)return false;
+      out.push(e);addChars+=L;return true;}
+    function bestByKeys(cat,txt,limit){
+      var lt=String(txt||'').toLowerCase(),res=[];
+      for(var j2=0;j2<G.lorebook.length;j2++){var e3=G.lorebook[j2];
+        if(e3.cat!==cat||futureE(e3)||out.indexOf(e3)>=0)continue;
+        var ks3=(e3.keys||[]),okk=false;
+        for(var k3=0;k3<ks3.length;k3++){var kk=String(ks3[k3]||'').toLowerCase();if(kk&&lt.indexOf(kk)>=0){okk=true;break;}}
+        if(okk)res.push(e3);}
+      res.sort(function(x,y){return (x.order==null?100:x.order)-(y.order==null?100:y.order);});
+      return res.slice(0,limit||1);
+    }
+    var np2=(pc&&pc.npcs)||[],names2=[];
+    for(var n1=0;n1<np2.length;n1++){var nm2=String(np2[n1].name||'');if(nm2)names2.push(nm2);}
+    var newCast=[];
+    for(var n2=0;n2<names2.length;n2++)if(LOREctx.prevCast.indexOf(names2[n2])<0)newCast.push(names2[n2]);
+    LOREctx.prevCast=names2.join('+');
+    for(var n3=0;n3<names2.length;n3++){
+      var lim2=newCast.indexOf(names2[n3])>=0?2:1;
+      var got=bestByKeys('人物',names2[n3],lim2);
+      if(!got.length)got=bestByKeys('群像',names2[n3],1);
+      for(var g1=0;g1<got.length;g1++)adopt(got[g1]);
+    }
+    var locNow2=String(w0['时地']||'');
+    var newLoc2=!!locNow2&&locNow2!==LOREctx.prevLoc;LOREctx.prevLoc=locNow2;
+    if(locNow2){var geo2=bestByKeys('地理',locNow2,newLoc2?2:1);
+      for(var g2=0;g2<geo2.length;g2++)adopt(geo2[g2]);}
+    var layer2=String(w0['现实层']||''),stance2=String(w0['态势']||'');
+    var scanTxt2=String(recent||'')+' '+String(userInput||'');
+    if(/潜入|并行/.test(layer2)){var nw2=bestByKeys('网络',scanTxt2,2);for(var g3=0;g3<nw2.length;g3++)adopt(nw2[g3]);}
+    if(/交战|交火|突入|白热|开火/.test(stance2)){var eqA=bestByKeys('装备',scanTxt2,2);for(var g4=0;g4<eqA.length;g4++)adopt(eqA[g4]);}
+    var ui2=String(userInput||'');
+    if(ui2){
+      if(/查|调查|档案|盘问|审讯/.test(ui2)){var ppl=bestByKeys('人物',ui2,1);for(var g5=0;g5<ppl.length;g5++)adopt(ppl[g5]);}
+      if(/前往|赶往|移动到|出发/.test(ui2)){var ge3=bestByKeys('地理',ui2,1);for(var g6=0;g6<ge3.length;g6++)adopt(ge3[g6]);}
+      if(/开火|射击|狙击|强攻|突入|拔枪|换弹|武装/.test(ui2)){var eqB=bestByKeys('装备',ui2,2);for(var g7=0;g7<eqB.length;g7++)adopt(eqB[g7]);}
+    }
+    window.__LORECTX={cast:names2,newCast:newCast,newLoc:newLoc2,added:addChars};
   }catch(e){}
   try{
     var used=0,ts=[];

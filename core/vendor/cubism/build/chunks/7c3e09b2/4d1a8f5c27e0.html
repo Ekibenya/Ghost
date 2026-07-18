@@ -6930,6 +6930,60 @@ document.addEventListener('drop',function(e){
     if(ref&&typeof deskDelete==='function'){deskDelete(ref);S._noFade=true;render();}
   }catch(e2){}
 },true);
+/* 手机触摸拖拽删除：按住用户文件图标移动>12px拾起(幽灵图标随指、原图标变淡),悬停回收站描边,松手入站即删;长按菜单已开则不拾起 */
+(function(){
+  var TD={ref:null,el:null,ghost:null,x0:0,y0:0,w:0,on:false};
+  function tdReset(){
+    if(TD.ghost&&TD.ghost.parentNode)TD.ghost.parentNode.removeChild(TD.ghost);
+    var b=document.querySelector('[data-drop="bin"]');if(b)b.style.outline='';
+    if(TD.el)TD.el.style.opacity='';
+    TD.ref=null;TD.el=null;TD.ghost=null;TD.on=false;
+  }
+  function binAt(x,y){var u=document.elementFromPoint(x,y);return u&&u.closest?u.closest('[data-drop="bin"]'):null;}
+  document.addEventListener('touchstart',function(e){
+    try{
+      if(typeof S==='undefined'||!S||S.screen!=='select')return;
+      if(e.touches.length!==1){tdReset();return;}
+      var d=e.target&&e.target.closest?e.target.closest('[data-drag]'):null;
+      if(!d)return;
+      var t=e.touches[0];TD.ref=d.getAttribute('data-drag');TD.el=d;TD.x0=t.clientX;TD.y0=t.clientY;TD.on=false;
+    }catch(e2){}
+  },{passive:true,capture:true});
+  document.addEventListener('touchmove',function(e){
+    try{
+      if(!TD.ref)return;
+      var t=e.touches[0];
+      if(!TD.on){
+        if(S.deskCtx){TD.ref=null;return;}
+        if(Math.abs(t.clientX-TD.x0)<12&&Math.abs(t.clientY-TD.y0)<12)return;
+        TD.on=true;
+        try{if(navigator.vibrate)navigator.vibrate(10);}catch(ev){}
+        var r=TD.el.getBoundingClientRect();TD.w=r.width;
+        var g=TD.el.cloneNode(true);
+        g.style.cssText='position:fixed;left:0;top:0;width:'+r.width+'px;margin:0;z-index:2147483000;opacity:.78;pointer-events:none;filter:drop-shadow(0 6px 14px rgba(0,0,0,.6))';
+        document.body.appendChild(g);TD.ghost=g;TD.el.style.opacity='.35';
+      }
+      e.preventDefault();
+      TD.ghost.style.transform='translate('+(t.clientX-TD.w/2)+'px,'+(t.clientY-34)+'px)';
+      var b=binAt(t.clientX,t.clientY),b0=document.querySelector('[data-drop="bin"]');
+      if(b0)b0.style.outline=b?'2px dashed #3ddc84':'';
+    }catch(e2){}
+  },{passive:false,capture:true});
+  document.addEventListener('touchend',function(e){
+    try{
+      if(!TD.ref){return;}
+      if(TD.on){
+        var t=e.changedTouches[0];
+        if(binAt(t.clientX,t.clientY)&&typeof deskDelete==='function'){
+          try{if(navigator.vibrate)navigator.vibrate(25);}catch(ev){}
+          deskDelete(TD.ref);S._noFade=true;render();
+        }
+      }
+      tdReset();
+    }catch(e2){tdReset();}
+  },{passive:true,capture:true});
+  document.addEventListener('touchcancel',tdReset,{passive:true,capture:true});
+})();
 document.addEventListener('click',function(e){
   try{
     if(typeof S==='undefined'||!S||S.screen!=='select')return;

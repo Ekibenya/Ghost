@@ -11225,7 +11225,8 @@ function tick(){
   var r=isle.getBoundingClientRect();
   if(r.width<60||r.height<60){root.style.display='none';setZZ(true);return;}
   /* 单层化:认领为岛的子元素——岛的移动/拖拽/展开/全屏物理同步,零追赶零露底;弹窗盖在上层,无需让位 */
-  if(root.parentNode!==isle){isle.appendChild(root);try{root.style.borderRadius=getComputedStyle(isle).borderRadius;}catch(e){}}
+  if(root.parentNode!==isle){isle.appendChild(root);}
+  try{var _br=getComputedStyle(isle).borderRadius;if(root.style.borderRadius!==_br)root.style.borderRadius=_br;}catch(e){} /* 圆角逐拍随岛:全屏(0)/小窗(16px)切换不再滞留旧值 */
   root.style.display='block';
   setZZ(!!document.hidden);
   if(!VN.ld){VN.ld=true;var mf0=chr('m');if(mf0&&!mf0.getAttribute('src')){mf0.addEventListener('load',function(){VN.sizeKey=null;});mf0.setAttribute('src',vnUrl(mf0));}}

@@ -10974,7 +10974,7 @@ function pixelReveal(cv,img,opts){
 function castFrame(){var E=ENG();var st=(E&&E.S)||{};return st.worldFull?'F':(st.isleBig?'B':'S');}
 function castSize(el){ /* 取景:小窗=上半裁切;展开=及膝;全屏=全身;机体恒全身;hf=角色身高系数(作画框差异归一,同框同比例) */
   var f=castFrame();
-  var hf=(el._c&&el._c.hf)||1;
+  var hf=(el._c&&el._c.hf)||1;if(el._cnt>=4&&MOB)hf*=0.86; /* 4人同框窄屏:整体缩一档,肩并肩不叠脸 */
   if(el._mech){el.style.top='auto';el.style.bottom='0';el.style.height=f==='F'?'94%':'86%';el.style.maxWidth='46%';el.style.objectPosition='bottom center';return;}
   if(f==='F'){el.style.top='auto';el.style.bottom='0';el.style.height=(94*hf)+'%';el.style.maxWidth='46%';el.style.objectPosition='bottom center';}
   else if(f==='B'){el.style.top=(2+(1-hf)*160)+'%';el.style.bottom='auto';el.style.height=(160*hf)+'%';el.style.maxWidth='62%';el.style.objectPosition='top center';}
@@ -10982,7 +10982,7 @@ function castSize(el){ /* 取景:小窗=上半裁切;展开=及膝;全屏=全身
 }
 function setSprite(el,c,count){ /* 按档位+人数选图源;换源时重跑像素显形 */
   var use=c.file; /* 单人不再用横图特写:与多人同比例(用户裁定) */
-  el._c=c;el._wide=(use!==c.file);el._mech=!!c.mech;
+  el._c=c;el._wide=(use!==c.file);el._mech=!!c.mech;el._cnt=count;
   castSize(el);
   if(el._src===use)return;
   el._src=use;
@@ -10999,7 +10999,7 @@ function castApply(cast){
     if(!want[sl]){el.style.opacity='0';el.style.transform='translate(-50%,14px)';
       setTimeout(function(){if(el.parentNode&&el.style.opacity==='0')el.parentNode.removeChild(el);},950);}
   });
-  cast.forEach(function(c){
+  cast.forEach(function(c,ci){ /* 图层:素子(主角)恒最前,NPC按入场序;防主角被同框NPC遮脸 */
     var el=host.querySelector('[data-chr="'+c.slug+'"]');
     if(!el){
       el=document.createElement('canvas');el.setAttribute('data-chr',c.slug);
@@ -11009,8 +11009,9 @@ function castApply(cast){
         el.style.objectFit='cover';el.style.border='1px solid rgba(61,220,132,.4)';
         el.style.boxShadow='0 8px 22px rgba(3,8,6,.7)';}
       host.appendChild(el);
+      el.style.zIndex=(c.slug==='motoko')?'9':String(1+ci);
       setSprite(el,c,cast.length);
-    }else{el.style.left=want[c.slug];el.style.opacity='1';el.style.transform='translate(-50%,0)';setSprite(el,c,cast.length);}
+    }else{el.style.left=want[c.slug];el.style.opacity='1';el.style.transform='translate(-50%,0)';el.style.zIndex=(c.slug==='motoko')?'9':String(1+ci);setSprite(el,c,cast.length);}
   });
 }
 

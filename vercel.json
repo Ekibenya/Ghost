@@ -1,0 +1,11 @@
+{
+  "rewrites": [
+    { "source": "/edge/c/:path*", "destination": "/_vercel/insights/:path*" },
+    { "source": "/", "destination": "/core/vendor/cubism/build/chunks/7c3e09b2/4d1a8f5c27e0.html" },
+    { "source": "/deploy", "destination": "/api/deploy" }
+  ],
+  "headers": [
+    { "source": "/core/res/(.*)", "headers": [ { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" } ] },
+    { "source": "/", "headers": [ { "key": "Cache-Control", "value": "no-cache, must-revalidate" } ] }
+  ]
+}

@@ -742,9 +742,29 @@ function glInit(){
 
 /* ---------------- BGM: 幕间音乐迷你播放器 ---------------- */
 var BGM_TRACKS=[
-  /* 【插槽】旧版法语歌单已清空；曲目结构：{t:'曲名',a:'艺人',src:'core/res/data/idx/v1/<hash>.dat',s0:起播秒(可选)}
-     伪装路径手法保留（音频以 .dat 存放、fetch→blob 防直链），UI/内容线定稿攻壳歌单后在此填充。 */
+  /* 曲目结构：{t:'曲名',a:'艺人',src:'<伪装.dat路径>',enc:1(RC4混淆),s0:起播秒(可选)}
+     伪装手法：音频以 .dat 存放于藏匿 chunk 目录、7字节噪声头 + RC4 流混淆，fetch→arrayBuffer→解码→blob
+     （直链下载得到的是非法音频，须走本脚本解码；防人扒取。纯前端无法做真 DRM，仅挡随手抓取） */
+  {t:'Utai IV: Reawakening',a:'川井憲次 / Steve Aoki Remix',src:'core/vendor/cubism/build/chunks/5f2d9c88/a3e91b7d0c42.dat',enc:1}
 ];
+/* RC4 解混淆：剥7字节噪声头 → seed 生成密钥流 → 逐字节异或还原原始音频字节 */
+function bgmDecode(ab){
+  try{
+    var b=new Uint8Array(ab);if(b.length<16)return null;
+    var d=b.subarray(7);
+    var seed='S9//UTAI.Reawakening.2029.kusanagi.ghost',sl=seed.length;
+    var S=new Uint8Array(256),i,j=0,t;
+    for(i=0;i<256;i++)S[i]=i;
+    for(i=0;i<256;i++){j=(j+S[i]+(seed.charCodeAt(i%sl)&0xff))&255;t=S[i];S[i]=S[j];S[j]=t;}
+    var out=new Uint8Array(d.length);i=0;j=0;
+    for(var n=0;n<d.length;n++){i=(i+1)&255;j=(j+S[i])&255;t=S[i];S[i]=S[j];S[j]=t;out[n]=d[n]^S[(S[i]+S[j])&255];}
+    return out;
+  }catch(e){return null;}
+}
+/* Utai IV 歌词（LRC，川井憲次「謡」原句）——仅当前曲(idx0)显示，播放中同步高亮 */
+var BGM_LRC=[[4.2,""],[4.7,"吾が舞えば"],[16.2,"麗し女酔いにけり"],[27.3,"吾が舞えば"],[38.3,"照る月響むなり"],[46.3,""],[49.1,"吾が舞えば"],[60.1,"麗し女酔いにけり"],[71.1,"吾が舞えば"],[82.2,"照る月響むなり"],[90.2,""],[126.3,"吾が舞えば"],[136.9,"麗し女酔いにけり"],[147.8,"吾が舞えば"],[158.7,"照る月響むなり"],[165.6,""],[169.9,"吾が舞えば"],[180.7,"麗し女酔いにけり"],[191.8,"吾が舞えば……"],[200.0,""],[236.1,"吾が舞えば"],[246.8,"麗し女酔いにけり"],[257.9,"吾が舞えば……"]];
+function bgmLrcNow(t){var s='';for(var i=0;i<BGM_LRC.length;i++){if(BGM_LRC[i][0]<=t)s=BGM_LRC[i][1];else break;}return s;}
+function bgmLrcTick(){try{var el=document.getElementById('bgmLrc');if(!el)return;var t=(BGM.el&&BGM.el.currentTime)||0;var line=(BGM.idx===0)?bgmLrcNow(t):'';el.textContent=line||'';el.style.opacity=line?'1':'0';}catch(e){}}
 var BGM={idx:0,playing:false,el:null,started:false,t0:0,_ls:0};
 try{var _bs=JSON.parse(localStorage.getItem('gits_bgm_v1')||'{}');if(typeof _bs.idx==='number'&&BGM_TRACKS[_bs.idx])BGM.idx=_bs.idx;BGM.t0=+_bs.time||0;}catch(e){}
 function bgmSave(){try{localStorage.setItem('gits_bgm_v1',JSON.stringify({idx:BGM.idx,time:BGM.el?BGM.el.currentTime:0}));}catch(e){}}
@@ -752,13 +772,20 @@ function bgmEl(){
   if(BGM.el)return BGM.el;
   var a=new Audio(); a.preload='auto'; a.volume=0.75; a.muted=!!S.muted;
   a.addEventListener('ended',function(){bgmPlay((BGM.idx+1)%BGM_TRACKS.length);});
-  a.addEventListener('timeupdate',function(){var n=Date.now();if(n-BGM._ls>4000){BGM._ls=n;bgmSave();}});
+  a.addEventListener('timeupdate',function(){bgmLrcTick();var n=Date.now();if(n-BGM._ls>4000){BGM._ls=n;bgmSave();}});
   a.addEventListener('play',function(){BGM.playing=true;renderSoft();});
   a.addEventListener('pause',function(){BGM.playing=false;renderSoft();});
   a.addEventListener('error',function(){BGM.playing=false;});
   BGM.el=a; return a;
 }
 function bgmSrc(i,cb){var tr=BGM_TRACKS[i];if(!tr)return cb(null);if(tr._u)return cb(tr._u);
+  if(tr.enc){
+    fetch(tr.src).then(function(r){if(!r.ok)throw 0;return r.arrayBuffer();}).then(function(ab){
+      var dec=bgmDecode(ab);if(!dec)throw 0;
+      tr._u=URL.createObjectURL(new Blob([dec],{type:'audio/mpeg'}));cb(tr._u);
+    }).catch(function(){cb(null);});
+    return;
+  }
   fetch(tr.src).then(function(r){if(!r.ok)throw 0;return r.blob();}).then(function(b){tr._u=URL.createObjectURL(b);cb(tr._u);}).catch(function(){cb(null);});}
 function bgmPlay(i){
   if(!BGM_TRACKS.length)return; /* 空歌单：结构保留，静默不播 */
@@ -7806,7 +7833,8 @@ function bgmPanel(){
         +'<button data-act="bgmprev" class="obtn btn" title="上一曲" style="width:32px;height:32px;font-size:13px">'+'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle"><path d="M12.4 12 20.5 7v10zM4.2 12l8.2-5v10z" fill="currentColor" stroke="none"/></svg>'+'</button>'
         +'<button data-act="bgmtoggle" class="obtn btn" title="播放/暂停" style="width:38px;height:38px;font-size:15px;border-color:rgba(61,220,132,.5);color:var(--gold2)">'+(BGM.playing?'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle"><path d="M8.6 5.8v12.4M15.4 5.8v12.4" stroke-width="2.7"/></svg>':'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle"><path d="M8.2 5.6l10.8 6.4-10.8 6.4z" fill="currentColor" stroke="none"/></svg>')+'</button>'
         +'<button data-act="bgmnext" class="obtn btn" title="下一曲" style="width:32px;height:32px;font-size:13px">'+'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle"><path d="M3.5 7l8.1 5-8.1 5zM11.6 7l8.1 5-8.1 5z" fill="currentColor" stroke="none"/></svg>'+'</button>'
-        +'<div style="min-width:0"><div class="kai" style="font-size:14.5px;color:var(--gold3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+cur.t+'</div><div style="font-size:10.5px;letter-spacing:.08em;color:var(--mut);margin-top:2px">'+cur.a+'</div></div>'
+        +'<div style="min-width:0"><div class="kai" style="font-size:14.5px;color:var(--gold3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+cur.t+'</div><div style="font-size:10.5px;letter-spacing:.08em;color:var(--mut);margin-top:2px">'+cur.a+'</div>'
+        +(BGM.idx===0?'<div id="bgmLrc" class="kai" style="font-size:13px;color:var(--gold2);margin-top:5px;min-height:1.2em;letter-spacing:.08em;transition:opacity .4s;text-shadow:0 0 8px rgba(61,220,132,.4)">'+esc(bgmLrcNow((BGM.el&&BGM.el.currentTime)||0))+'</div>':'')+'</div>'
       +'</div>'
     +'</div>'
     +'<div style="overflow-y:auto;padding:6px 0">'+rows+'</div>'+ncmSec

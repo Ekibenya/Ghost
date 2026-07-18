@@ -684,7 +684,7 @@ function ensureTyping(){
 var ZJMOB=false;try{ZJMOB=Math.min(screen.width||9e9,window.innerWidth||9e9)<=560;}catch(e){}
 var LOWFX=false;try{var _lf0=localStorage.getItem('gits_lowfx');LOWFX=(_lf0==='1');}catch(e){} /* 低配模式：绝不默认开启(含手机)——游戏不吃配置；仅玩家在设置里手动勾选才启用 */
 var SAFEM=false;try{SAFEM=localStorage.getItem('gits_safe')==='1';}catch(e){}
-try{if(sessionStorage.getItem('gits_settling')==='1'){var _cn=(parseInt(sessionStorage.getItem('gits_crashN'),10)||0)+1;sessionStorage.setItem('gits_crashN',String(_cn));if(_cn>=2){SAFEM=true;window.__mbAutoSafe=true;}}else{try{sessionStorage.setItem('gits_crashN','0');}catch(e2){}}sessionStorage.setItem('gits_settling','1');window.addEventListener('load',function(){setTimeout(function(){try{sessionStorage.setItem('gits_settling','0');sessionStorage.setItem('gits_crashN','0');}catch(e){}},6000);});}catch(e){}
+try{if(sessionStorage.getItem('gits_settling')==='1'){var _cn=(parseInt(sessionStorage.getItem('gits_crashN'),10)||0)+1;sessionStorage.setItem('gits_crashN',String(_cn));if(_cn>=2){SAFEM=true;window.__mbAutoSafe=true;}}else{try{sessionStorage.setItem('gits_crashN','0');}catch(e2){}}sessionStorage.setItem('gits_settling','1');window.addEventListener('load',function(){setTimeout(function(){try{sessionStorage.setItem('gits_settling','0');sessionStorage.setItem('gits_crashN','0');}catch(e){}},6000);});/* 正常刷新/跳转会触发pagehide→清安定标记;真崩溃触发不了→仅真崩溃计数,快速手动刷新不再误判进安全模式 */window.addEventListener('pagehide',function(){try{sessionStorage.setItem('gits_settling','0');}catch(e3){}});}catch(e){}
 if(SAFEM){LOWFX=true;}
 if(LOWFX)document.documentElement.classList.add('zjLow');
 function lowApply(on){

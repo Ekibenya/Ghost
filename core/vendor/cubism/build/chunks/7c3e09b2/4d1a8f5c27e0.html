@@ -3039,6 +3039,24 @@ function giEqParseArms(v){
 }
 function eqArmRaw(a){return a.nm+(a.n!=null?'×'+a.n:'')+(a.note?'('+a.note+')':'');}
 /* ---- 库存（gits_interact_v1 持久化；bag=背包/aug=义体挂载/pend=待注入操作） ---- */
+var OPENING_INV={ /* 各开局初始持有（剧情对应）：bag=[[目录id,数量]] aug=[义体挂载id] wear=服装id
+  躯壳注记播种的服装优先于本表；玩家改动后按sig持久化不重播 */
+ 0:{bag:[['hv-magazine',1],['interface-cable',1],['coffee',1]],aug:['audio-implant'],wear:null},
+ 1:{bag:[['hv-magazine',2],['marker-rounds',1],['rappel-grapple',1],['interface-cable',1],['stim-spray',1]],aug:['cyber-eye','audio-implant'],wear:'combat-bodysuit'},
+ 2:{bag:[['hv-magazine',3],['ew-goggles',1],['handcuffs',1],['section9-badge',1],['hanami-sake',1]],aug:['audio-implant'],wear:'motoko-civvies'},
+ 3:{bag:[['cyberbrain-scanner',1],['interface-cable',1],['search-terminal',1],['marker-rounds',1],['coffee',1]],aug:['audio-implant','qrs-jack'],wear:'vacation-shirt'},
+ 4:{bag:[['fiber-optic-spool',1],['e-binoculars',1],['decoy-beacon',1],['repair-patch',1],['cash-bundle',1]],aug:['cyber-eye','audio-implant'],wear:'white-longcoat'},
+ 5:{bag:[['seburo-snab',1],['handcuffs',1],['case-files',1],['coffee',1]],aug:['audio-implant'],wear:null},
+ 6:{bag:[['cyberbrain-scanner',1],['interface-cable',1],['ew-goggles',1],['repair-toolkit',1],['marker-rounds',1]],aug:['audio-implant'],wear:'motoko-civvies'},
+ 7:{bag:[['case-files',1],['news-clipping',1],['informant-card',1],['coffee',1]],aug:['audio-implant'],wear:'motoko-civvies'},
+ 8:{bag:[['external-memory',1],['interface-cable',1],['repair-patch',1]],aug:[],wear:null},
+ 9:{bag:[['coffee',2],['sundae',1],['case-files',1],['fried-orion',1]],aug:['audio-implant'],wear:'motoko-civvies'},
+ 10:{bag:[['hv-magazine',1],['interface-cable',1],['coffee',1]],aug:['audio-implant'],wear:null},
+ 11:{bag:[['hv-magazine',2],['e-binoculars',1],['natural-oil',1],['repair-patch',1]],aug:['cyber-eye','audio-implant'],wear:'batou-white-coat'},
+ 12:{bag:[['case-files',1],['section9-badge',1],['coffee',1],['news-clipping',1]],aug:[],wear:null},
+ 13:{bag:[['case-files',2],['aramaki-flask',1],['informant-card',1]],aug:[],wear:null},
+ 14:{bag:[['natural-oil',1],['fuchikoma-camo-module',1],['fuchikoma-ballast',1],['repair-patch',1]],aug:[],wear:null}
+};
 function giEqSeed(){
   var sig='';try{var h0=S.history[0];sig=String(S.openingId==null?'?':S.openingId)+':'+String(h0&&h0.text||'').length;}catch(e){}
   var inv=GI.state.eqInv;
@@ -3052,6 +3070,14 @@ function giEqSeed(){
       if(p0.char['迷彩']!=null&&!/^(无|—|-)/.test(String(p0.char['迷彩'])))inv.camo='thermoptic-camo-2902';
       var wr=(/[(（]([^)）]*)[)）]/.exec(String(p0.char['躯壳']||''))||[])[1]||'';
       if(wr){var wri=eqFind(wr);if(wri&&wri[3]==='c')inv.wear=wri[0];}
+    }
+  }catch(e){}
+  try{ /* 开局初始持有播种：背包/义体挂载/服装（剧情对应；躯壳注记服装优先） */
+    var oi=OPENING_INV[S.openingId==null?-1:S.openingId];
+    if(oi&&!inv.bag.length&&!inv.aug.length){
+      (oi.bag||[]).forEach(function(x){var it=EQ_BY_ID[x[0]];if(it)inv.bag.push({id:x[0],nm:it[1],n:x[1]||1});});
+      (oi.aug||[]).forEach(function(g){if(EQ_BY_ID[g]&&inv.aug.indexOf(g)<0)inv.aug.push(g);});
+      if(oi.wear&&!inv.wear&&EQ_BY_ID[oi.wear])inv.wear=oi.wear;
     }
   }catch(e){}
   giSave();return inv;

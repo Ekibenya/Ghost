@@ -801,7 +801,7 @@ var SD_WARN=[];function sdWarn(m){SD_WARN.push(m);if(SD_WARN.length>40)SD_WARN.s
 var SD_LINT={drift:{}}; /* 未知键连续出现计数 → 协议漂移 lint（§11.2） */
 function sdNum(v){var m=/(\d{1,3})/.exec(String(v==null?'':v));return m?Math.max(0,Math.min(100,parseInt(m[1],10))):null;}
 function sdSetNum(v,n){var s=String(v==null?'':v);return /\d/.test(s)?s.replace(/\d{1,3}/,String(n)):String(n);}
-function sdNormLine(l){return String(l||'').replace(/｜/g,'|').replace(/％/g,'').trim();}
+function sdNormLine(l){return String(l||'').replace(/[｜┃]/g,'|').replace(/％/g,'').trim();}
 function sdKV(seg){var m=/^([^=：:＝|]+?)\s*[=：:＝]\s*([\s\S]*)$/.exec(String(seg||'').trim());return m?[m[1].trim(),m[2].trim()]:null;} /* 只切第一个分隔符：时地里的 09:20 不受伤（§1.2 归一） */
 function sdNpcLine(l){
   var parts=sdNormLine(l).replace(/^◈/,'').split('|').map(function(s){return s.trim();}).filter(Boolean);
@@ -1075,7 +1075,7 @@ var LORESYN=[['老狐狸','荒卷'],['老头子','荒卷'],['猿脸','荒卷'],[
   ['人形使い','傀儡师'],['2501','傀儡师'],['思考战车','Fuchikoma'],['攻壳车','Fuchikoma'],
   ['洗脑机','HC-25'],['洗脑工厂','人间工场'],['救济中心','人间工场'],
   ['択捉','择捉岛'],['Bertarve','择捉岛'],['貝爾塔爾韋','择捉岛'],['新浜','新浜市']];
-var LOREctx={prevCast:'',prevLoc:''};
+var LOREctx={prevCast:'',prevLoc:'',curCast:'',curLoc:'',node:null};
 var _scanLore0=scanLore;
 scanLore=function(recent,budget,history,userInput){
   var ext='';
@@ -1085,9 +1085,11 @@ scanLore=function(recent,budget,history,userInput){
       if(probe.indexOf(LORESYN[i][0])>=0&&probe.indexOf(LORESYN[i][1])<0)ext+=' '+LORESYN[i][1];
   }catch(e){}
   var out=_scanLore0(String(recent||'')+ext,budget,history,String(userInput||'')+ext);
+  /* 面板锚定传入的history切片（rerollPanel重出旧幕时与主扫描同一"当前"），无切片再退全局 */
+  var PNL=null;try{PNL=(history&&history.length&&typeof effUpTo==='function')?effUpTo(history):(currentPanel&&currentPanel());}catch(ePnl){try{PNL=currentPanel&&currentPanel();}catch(e2){}}
   try{ /* 案件保底:案名与条目keys是两套词汇,改用时间窗锚定——from/to包住当前时点的案件条目
         即当前案(十二案时间线互不重叠),按order取前2条强制在场 */
-    var p=currentPanel&&currentPanel();
+    var p=PNL;
     var cs=p&&p.world?String(p.world['案件']||''):'';
     if(cs&&cs!=='—'){
       var op2=currentOpening();var now2=(op2&&typeof op2.year==='number')?op2.year:null;
@@ -1110,7 +1112,7 @@ scanLore=function(recent,budget,history,userInput){
         ①在场人物保底 ③新进场瞬时加权(首登场轮×2条) ②地点保底(新地点×2条)
         ④模式偏置(潜入→网络/交战→装备) ⑤意图路由(查→人物/前往→地理/开火→装备)
         总追加≤3600字封顶，全部过时间锁，不挤占常规预算 */
-    var pc=currentPanel&&currentPanel();
+    var pc=PNL;
     var w0=pc&&pc.world?pc.world:{};
     var opx=currentOpening();var nowx=(opx&&typeof opx.year==='number')?opx.year:null;
     var addChars=0;
@@ -1129,11 +1131,14 @@ scanLore=function(recent,budget,history,userInput){
       res.sort(function(x,y){return (x.order==null?100:x.order)-(y.order==null?100:y.order);});
       return res.slice(0,limit||1);
     }
+    /* 幂等锚：以最后一条world节点为界推进prev基线——同回合内二次调用(重出/探针)不再吞掉"新登场/新地点"加权 */
+    var lwN=null;try{var hh2=history||S.history||[];for(var q2=hh2.length-1;q2>=0;q2--){if(hh2[q2].role==='world'){lwN=hh2[q2];break;}}}catch(eLw){}
+    if(lwN!==LOREctx.node){LOREctx.prevCast=LOREctx.curCast||'';LOREctx.prevLoc=LOREctx.curLoc||'';LOREctx.node=lwN;}
     var np2=(pc&&pc.npcs)||[],names2=[];
     for(var n1=0;n1<np2.length;n1++){var nm2=String(np2[n1].name||'');if(nm2)names2.push(nm2);}
     var newCast=[];
     for(var n2=0;n2<names2.length;n2++)if(LOREctx.prevCast.indexOf(names2[n2])<0)newCast.push(names2[n2]);
-    LOREctx.prevCast=names2.join('+');
+    LOREctx.curCast=names2.join('+');
     for(var n3=0;n3<names2.length;n3++){
       var lim2=newCast.indexOf(names2[n3])>=0?2:1;
       var got=bestByKeys('人物',names2[n3],lim2);
@@ -1141,7 +1146,7 @@ scanLore=function(recent,budget,history,userInput){
       for(var g1=0;g1<got.length;g1++)adopt(got[g1]);
     }
     var locNow2=String(w0['时地']||'');
-    var newLoc2=!!locNow2&&locNow2!==LOREctx.prevLoc;LOREctx.prevLoc=locNow2;
+    var newLoc2=!!locNow2&&locNow2!==LOREctx.prevLoc;LOREctx.curLoc=locNow2;
     if(locNow2){var geo2=bestByKeys('地理',locNow2,newLoc2?2:1);
       for(var g2=0;g2<geo2.length;g2++)adopt(geo2[g2]);}
     var layer2=String(w0['现实层']||''),stance2=String(w0['态势']||'');
@@ -2481,9 +2486,7 @@ function isMobile(){ if(S.device==='mobile')return true; if(S.device==='desktop'
 /* ---------------- ST CHAT SYNC ---------------- */
 function normalizeMsg(m){
   // 酒馆助手 message objects vary; try common shapes
-  var role = m.role||m.is_user!=null?(m.is_user?'user':'world'):(m.name==='user'?'user':'world');
-  if(m.role==='user'||m.is_user===true) role='user';
-  else role='world';
+  var role=(m.role==='user'||m.is_user===true)?'user':'world';
   var text = m.message!=null?m.message:(m.mes!=null?m.mes:(typeof m==='string'?m:''));
   var o={role:role,text:text};
   if(role==='world') o.panel=parseMvu(text);
@@ -2882,8 +2885,8 @@ effUpTo=function(hist){ /* 覆写：逐轮 merge 之上加 giSettle 审计（缓
     if(h.role!=='world')continue;
     if(h.panel===undefined)h.panel=parseMvu(h.text);
     var c=h._sdEff;
-    if(c&&c.p===eff&&c.d===h.panel)eff=c.v;
-    else{var v=sdMerge(eff,h.panel);try{giSettle(v,eff,lastU);}catch(e){}h._sdEff={p:eff,d:h.panel,v:v};eff=v;}
+    if(c&&c.p===eff&&c.d===h.panel&&c.u===lastU)eff=c.v;
+    else{var v=sdMerge(eff,h.panel);try{giSettle(v,eff,lastU);}catch(e){}h._sdEff={p:eff,d:h.panel,v:v,u:lastU};eff=v;}
     lastU=null;
   }
   return eff;
@@ -3708,8 +3711,9 @@ function giTierFx(tier){
   if(tier==='完全掌控'&&anchor){var rb=document.createElement('div');rb.className='gi-rainbow';anchor.appendChild(rb);setTimeout(function(){if(rb.parentNode)rb.parentNode.removeChild(rb);},1000);}
 }
 /* ---- §2.7 UPLOAD 进度演出：流式期输入区上沿，绑 TTFT（EMA 存 gits_ttft，纯演出零结算） ---- */
-var GIUP={el:null,tm:null,t0:0,ema:3500};
+var GIUP={el:null,tm:null,fin:null,t0:0,ema:3500};
 function giUploadStop(){
+  if(GIUP.fin){clearTimeout(GIUP.fin);GIUP.fin=null;}
   if(GIUP.tm){clearInterval(GIUP.tm);GIUP.tm=null;}
   if(GIUP.el){var e=GIUP.el;GIUP.el=null;if(e.parentNode)e.parentNode.removeChild(e);}
 }
@@ -3735,7 +3739,7 @@ function giUploadStart(){
       if(S.aiLive&&dt<60000){try{localStorage.setItem('gits_ttft',String(Math.max(600,Math.round(GIUP.ema*0.7+dt*0.3))));}catch(e){}}
       var tx=el.querySelector('.gi-uptx'),bi=el.querySelector('.gi-upbar>i');
       if(tx)tx.textContent='UPLOAD ▓▓▓▓▓▓▓▓▓▓ 100%';if(bi)bi.style.width='100%';
-      setTimeout(giUploadStop,450);clearInterval(GIUP.tm);GIUP.tm=null;return;
+      GIUP.fin=setTimeout(giUploadStop,450);clearInterval(GIUP.tm);GIUP.tm=null;return;
     }
     var p=Math.min(97,Math.round(100*(1-Math.exp(-dt/(GIUP.ema*0.85)))));
     var fill=Math.floor(p/10),half=(p%10>=5)?1:0;
@@ -3959,7 +3963,7 @@ function giMazeOpen(raw,p){
     grid:null,W:5,H:Math.min(7,3+lvl),pos:null,trace:0,extraLoad:0,ice:0,intel:0,keyFree:/渗透钥/.test(giVal2('武装')),
     ask:null,ph:0,parts:[],raf:null,msg:''};
   /* 作战图预定线：3D地图dive态排定的跳板路径（GITS-MAP3D写入GI.state.gmapJumpPath，用后即焚） */
-  try{var jp=GI.state.gmapJumpPath;if(jp&&jp.length){var jn=Math.max(2,Math.min(4,jp.length)),jt=Math.max(4,20-5*jn);
+  try{var jp=GI.state.gmapJumpPath;jp=jp&&jp.ids?jp.ids:jp;if(jp&&jp.length){var jn=Math.max(2,Math.min(4,jp.length)),jt=Math.max(4,20-5*jn);
     GIMZ.cards.unshift({name:'既定路径 '+jp.slice(0,4).join('→'),risk:jn>=4?'低':(jn===3?'中':'高'),step:jn,t0:jt,pre:1,
       desc:'作战图上排定的'+jn+'跳接力——预铺的线，起点最净（起始追踪'+jt+'/步进+'+jn+'）'});
     GI.state.gmapJumpPath=null;if(typeof giSave==='function')giSave();}}catch(e){}
@@ -5638,6 +5642,7 @@ function gmenuMount(){
   gmapEnsureThree(function(ok){
     if(!ok){GMENU.fail=true;GMENU.on=false;return;} /* three加载失败=纯黑 */
     if(!GMENU.on)return;
+    if(GMENU.cv||GMENU.rd)return; /* 加载期离开-返回会入队两个回调：已建即退，防双renderer/双rAF泄漏GL上下文 */
     if(typeof S!=='undefined'&&S&&S.screen!=='select'&&S.screen!=='title'){GMENU.on=false;return;} /* 载入期间已离开 */
     var T=window.THREE;
     var cv=document.createElement('canvas');cv.id='gmenuBG';
@@ -5794,6 +5799,10 @@ setInterval(function(){try{
     if(cs.display==='none')el.style.display='';
     var r=el.getBoundingClientRect();
     if(r.width>0&&(r.left>=window.innerWidth||r.right<=0||r.top>=window.innerHeight||r.bottom<=0)){
+      /* 年轻且在跑的动画(zen退出级联滑入起始帧在屏外)不打断,留给下轮体检 */
+      var young=false;
+      if(el.getAnimations)el.getAnimations().forEach(function(an){try{if(an.playState==='running'&&(an.currentTime||0)<900)young=true;}catch(e3){}});
+      if(young)return;
       if(el.getAnimations)el.getAnimations().forEach(function(an){try{an.cancel();}catch(e2){}});
       el.style.transform='';el.style.opacity='';
     }
@@ -10410,7 +10419,8 @@ function presence(){
   var p=panelNow(); var npcs=p?(p.npcs||[]):[];
   var names=npcs.map(function(n){return String(n.name||'');});
   var cast=[],seen={};
-  for(var i=0;i<names.length&&cast.length<3;i++){var c=chrOf(names[i]);if(c&&!seen[c.slug]){seen[c.slug]=1;cast.push(c);}}
+  /* 素子由常驻交互iframe(vnMitsu)独占呈现——非素子开局她以NPC进◈link时不得再建静态立绘,防同屏双身 */
+  for(var i=0;i<names.length&&cast.length<3;i++){var c=chrOf(names[i]);if(c&&c.slug!=='motoko'&&!seen[c.slug]){seen[c.slug]=1;cast.push(c);}}
   var key=cast.map(function(c){return c.slug;}).join('+');
   if(key!==VN.castKey){VN.castKey=key;castApply(cast);}
   return {names:names,npcs:npcs};

@@ -7429,11 +7429,18 @@ function overlayView(){
     +inner+'</div></div>';
 }
 function codexBody(){
-  var CATS=['核心','人物','群像','组织','政治','军事','历史','科技','装备','网络','地理','社会','思想','宗教','企业','案件','动画','语录','风味','分歧','事件','开局','MVU'];
+  var CATS=['核心','人物','群像','组织','政治','军事','历史','科技','装备','网络','地理','社会','思想','宗教','企业','案件','动画','语录','风味','分歧','事件','开局'];
+  /* 图鉴可见性过滤（仅表层UI；引擎注入走G.lorebook原表不受影响）：
+     MVU类全隐藏；核心类只示 世界观总纲2029/公安9课速览/译名对照总表/玩家扮演与称谓规则 */
+  function codexVisible(e){
+    if(e.cat==='MVU')return false;
+    if(e.cat==='核心')return /世界观总纲2029|公安9课速览|译名对照总表|玩家扮演与称谓规则/.test(String(e.title||''));
+    return true;
+  }
   if(ULORE.length)CATS.push('自定义');else if(S.codexCat==='自定义')S.codexCat='核心';
   var mob=isMobile();
   var cats=CATS.map(function(c){var on=c===S.codexCat;return '<div class="btn" data-cat="'+c+'" style="position:relative;z-index:1;cursor:pointer;padding:9px 15px;font-family:var(--kai);font-size:15px;letter-spacing:.28em;color:'+(on?'var(--gold2)':'var(--mut)')+'">'+c+'</div>';}).join('');
-  var entries=S.codexCat==='自定义'?ULORE:G.lorebook.filter(function(e){return e.cat===S.codexCat;});
+  var entries=S.codexCat==='自定义'?ULORE:G.lorebook.filter(function(e){return e.cat===S.codexCat&&codexVisible(e);});
   var ci=Math.min(S.codexIdx,Math.max(0,entries.length-1));
   var list=entries.map(function(e,i){var on=i===ci;return '<div class="btn" data-cidx="'+i+'" style="position:relative;z-index:1;cursor:pointer;padding:8px 12px;font-size:13px;line-height:1.45;color:'+(on?'var(--gold3)':'#1e9e5c')+'">'+esc(e.title)+'</div>';}).join('');
   var cur=entries[ci];
@@ -9995,17 +10002,16 @@ var root=document.createElement('div');
 root.id='vnRoot';
 root.style.cssText='position:fixed;left:0;top:0;width:0;height:0;z-index:5;display:none;overflow:hidden;border-radius:16px;background:#0b0906;pointer-events:none;box-shadow:0 10px 28px rgba(18,40,27,.45),inset 0 1px 0 rgba(255,255,255,.1)';
 root.innerHTML=
-  '<img id="vnBgA" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:saturate(.72) contrast(1.12) brightness(.9);opacity:1;transition:opacity 1s ease">'
- +'<img id="vnBgB" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:saturate(.72) contrast(1.12) brightness(.9);opacity:0;transition:opacity 1s ease">'
+  '<img id="vnBgA" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:1;transition:opacity 1s ease">'
+ +'<img id="vnBgB" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 1s ease">'
  +'<div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.12),transparent 30%,transparent 72%,rgba(0,0,0,.3))"></div>'
  +'<div id="vnCast" style="position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden"></div>'
- +'<div id="vnCrt" style="position:absolute;inset:0;z-index:2;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(1,8,4,.28) 0 1px,transparent 1px 3px),repeating-linear-gradient(90deg,rgba(255,60,110,.040) 0 1px,rgba(60,255,160,.040) 1px 2px,rgba(60,140,255,.040) 2px 3px),radial-gradient(ellipse at center,transparent 52%,rgba(1,8,4,.55) 100%);animation:vnFlick 3.4s ease-in-out infinite">'+'<div id="vnCrtRoll" style="position:absolute;left:0;right:0;top:-22%;height:20%;background:linear-gradient(180deg,transparent,rgba(190,255,222,.075),rgba(190,255,222,.028),transparent);animation:vnRoll 5.2s linear infinite"></div>'+'<div style="position:absolute;inset:0;background:rgba(24,130,86,.10);mix-blend-mode:soft-light"></div>'+'</div>'
+
  +'<iframe id="vnBatou" data-vnsrc="'+DIR+'batou.html?vn=1" allowtransparency="true" scrolling="no" style="position:absolute;left:1%;bottom:0;height:86%;width:30%;border:0;background:transparent;opacity:0;visibility:hidden;transition:opacity .8s ease,left .9s cubic-bezier(.3,.1,.25,1),height .9s cubic-bezier(.3,.1,.25,1),bottom .9s cubic-bezier(.3,.1,.25,1)"></iframe>'
  +'<iframe id="vnTogusa" data-vnsrc="'+DIR+'togusa.html?vn=1" allowtransparency="true" scrolling="no" style="position:absolute;left:14%;bottom:0;height:86%;width:30%;border:0;background:transparent;opacity:0;visibility:hidden;transition:opacity .8s ease,left .9s cubic-bezier(.3,.1,.25,1),height .9s cubic-bezier(.3,.1,.25,1),bottom .9s cubic-bezier(.3,.1,.25,1)"></iframe>'
  +'<iframe id="vnMitsu" data-vnsrc="'+DIR+'gits_chr.html?vn=1&r=6" allowtransparency="true" scrolling="no" style="position:absolute;inset:0;width:100%;height:100%;border:0;background:transparent"></iframe>'
  +'<div id="vnJp" style="position:absolute;inset:0;z-index:2;display:none;overflow-y:auto;padding:36px 20px 16px;font-size:13px;line-height:2.1;color:rgba(214,217,223,.62);white-space:pre-wrap;background:transparent;text-shadow:0 1px 3px rgba(3,8,6,.7),0 0 8px rgba(3,8,6,.45);pointer-events:auto;font-family:\'Hiragino Mincho ProN\',\'Yu Mincho\',serif"></div>'
  +'<div id="vnCtl" style="position:absolute;top:6px;right:10px;z-index:3;display:flex;gap:6px;pointer-events:auto"></div>';
-(function(){var st=document.createElement('style');st.textContent='@keyframes vnRoll{from{top:-22%}to{top:112%}}@keyframes vnFlick{0%,100%{opacity:1}47%{opacity:1}50%{opacity:.94}53%{opacity:1}}html.zjLow #vnCrtRoll{display:none}html.zjLow #vnCrt{animation:none}@media (prefers-reduced-motion: reduce){#vnCrtRoll{display:none}#vnCrt{animation:none!important}}';document.head.appendChild(st);})();
 document.body.appendChild(root);
 /* VN 关闭时,岛右上角的迷你「影像」入口 */
 var pill=document.createElement('div');

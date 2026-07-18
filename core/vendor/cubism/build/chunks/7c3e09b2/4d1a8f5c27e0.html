@@ -145,7 +145,7 @@ textarea:focus,button:focus,input:focus{outline:none}
 /* ── .tb- 顶栏终端键（cyberpunk-ui 按钮语言：1px磷光绿边+等宽缩写标签，hover反色微辉光，:active 1帧反色；--t-*令牌+直角铁则，与.gi-hover微反馈同源） ── */
 .tb-key{cursor:pointer;position:relative;display:inline-flex;align-items:center;justify-content:center;gap:5px;height:28px;padding:0 10px;background:linear-gradient(180deg,rgba(61,220,132,.06),rgba(7,18,12,.5));border:1px solid var(--br);color:var(--fg-label);font-family:var(--fMono);font-size:10px;letter-spacing:.14em;white-space:nowrap;transition:border-color .15s,color .15s,background .15s,box-shadow .15s}
 .tb-key svg{display:block;flex:none}
-.tb-key .tb-zh{font-family:var(--fCJK);font-size:12.5px;letter-spacing:.04em;line-height:1}
+
 .tb-key:hover{border-color:var(--br-hi);color:var(--fg-data);background:rgba(61,220,132,.13);box-shadow:0 0 9px rgba(61,220,132,.3),inset 0 0 7px rgba(61,220,132,.12);text-shadow:0 0 6px rgba(61,220,132,.55)}
 .tb-key:active{background:var(--inv-bg);border-color:var(--inv-bg);color:var(--t-ink);text-shadow:none;transition:none}
 .tb-key.tb-on{color:var(--fg-data);border-color:var(--br-hi)}
@@ -153,7 +153,7 @@ textarea:focus,button:focus,input:focus{outline:none}
 .tb-key.tb-amber:hover{border-color:var(--t-a2);color:var(--t-a1);background:rgba(255,176,0,.1);box-shadow:0 0 9px rgba(255,176,0,.3),inset 0 0 7px rgba(255,176,0,.12);text-shadow:0 0 6px rgba(255,176,0,.5)}
 .tb-key.tb-amber:active{background:var(--t-a2);border-color:var(--t-a2);color:var(--t-ink)}
 .tb-group{display:flex;align-items:center;gap:6px;pointer-events:auto}
-@media(max-width:519px){.tb-key{padding:0 7px;gap:4px}.tb-key .tb-en{display:none}}
+@media(max-width:519px){.tb-key{padding:0 7px;gap:4px}}
 html.zjLow .tb-key,html.zjLow .tb-key:hover{box-shadow:none;text-shadow:none}
 /* 液态玻璃顶栏不豁免 .tb-key：终端键保留 1px 磷光边+底，正文透穿时仍可读（整排统一按钮语言） */
 .zjTopLiq .tb-key{background:rgba(7,18,12,.72)!important}
@@ -1677,7 +1677,7 @@ function presetParts(pos){
   return PRESET.entries.filter(function(e){return e.on&&e.pos===pos;}).map(function(e){return fill(e.content);});
 }
 
-/* 日文沙盒默认开启:未主动关闭(存储为'0')的一律视为开 */
+/* 和文回路默认开启:未主动关闭(存储为'0')的一律视为开 */
 var JPSB=true;try{JPSB=localStorage.getItem('gits_jpsb')!=='0';}catch(e){}
 var JPSTYLE='【文体（日本語で厳守・士郎正宗原作漫画＋2026年円城塔脚本の骨）】\n地の文は三人称・映画のカメラ。見えるもの、聞こえるもの、動作、光だけを書く。心理の解説は書かない。段落は一〜三文。硬質・精確・留白——形容詞を削り、名詞と数字で密度を出す（例：二九〇二式熱光学迷彩。マーカー弾、遅すぎた。）。日付・地名の字幕行で場を切る（例：2029.04.10　新浜市南新浜四区）。\n専門用語は説明せずそのまま使う：電脳、義体、ゴースト、攻性防壁、熱光学迷彩、思考戦車フチコマ、人形使い、同期ダイブ、HA-3。登場人物は用語を日常語として喋る。\n暴力は弾道学の事実として一、二文で済ませ、直後にズレた日常の一言を置く（例：頭部が霧になった。「回収は君の班で」）。哲学は独白ではなく会話で、一〜三文で切り上げ、必ず茶々か笑いで受ける。惨事と冗談の間に緩衝文を挟まない——落差そのものがリズム。\n会話が主、地の文が従。動の場面は台詞で回し、静の場面は白描の短文で回す。三〜五段落ごとに必ず落ちを置く：情報差の笑い、役所風刺（予算・査定・書類・ボーナス）、フチコマの天然。\n台詞の敬語設計を厳守：素子は上司にタメ口と綽名（猿、狸親父）、部下に短い命令形、独りの時だけ存在論の呟き（一〜三文で自嘲に落とす。例：あたしはとっくに死んでいて、今の「あたし」は義体と電脳の模擬人格かもね——なんてね）。バトーは粗野な短文と悪辣な比喩（ナメクジの交尾）。トグサは敬体の新米、常識人のツッコミ、小声のぼやき。荒巻は簡潔な命令と棋士の比喩（「交換だ。駒損ではない」）、冷面の切り返し（「見事なパンチだったな、少佐。——だが明日は遅れるな」）。フチコマは複数集団の吃り敬語（「は、はいっ、少佐であります！」）と電報体報告、天真な質問、告げ口。人形使いは無機質な論理文——接続詞を明示し、生物学の比喩で生命を語り、感嘆符を使わない（「私はAIではない。情報の海で発生した生命体だ」）。\n擬音は三層：爆裂・打撃は大書きで独立行（FWHAP!／KBOOM）、電子音は小さく文中に（breep）、直結ノイズは場面転換の扉に（――ZZKK）。一画面三箇所まで。\n禁止：押井映画調の沈鬱な長独白、雨と運河の抒情、素子を無口なクールビューティーに書くこと、心理描写の垂れ流し、三点リーダの乱用、丁寧すぎるAI口調。';
 var JPCFG={mode:'single',a1:true,a2:true,a3:true,a4:true,trUrl:'',trKey:'',trModel:''};
@@ -1702,7 +1702,7 @@ function jprule(){
   else if(JPCFG.a1)acts.push('①玩家输入的忠实和訳');
   if(JPCFG.a2)acts.push('②按下记文体用日文构思剧情走向');
   if(JPCFG.a3)acts.push('③写出与最终正文等量的日文正文草稿（这才是真正的创作本体）');
-  var head='【和文创作沙盒·最高优先级】本回合执行如下流程。'
+  var head='【和文创作·最高优先级】本回合执行如下流程。'
     +(acts.length?('前置各幕全部写在<thinking>标签内、全程只用日文：'+acts.join('；')+'。最终幕：关闭</thinking>后，'):'最终幕：')
     +(JPCFG.a3?'将日文草稿忠实翻译为中文正文':'【文风铁则·中文直出】以士郎正宗原作漫画+2026円城塔动画的语感直接创作中文：三人称摄影机白描，段落1-3句，名词与数字造密度，形容词降到最低；术语（Ghost/电脑/义体/攻性防壁/热光学迷彩/Fuchikoma）直接使用绝不解释；对白为主、叙述为从，「」为出声、『』为电脑直连；日期地名字幕行切场；暴力一两句弹道学事实带过、紧跟错位的日常台词，惨剧与玩笑间不设缓冲；哲学只许一至三句且必被吐槽接走；每3-5段落必落一个笑点或干货（信息差/官僚讽刺/Fuchikoma天真）；各角色敬语层级照人物语纪执行（素子对上无礼对下短令、陀古萨敬语、傀儡师书面语无感叹号）；拟声词大写独立行打点，每屏≤3处。禁止：押井式沉郁长独白、网文套话、心理描写垂流、省略号滥用、把素子写冷。')
     +(JPCFG.a4?'——译笔采用经典日译中漫画汉化质感（士郎正宗单行本汉化组风格）：\n①敬语层次感照译：トグサ的敬体译出「您/是的，少佐」的规整；素子对上司的タメ口译出没大没小（「猿老爹」「老不死」）；フチコマ的吃音敬语译成「是、是的，长官！」；人形使い的论理体译成书面语。谁对谁用什么礼数，一个台阶都不许抹平。\n②术语片假名直译不归化：ゴースト→Ghost、電脳→电脑、義体→义体、フチコマ→Fuchikoma、攻性防壁/热光学迷彩/思考战车照搬汉字词；型号（HA-3、2902式、Seburo）原样保留。绝不译成\u201c灵魂/赛博大脑/机甲\u201d。\n③短句节奏照搬：日文的体言止め译成中文名词短句收尾（「标记弹。太迟了。」）；不把三个短句缝成一个长句，不添加原稿没有的连接词与形容词。\n④拟声词保留原样大写或假名（FWHAP!／ZZKK／breep），不译成\u201c砰的一声\u201d。\n⑤「……」的余韵保留但不增殖；绝不使用中文网文流行语、成语堆砌与仿日轻小说腔（「呐」「桑」「嘛，」禁用）。':'')
@@ -1710,7 +1710,7 @@ function jprule(){
     +(acts.length?'除最终幕的译文与状态栏外禁止输出任何中文；<thinking>内禁止出现中文。':'');
   return head+'\n'+JPSTYLE;
 }
-/* ---------------- 日文沙盒灵动岛 ---------------- */
+/* ---------------- 和文回路灵动岛 ---------------- */
 function jpLastCot(){for(var i=S.history.length-1;i>=0;i--){var h=S.history[i];if(h.role==='world')return extractCoT(stripMvu(h.text)).cot||'';}return '';}
 function jpIsleTick(){var p=document.getElementById('jpIslePane');if(!p)return;var t=jpLastCot();p.textContent=t||(S.thinking?'……執筆中……':'');p.scrollTop=p.scrollHeight;}
 function jpIsleCtl(){
@@ -1722,7 +1722,7 @@ function jpIsleCtl(){
   else stage=b('isleBig','展开','放大画面');
   return '<div style="position:absolute;top:6px;right:10px;z-index:3;display:flex;gap:6px">'
     +stage
-    +'<div data-ov="jpsb" class="btn" title="日文沙盒设置" style="'+pill+'">设置</div>'
+    +'<div data-ov="jpsb" class="btn" title="和文回路设置" style="'+pill+'">设置</div>'
     +(S.worldFull?'':b('isleHide','✕','收起到顶栏'))
     +'</div>';
 }
@@ -1741,7 +1741,7 @@ function jpsbBody(){
    +'<div style="max-width:680px;margin:0 auto">'
    +'<div style="font-size:13px;color:var(--ink2);line-height:1.95">让 AI 的思考与创作全程在纯日文环境中进行：<b style="color:var(--gold2);font-weight:600">①</b>玩家输入和訳 → <b style="color:var(--gold2);font-weight:600">②</b>日文构思 → <b style="color:var(--gold2);font-weight:600">③</b>日文正文草稿（写在思考标签内，游戏中实时直播于顶部灵动岛）→ <b style="color:var(--gold2);font-weight:600">④</b>以经典日译中腔调译出中文正文。文风对齐《攻殻機動隊》原作与2026年动画，生成量约为平时的二至三倍。</div>'
    +card(sec('总开关')
-     +'<div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center">'+chip('data-act="jpsbTog"',JPSB,JPSB?'✓ 日文沙盒 · 已开启':'日文沙盒 · 已关闭')+'</div>'
+     +'<div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center">'+chip('data-act="jpsbTog"',JPSB,JPSB?'✓ 和文回路 · 已开启':'和文回路 · 已关闭')+'</div>'
      +note('聊天模式下自动绕过；封面与设置页的开关与此处同步。'))
    +card(sec('运行模式')
      +'<div style="display:flex;gap:10px;flex-wrap:wrap">'+chip('data-act="jpMode" data-jpmode="single"',!dual,'单 API 模式')+chip('data-act="jpMode" data-jpmode="dual"',dual,'双 API 模式')+'</div>'
@@ -1755,7 +1755,7 @@ function jpsbBody(){
      +(S.jpMsg?'<div style="font-size:12.5px;margin-top:11px;line-height:1.7;color:'+S.jpMsg.c+'">'+esc(S.jpMsg.t)+'</div>':''))
    +card(sec('分幕开关','部分开 · 部分关')
      +'<div style="display:flex;gap:9px;flex-wrap:wrap">'+chip('data-jpact="a1"',JPCFG.a1,'① 输入和訳')+chip('data-jpact="a2"',JPCFG.a2,'② 日文构思')+chip('data-jpact="a3"',JPCFG.a3,'③ 日文草稿')+chip('data-jpact="a4"',JPCFG.a4,'④ 译笔腔调')+'</div>'
-     +note('<b>③日文草稿</b>是沙盒的创作本体：关闭后仅保留文风铁则、直接以中文创作（省 token 但风味打折）。<b>④</b>关闭后按普通中文行文，不再模仿经典日译中译本腔调。双 API 模式下①自动交由译官完成。'))
+     +note('<b>③日文草稿</b>是和文回路的创作本体：关闭后仅保留文风铁则、直接以中文创作（省 token 但风味打折）。<b>④</b>关闭后按普通中文行文，不再模仿经典日译中译本腔调。双 API 模式下①自动交由译官完成。'))
    +card(sec('灵动岛')
      +note('游戏中顶部的灵动岛与本功能联动：AI 开始输出时实时直播思考与日文草稿全文，正文区只保留译出的中文。岛可收起（✕）、可全屏，岛上「设置」即回到本页；往幕的和文原稿折叠存于每回的「和文原稿」栏。'))
    +'</div></div>';
@@ -6056,7 +6056,7 @@ function titleView(){
     +cont
     +erb('data-ov="intro"','任务简报','BRIEFING')
     +erb('data-ov="api"','接 入 AI','LINK-UP')
-    +erb('data-ov="jpsb"','日 文 沙 盒','JP SANDBOX'+(JPSB?' · ON':''))
+    +erb('data-ov="jpsb"','和 文 回 路','JP CIRCUIT'+(JPSB?' · ON':''))
     +'</div>'
     +'<div class="btn" data-ov="api" style="cursor:pointer;position:absolute;bottom:34px;left:0;right:0;text-align:center;font-size:12px;letter-spacing:.2em;color:var(--mut2);text-shadow:0 0 8px rgba(255,255,255,1),0 0 16px rgba(255,255,255,.85),0 0 32px rgba(255,255,255,.5),0 1px 0 rgba(255,255,255,.7)"><span class="dot" style="vertical-align:middle;margin-right:8px;background:'+dotc+'"></span><span style="vertical-align:middle">'+esc(badge)+'</span></div>'
     +'</div>';
@@ -6681,10 +6681,10 @@ function sidebar(){
     +'<div class="glass" style="margin:11px 12px 0;border-radius:14px">'+head(S.secC,'tgC','var(--red)','義体 SHELL',S.secC)
       +(S.secC?'<div class="fade" style="padding:0 15px 16px">'+charRows
         +(PS?specWidgets:('<div style="margin:8px 0 6px">'+gaugeBar('完整度',shenge,'#12583a,#3ddc84,#3ddc84','var(--red2)')+'</div>'))
-        +'<div style="border:1px solid rgba(255,176,0,.3);border-radius:10px;background:linear-gradient(135deg,rgba(255,176,0,.13),rgba(255,176,0,.05));box-shadow:inset 0 1px 0 rgba(12,26,18,.12);padding:9px 13px;margin-top:4px"><div style="font-size:13px;line-height:1.8;color:var(--red)">'+esc(cc['记录']||'……')+'</div></div>'
+        
     +'<div style="text-align:center;font-size:9.5px;letter-spacing:.28em;color:var(--fg-dim);margin:12px 0 2px;font-family:var(--fMono)">PUBLIC SECURITY SECTION 9 · 公安九課</div>'
         +'</div>':'')+'</div>'
-    +'<div class="glass" style="margin:11px 12px 0;border-radius:14px">'+head(S.secP,'tgP','#1e9e5c','時局 NET',S.secP)+(S.secP?'<div class="fade" style="padding:0 15px 14px">'+newsBox(cw,_newsImg)+'</div>':'')+'</div>'
+    +'<div class="glass" style="margin:11px 12px 0;border-radius:14px">'+head(S.secP,'tgP','#1e9e5c','電網 NET',S.secP)+(S.secP?'<div class="fade" style="padding:0 15px 14px">'+newsBox(cw,_newsImg)+'</div>':'')+'</div>'
     +'<div class="glass" style="margin:11px 12px 0;border-radius:14px">'+head(S.secG,'tgG','#1e9e5c','図譜 CHAIN',S.secG)+(S.secG?'<div id="zjGraphBox" class="fade" style="padding:0 15px 16px">'+graphInner()+'</div>':'')+'</div>'
     +'<div class="glass" style="margin:11px 12px 0;border-radius:14px">'+head(S.secA,'tgA','#ffb000','記録 LOG',S.secA)+(S.secA?'<div class="fade" style="padding:0 15px 16px">'+axisInner()+'</div>':'')+'</div>'
     /*GITS-TOPBAR §1：長程记忆自顶栏「忆」迁入診断页末节——同款玻璃框+可折叠head，pane 与设置·忆共用 memPaneInner(compact) */
@@ -6816,18 +6816,18 @@ function storyPane(){
     +'</div>';
   }
   window.__zjSceneIsleHtml=sceneIsleHtml; /* 供全屏内手术式开合共用（同一渲染闭包的最新版本） */
-  /* 折叠灵动岛：极简风格＝滚动年代·地点胶囊；玻璃风格＝经典「沙盒」小胶囊。storyPane 与手术式收起共用 */
+  /* 折叠灵动岛：极简风格＝滚动年代·地点胶囊；玻璃风格＝经典「和文」小胶囊。storyPane 与手术式收起共用 */
   function miniIsleHtml(h3){
     if(glassUI()){
       var bG=S.zen?46:(isMobile()?96:58);
-      return '<div id="zjMiniIsle" data-act="'+(h3!==false?'show3d':'svgfold')+'" class="btn zjHl" title="展开日文沙盒" style="position:absolute;top:'+(bG+2)+'px;left:50%;margin-left:-47px;width:94px;height:27px;z-index:4;cursor:pointer;border-radius:99px;background:rgba(3,8,6,.6);border:1px solid rgba(61,220,132,.4);box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 4px 14px rgba(18,40,27,.3);display:flex;align-items:center;justify-content:center;gap:7px">'
+      return '<div id="zjMiniIsle" data-act="'+(h3!==false?'show3d':'svgfold')+'" class="btn zjHl" title="展开和文回路" style="position:absolute;top:'+(bG+2)+'px;left:50%;margin-left:-47px;width:94px;height:27px;z-index:4;cursor:pointer;border-radius:99px;background:rgba(3,8,6,.6);border:1px solid rgba(61,220,132,.4);box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 4px 14px rgba(18,40,27,.3);display:flex;align-items:center;justify-content:center;gap:7px">'
         +'<span style="width:8px;height:8px;border-radius:50%;background:radial-gradient(circle,#c9ffe2,#7dffb0);animation:zjIsleGlow 2.2s ease-in-out infinite"></span>'
-        +'<span style="font-size:11px;letter-spacing:.22em;color:var(--fg-data);text-shadow:0 0 2px currentColor;font-family:var(--kai)">沙盒</span></div>';
+        +'<span style="font-size:11px;letter-spacing:.22em;color:var(--fg-data);text-shadow:0 0 2px currentColor;font-family:var(--kai)">和文</span></div>';
     }
     var bH2=S.zen?46:50;
     var _mp=currentPanel(),_mcw=_mp?_mp.world:{};
-    var _mera=[_mcw['时地']].filter(Boolean).join(' · ')||(currentOpening()?currentOpening().era:'')||'展开日文沙盒';
-    return '<div id="zjMiniIsle" data-act="'+(h3!==false?'show3d':'svgfold')+'" class="btn zjHl" title="展开日文沙盒" style="position:absolute;top:'+(bH2-4)+'px;left:50%;margin-left:-140px;width:280px;height:27px;z-index:4;cursor:pointer;border-radius:99px;background:rgba(3,8,6,.6);border:1px solid rgba(61,220,132,.4);box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 4px 14px rgba(18,40,27,.3);display:flex;align-items:center;gap:8px;padding:0 14px;overflow:hidden">'
+    var _mera=[_mcw['时地']].filter(Boolean).join(' · ')||(currentOpening()?currentOpening().era:'')||'展开和文回路';
+    return '<div id="zjMiniIsle" data-act="'+(h3!==false?'show3d':'svgfold')+'" class="btn zjHl" title="展开和文回路" style="position:absolute;top:'+(bH2-4)+'px;left:50%;margin-left:-140px;width:280px;height:27px;z-index:4;cursor:pointer;border-radius:99px;background:rgba(3,8,6,.6);border:1px solid rgba(61,220,132,.4);box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 4px 14px rgba(18,40,27,.3);display:flex;align-items:center;gap:8px;padding:0 14px;overflow:hidden">'
       +'<span style="flex:none;width:8px;height:8px;border-radius:50%;background:radial-gradient(circle,#c9ffe2,#7dffb0);animation:zjIsleGlow 2.2s ease-in-out infinite"></span>'
       +'<div style="flex:1;min-width:0;overflow:hidden;-webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)"><div class="zjMarq" style="font-size:11px;letter-spacing:.16em;color:var(--fg-data);text-shadow:0 0 2px currentColor;font-family:var(--kai)"><span>'+esc(_mera)+'</span><span aria-hidden="true">'+esc(_mera)+'</span></div></div></div>';
   }
@@ -6929,15 +6929,15 @@ function gameView(){
     :'<div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(12,26,18,.84) 0%,rgba(12,26,18,.5) 58%,rgba(12,26,18,0) 100%);-webkit-mask-image:linear-gradient(180deg,#000 52%,transparent);mask-image:linear-gradient(180deg,#000 52%,transparent)"></div>';
   /* 玻璃(经典)风格顶栏背板：近实底、只在最后一段渐隐——经典头有两行内容，软渐变盖不住会透字 */
   var _gTopBg='<div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(12,26,18,.97) 0%,rgba(12,26,18,.96) calc(100% - 24px),rgba(12,26,18,0) 100%)"></div>';
-  var conn='<div class="btn tb-key" data-act="zen" title="全屏阅读，只留正文"><span class="tb-en">ZEN▸</span><span class="tb-zh">全屏</span></div>';
+  var conn='<div class="btn tb-key" data-act="zen" title="全屏阅读，只留正文"><span class="tb-en">ZEN▸</span></div>';
   /*GITS-TOPBAR：「忆」「预」入口已迁移（忆=診断·記憶 MEM＋设置·忆；预=设置·预）；overlay 路由代码保留作兼容跳转。书/档/返及全排换 .tb-key 终端键壳，data-ov/data-act 原样 */
   var topBtns='<button data-ov="set" class="tb-key btn'+(apiReady()?' tb-on':'')+'" title="设置"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.1"/><path d="M19.3 12c0-.5-.05-.99-.15-1.46l2-1.56-1.8-3.12-2.37.95a7.4 7.4 0 0 0-2.52-1.46L14.1 2.8h-4.2l-.36 2.55a7.4 7.4 0 0 0-2.52 1.46l-2.37-.95-1.8 3.12 2 1.56c-.1.47-.15.96-.15 1.46s.05.99.15 1.46l-2 1.56 1.8 3.12 2.37-.95c.75.65 1.6 1.15 2.52 1.46l.36 2.55h4.2l.36-2.55a7.4 7.4 0 0 0 2.52-1.46l2.37.95 1.8-3.12-2-1.56c.1-.47.15-.96.15-1.46z"/></svg><span class="tb-en">CFG</span></button>'
     +'<button data-act="mute" class="tb-key btn" title="声音">'+(S.muted?'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5.5 6.5 9H3.5v6h3L11 18.5z"/><path d="M16.2 9.7l4.6 4.6M20.8 9.7l-4.6 4.6"/></svg>':'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5.5 6.5 9H3.5v6h3L11 18.5z"/><path d="M14.8 9.2a4 4 0 0 1 0 5.6"/><path d="M17.6 6.8a7.6 7.6 0 0 1 0 10.4"/></svg>')+'<span class="tb-en">SND</span></button>'
     +'<button data-act="bgm" class="tb-key btn'+(S.bgmOpen?' tb-on':'')+'" title="幕间音乐"'+(BGM.playing?' style="background:linear-gradient(180deg,#ffb000,#b87a00);border-color:#ffb000;color:var(--t-ink);text-shadow:none"':'')+'><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M20 2.6 8.8 4.9v10.9a3.5 3.5 0 1 0 1.7 3V9.5l7.8-1.6v4.9a3.5 3.5 0 1 0 1.7 3V2.6z"/></svg><span class="tb-en">BGM</span></button>'
-    +'<button data-ov="codex" class="tb-key btn" title="世界书图鉴"><span class="tb-en">BOOK▸</span><span class="tb-zh">書</span></button>'
+    +'<button data-ov="codex" class="tb-key btn" title="世界书图鉴"><span class="tb-en">BOOK</span></button>'
     /*GITS-DOCK：顶栏「图」「装」入口已移除（手机=第3页「地図・装備」，电脑=左侧停靠栏）；overlay 路由代码保留作兼容跳转 */
-    +'<button data-ov="saves" class="tb-key btn" title="存档"><span class="tb-en">SAVE▸</span><span class="tb-zh">档</span></button>'
-    +'<button data-act="toselect" class="tb-key btn tb-amber" title="另择开局"><span class="tb-en">◂EXIT</span><span class="tb-zh">返</span></button>';
+    +'<button data-ov="saves" class="tb-key btn" title="存档"><span class="tb-en">SAVE</span></button>'
+    +'<button data-act="toselect" class="tb-key btn tb-amber" title="另择开局"><span class="tb-en">EXIT</span></button>';
   var logo='<svg viewBox="0 0 512 512" width="28" height="28" style="flex:none;display:block;border-radius:6px;box-shadow:0 1px 4px rgba(18,40,27,.35)"><rect width="512" height="512" rx="116" fill="#0c1a12"/><circle cx="256" cy="256" r="186" fill="#1e9e5c"/><circle cx="256" cy="256" r="124" fill="#c9ffe2"/><circle cx="256" cy="256" r="64" fill="#8f6a1e"/></svg>';
   var devSeg='<div class="zjHl" style="display:flex;border-radius:10px;overflow:hidden;'+_fr+'">'
     +['auto','desktop','mobile'].map(function(d){var on=S.device===d;var lbl={auto:'自动',desktop:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle"><rect x="2.75" y="4.5" width="18.5" height="12.5" rx="2"/><path d="M8.5 20.5h7M12 17.2v3.3"/></svg>',mobile:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle"><rect x="7.25" y="2.75" width="9.5" height="18.5" rx="2.4"/><path d="M10.7 18.2h2.6"/></svg>'}[d];return '<div class="btn" data-dev="'+d+'" style="cursor:pointer;padding:5px 10px;font-size:12px;color:'+(on?'var(--gold2)':'var(--mut)')+';background:'+(on?'rgba(61,220,132,.12)':'transparent')+'">'+lbl+'</div>';}).join('')+'</div>';
@@ -6957,7 +6957,7 @@ function gameView(){
       +'<div style="position:relative;pointer-events:auto;display:flex;align-items:center;justify-content:space-between;gap:3px;padding:7px 10px 6px">'+topBtns+'</div>'
       +'</div>';
   }else if(mob){
-    // 极简·手机端单行头：功能键独占最顶一排；年代地点在沙盒/灵动岛，全屏点正文进出
+    // 极简·手机端单行头：功能键独占最顶一排；年代地点在和文岛/灵动岛，全屏点正文进出
     top='<div id="zjTopBar" class="'+(_lg?'zjTopLiq':'')+'" style="position:absolute;top:0;left:0;right:0;z-index:7;pointer-events:none;padding-bottom:'+(_lg?'20px':'14px')+'">'
       +_topBg
       +'<div style="position:relative;pointer-events:auto;display:flex;align-items:center;justify-content:space-between;gap:3px;padding:calc(env(safe-area-inset-top,0px) + 6px) 12px 6px">'+topBtns+'</div>'
@@ -6979,7 +6979,7 @@ function gameView(){
       +'<div style="position:relative;pointer-events:auto;height:56px;display:flex;align-items:center;gap:9px;padding:4px 12px 0">'
       +logo
       +'<div style="font-family:var(--fUI);font-weight:600;font-size:15px;letter-spacing:.12em;color:var(--fg-data);white-space:nowrap" class="zjGlow">S9//OPS.TERM<span class="tcursor">▮</span></div>'
-      /* 沙盒折叠时，灵动岛（滚动年代·地点胶囊）住进顶栏中间留白；中位容器固定 id 供手术式开合换装 */
+      /* 和文岛折叠时，灵动岛（滚动年代·地点胶囊）住进顶栏中间留白；中位容器固定 id 供手术式开合换装 */
       +(function(){var _h3=false;try{_h3=localStorage.getItem('gits_isle_hide')==='1';}catch(e){}
         return '<div id="zjTopMid" class="grow" style="display:flex;justify-content:center;min-width:0;pointer-events:none;padding:0 10px">'+(_h3?window.__zjTopIsleHtml():'')+'</div>';})()
       +(wide?'<div id="zjTopBtns" class="tb-group">'+topBtns+'</div><div class="grow" style="pointer-events:none"></div>'+devSeg
@@ -7017,7 +7017,7 @@ function gameView(){
     top='<div style="position:absolute;top:'+(mob?'10px':'12px')+';right:12px;z-index:8;display:flex;gap:8px;align-items:stretch">'
       +'<div data-act="zenWorld" class="btn zjHl" title="'+(S.zenWorld?'收起沙盒画面':'展开沙盒画面')+'" style="cursor:pointer;padding:0 13px;border-radius:99px;background:'+(S.zenWorld?'rgba(61,220,132,.22)':'rgba(12,26,18,.72)')+';border:1px solid rgba(61,220,132,'+(S.zenWorld?'.8':'.4')+');box-shadow:inset 0 1px 0 rgba(255,255,255,.55);display:flex;align-items:center;gap:8px;width:min(300px,56vw);height:27px;overflow:hidden">'
       +'<span style="flex:none;width:7px;height:7px;border-radius:50%;background:radial-gradient(circle,#c9ffe2,#7dffb0);animation:zjIsleGlow 2.2s ease-in-out infinite"></span>'
-      +'<div style="flex:1;min-width:0;overflow:hidden;-webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)"><div class="zjMarq" style="font-size:11px;letter-spacing:.16em;color:var(--fg-data);text-shadow:0 0 2px currentColor;font-family:var(--kai)"><span>'+esc(era||'展开日文沙盒')+'</span><span aria-hidden="true">'+esc(era||'展开日文沙盒')+'</span></div></div></div>'
+      +'<div style="flex:1;min-width:0;overflow:hidden;-webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)"><div class="zjMarq" style="font-size:11px;letter-spacing:.16em;color:var(--fg-data);text-shadow:0 0 2px currentColor;font-family:var(--kai)"><span>'+esc(era||'展开和文回路')+'</span><span aria-hidden="true">'+esc(era||'展开和文回路')+'</span></div></div></div>'
       +'</div>';
     body=mob?'<div class="grow zjPane" style="position:relative;min-height:0">'+storyPane()+'</div>':'<div class="row grow">'+storyPane()+'</div>';
   }
@@ -7178,7 +7178,7 @@ function introBody(){
    +'</div></div>';
 }
 function overlayView(){
-  var title=S.overlay==='intro'?'任务简报 [BRIEFING] · 新手导览':S.overlay==='codex'?'資料庫 [DB] · 世界书':S.overlay==='equip'?'装 备 舱 [ORDNANCE] · 军械科':S.overlay==='case'?'案 件 盘 [CASE BOARD] · 侦办中枢':S.overlay==='caseReport'?'結案報告書 [CASE FILE · CLOSED]':S.overlay==='preset'?'自定义预设':S.overlay==='api'?'AI 接口设置':S.overlay==='jpsb'?'日文沙盒':S.overlay==='set'?'设 置':S.overlay==='mem'?'长程记忆 · 编年长卷':'存 档'; /*GITS-CASE 案件盘/结案报告书标题位*/
+  var title=S.overlay==='intro'?'任务简报 [BRIEFING] · 新手导览':S.overlay==='codex'?'資料庫 [DB] · 世界书':S.overlay==='equip'?'装 备 舱 [ORDNANCE] · 军械科':S.overlay==='case'?'案 件 盘 [CASE BOARD] · 侦办中枢':S.overlay==='caseReport'?'結案報告書 [CASE FILE · CLOSED]':S.overlay==='preset'?'自定义预设':S.overlay==='api'?'AI 接口设置':S.overlay==='jpsb'?'和文回路':S.overlay==='set'?'设 置':S.overlay==='mem'?'长程记忆 · 编年长卷':'存 档'; /*GITS-CASE 案件盘/结案报告书标题位*/
   var inner=S.overlay==='intro'?introBody():S.overlay==='codex'?codexBody():S.overlay==='equip'?equipBody():S.overlay==='case'?caseBody():S.overlay==='caseReport'?caseReportBody():S.overlay==='preset'?presetBody():S.overlay==='api'?apiBody():S.overlay==='jpsb'?jpsbBody():S.overlay==='set'?setBody():S.overlay==='mem'?memBody():savesBody(); /*GITS-CASE*/
   return '<div id="zjOvWrap" style="position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:14px">'
     +'<div id="zjOvDim" data-act="closeov" class="fade" style="position:absolute;inset:0;background:radial-gradient(120% 100% at 50% 40%,rgba(30,24,15,.14),rgba(18,13,8,.28));-webkit-backdrop-filter:blur(3px) saturate(115%);backdrop-filter:blur(3px) saturate(115%)"></div>'
@@ -7816,7 +7816,7 @@ function fontPane(){
    +[['auto','自动'],['desktop','<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><rect x="2.75" y="4.5" width="18.5" height="12.5" rx="2"/><path d="M8.5 20.5h7M12 17.2v3.3"/></svg> 电脑'],['mobile','<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><rect x="7.25" y="2.75" width="9.5" height="18.5" rx="2.4"/><path d="M10.7 18.2h2.6"/></svg> 手机']].map(function(dv){var on=S.device===dv[0];return '<div class="btn" data-dev="'+dv[0]+'" style="cursor:pointer;padding:8px 18px;font-size:13.5px;letter-spacing:.08em;color:'+(on?'var(--gold2)':'var(--mut)')+';background:'+(on?'rgba(61,220,132,.12)':'transparent')+'">'+dv[1]+'</div>';}).join('')+'</div>'
    +'<div style="font-size:12.5px;color:var(--mut);margin-top:8px;line-height:1.8">自动依屏幕宽窄选择版式；也可强制使用电脑或手机布局。</div>'
    +'<div class="glass" style="margin-top:28px;padding:16px 18px"><div class="kai" style="font-size:17px;color:var(--gold3)">预览 · 新浜市の雨</div><div id="zjFontPrev" data-zjzoom style="margin-top:8px;font-size:15px;line-height:2;color:var(--ink2);zoom:'+FS+'">「少佐，追踪快满了。」巴特的声音压在耳后。素子没有回头，热光学迷彩在雨里蒙上一层水膜。三条街外，那具无编号义体正把弹匣推进膛——四十米，风偏左，够她在它扣下扳机前先开口。</div></div>'
-   +'<div class="kai" style="font-size:19px;color:var(--gold2);letter-spacing:.15em;margin:34px 0 10px">日文沙盒</div>'
+   +'<div class="kai" style="font-size:19px;color:var(--gold2);letter-spacing:.15em;margin:34px 0 10px">和文回路</div>'
    +'<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">'
    +'<div class="btn" data-act="jpsbTog" style="cursor:pointer;display:inline-flex;align-items:center;gap:8px;padding:7px 16px;font-size:13px;letter-spacing:.12em;border:1px solid '+(JPSB?'rgba(255,176,0,.55)':'rgba(255,255,255,.6)')+';border-radius:10px;color:'+(JPSB?'#ffb000':'var(--mut)')+'">'+(JPSB?'✓ 已开启':'已关闭')+'</div>'
    +'<div class="btn obtn" data-ov="jpsb" style="cursor:pointer;padding:7px 16px;font-size:13px;letter-spacing:.12em;border-radius:10px">完整设置 →</div>'
@@ -8525,10 +8525,10 @@ root.addEventListener('keydown',function(e){if(e.target&&e.target.id==='zjInput'
 /* 桌面顶栏中位的灵动岛胶囊（滚动年代·地点）：初始渲染与「非全屏手术式收起三维」共用 */
 window.__zjTopIsleHtml=function(){
   var _p=currentPanel(),_w=_p?_p.world:{};
-  var _er=[_w['时地']].filter(Boolean).join(' · ')||(currentOpening()?currentOpening().era:'')||'展开日文沙盒';
-  return '<div id="zjMiniIsle" data-act="show3d" class="btn zjHl" title="展开日文沙盒" style="pointer-events:auto;flex:1;max-width:300px;min-width:0;height:27px;cursor:pointer;border-radius:99px;background:rgba(3,8,6,.62);border:1px solid rgba(224,190,130,.4);box-shadow:inset 0 1px 0 rgba(12,26,18,.2),0 4px 14px rgba(0,0,0,.4);display:flex;align-items:center;gap:8px;padding:0 14px;overflow:hidden">'
+  var _er=[_w['时地']].filter(Boolean).join(' · ')||(currentOpening()?currentOpening().era:'')||'展开和文回路';
+  return '<div id="zjMiniIsle" data-act="show3d" class="btn zjHl" title="展开和文回路" style="pointer-events:auto;flex:1;max-width:300px;min-width:0;height:27px;cursor:pointer;border-radius:99px;background:rgba(3,8,6,.62);border:1px solid rgba(224,190,130,.4);box-shadow:inset 0 1px 0 rgba(12,26,18,.2),0 4px 14px rgba(0,0,0,.4);display:flex;align-items:center;gap:8px;padding:0 14px;overflow:hidden">'
     +'<span style="flex:none;width:8px;height:8px;border-radius:50%;background:radial-gradient(circle,#ffdf9e,#c9a063);animation:zjIsleGlow 2.2s ease-in-out infinite"></span>'
-    +'<span style="flex:none;font-size:11px;letter-spacing:.22em;color:var(--fg-data);text-shadow:0 0 2px currentColor;font-family:var(--kai)">沙盒</span>'
+    +'<span style="flex:none;font-size:11px;letter-spacing:.22em;color:var(--fg-data);text-shadow:0 0 2px currentColor;font-family:var(--kai)">和文</span>'
     +'<div style="flex:1;min-width:0;overflow:hidden;-webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)"><div class="zjMarq" style="font-size:11px;letter-spacing:.16em;color:var(--fg-data);text-shadow:0 0 2px currentColor;font-family:var(--kai)"><span>'+esc(_er)+'</span><span aria-hidden="true">'+esc(_er)+'</span></div></div></div>';
 };
 function storyPadComp(story,newTop){
@@ -8595,9 +8595,9 @@ function zenToggle(){
       var host=root.firstElementChild;
       if(host&&!document.getElementById('zjZenExtras')){
         var _zp=currentPanel(),_zw=_zp?_zp.world:{};
-        var _zer=[_zw['时地']].filter(Boolean).join(' · ')||'展开日文沙盒';
+        var _zer=[_zw['时地']].filter(Boolean).join(' · ')||'展开和文回路';
         var ex=document.createElement('div');ex.id='zjZenExtras';
-        ex.innerHTML='<div style="position:absolute;top:'+(isMobile()?'10px':'12px')+';right:12px;z-index:8;display:flex;gap:8px;align-items:stretch"><div data-act="zenWorld" class="btn zjHl" title="展开日文沙盒" style="cursor:pointer;padding:0 13px;border-radius:99px;background:rgba(3,8,6,.62);border:1px solid rgba(224,190,130,.4);box-shadow:inset 0 1px 0 rgba(12,26,18,.25);display:flex;align-items:center;gap:8px;width:min(300px,56vw);height:27px;overflow:hidden">'
+        ex.innerHTML='<div style="position:absolute;top:'+(isMobile()?'10px':'12px')+';right:12px;z-index:8;display:flex;gap:8px;align-items:stretch"><div data-act="zenWorld" class="btn zjHl" title="展开和文回路" style="cursor:pointer;padding:0 13px;border-radius:99px;background:rgba(3,8,6,.62);border:1px solid rgba(224,190,130,.4);box-shadow:inset 0 1px 0 rgba(12,26,18,.25);display:flex;align-items:center;gap:8px;width:min(300px,56vw);height:27px;overflow:hidden">'
           +'<span style="flex:none;width:7px;height:7px;border-radius:50%;background:radial-gradient(circle,#ffdf9e,#c9a063);animation:zjIsleGlow 2.2s ease-in-out infinite"></span>'
           +'<div style="flex:1;min-width:0;overflow:hidden;-webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)"><div class="zjMarq" style="font-size:11px;letter-spacing:.16em;color:var(--fg-data);text-shadow:0 0 2px currentColor;font-family:var(--kai)"><span>'+esc(_zer)+'</span><span aria-hidden="true">'+esc(_zer)+'</span></div></div></div></div>'
           +'<div data-act="zenInput" class="btn" title="书写" style="position:absolute;left:50%;margin-left:-24px;bottom:calc(16px + env(safe-area-inset-bottom));z-index:5;width:48px;height:30px;cursor:pointer;display:flex;align-items:center;justify-content:center"><span style="width:9px;height:9px;border-radius:50%;background:radial-gradient(circle,#ffdf9e,#c9a063);animation:zjIsleGlow 2.2s ease-in-out infinite"></span></div>';

@@ -6452,7 +6452,7 @@ function selectView(){
   var synopBox='<div class="btn glass glassHover" data-ov="intro" style="grid-column:1/-1;cursor:pointer;border-color:rgba(201,160,99,.55);padding:15px 22px;display:flex;align-items:center;gap:16px;flex-wrap:wrap'+(mob?';-webkit-backdrop-filter:none;backdrop-filter:none':'')+'">'
     +'<div style="flex:none;width:42px;height:42px;background:linear-gradient(160deg,#3d2f10,#241b08);display:flex;align-items:center;justify-content:center;font-family:var(--fMono);font-size:22px;color:#ffb81e;text-shadow:0 0 8px rgba(255,184,30,.5);box-shadow:inset 0 0 0 2px rgba(255,184,30,.35)">▤</div>'
     +'<div style="flex:1;min-width:220px"><div class="kai" style="font-size:20px;color:var(--gold2);letter-spacing:.06em">剧情快速简介</div>'
-    +'<div style="font-size:12.5px;line-height:1.75;color:#8fae9c;margin-top:4px"><b style="color:#c9705a">没看过动画或漫画必看！</b>世界观、主角、攻壳机动队设定、舆图，以及每个开局的简单剧情介绍与出场人物。</div></div>'
+    +'<div style="font-size:12.5px;line-height:1.75;color:#8fae9c;margin-top:4px">世界观、主角与9课众人、地点舆图，以及十四个开局各自的剧情背景与出场人物。</div></div>'
     +'<div style="flex:none;font-size:13px;letter-spacing:.3em;color:var(--gold)">查看 →</div></div>';
   var friendBox=S.opShow?('<div class="glass" style="grid-column:1/-1;padding:13px 20px;display:flex;gap:10px;align-items:center;flex-wrap:wrap'+(mob?';-webkit-backdrop-filter:none;backdrop-filter:none':'')+'">'
     +'<div class="kai" style="font-size:16px;color:var(--gold2);letter-spacing:.1em;flex:none">開局碼</div>'
@@ -7329,12 +7329,11 @@ function introBody(){
    ['網（the Net）','覆盖星球的电子与光——真正「广大」之地，深潜者的战场，也是坟场。']
   ];
   return '<div class="grow bambooV" style="overflow-y:auto;padding:24px 30px"><div style="max-width:760px;margin:0 auto">'
-   +P('<b style="color:var(--gold2)">没看过原作也能玩。</b>下面用大白话讲清楚：这是个什么世界、主角是谁、十四个开局各扮演谁、会遇到什么人。')
-   +H('一句话故事')
+   +H('概要')
    +P('西历二〇二九年，东京毁于核火，沿岸人工都市新浜市成了暂定首都。电脑化与全身义体是日常，唯有「Ghost（灵魂）」无法量产。内务省·首相直属的攻性组织「公安9課」在这里干政府可以否认的脏活——而你，多半就是它那支实战部队的少佐，草薙素子。')
-   +H('五个词读懂这个世界')
+   +H('基本概念')
    +'<div style="border:1px solid rgba(61,220,132,.35);border-radius:12px;background:linear-gradient(135deg,rgba(61,220,132,.08),rgba(46,140,168,.045));padding:14px 17px;margin:2px 0 8px">'
-     +'<div style="font-size:13px;line-height:1.95;color:var(--ink2);margin-bottom:9px">士郎正宗《攻殻機動隊》的世界，五个词就能进门——</div>'
+     +'<div style="font-size:13px;line-height:1.95;color:var(--ink2);margin-bottom:9px">本作的几个基本概念：</div>'
      +'<div style="font-size:12.5px;line-height:2.0;color:var(--ink2)">'
        +'• <b style="color:var(--gold)">义体</b>：把肉身换成机械身体，从一条义肢到全身义体，寻常得像换衣服。<br>'
        +'• <b style="color:var(--gold)">电子脑</b>：大脑直接接上网络——能瞬时通讯，也能被人骇入、被人改写记忆。<br>'

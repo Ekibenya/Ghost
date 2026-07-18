@@ -6815,6 +6815,18 @@ function d95Icon(n,sz){
     b=r(2,2,5,5,A)+r(3,3,3,3,DK)+r(4,4,1,1,A)+r(7,4,7,1,A)+r(7,5,7,1,A2)
      +r(10,6,1,3,A)+r(13,6,1,2,A)+r(2,2,5,1,AH)
      +r(2,10,12,4,G2)+r(3,11,10,2,DK)+'<text x="3.4" y="13.2" font-size="2.6" fill="'+G+'" font-family="monospace">C0DE-2501</text>';
+  }else if(n==='album'){
+    b=r(1,2,14,11,SV2)+r(2,3,12,9,CB)+r(2,3,12,1,A)
+     +r(3,9,3,-4,0)+'<path d="M2 11 L5 7 L7 9 L10 5 L14 11 Z" fill="'+G+'"/>'
+     +r(10,4,2,2,CY)+r(2,11,12,1,A3);
+  }else if(n==='doc'){
+    b=r(3,1,8,14,PA)+r(9,1,2,3,GY)+r(3,1,6,1,CY)
+     +r(4,5,6,1,G)+r(4,7,6,1,GY)+r(4,9,4,1,GY)+r(4,11,6,1,GY)+r(4,13,3,1,A3)
+     +r(11,1,1,14,A3);
+  }else if(n==='preset'){
+    b=r(2,2,12,12,G2)+r(2,2,12,1,A)+r(3,3,10,10,CB)
+     +r(4,5,3,1,CY)+r(8,5,4,1,GY)+r(4,7,3,1,CY)+r(8,7,4,1,GY)+r(4,9,3,1,CY)+r(8,9,4,1,GY)
+     +r(4,11,6,1,A3);
   }else if(n==='pwr'){
     b=r(5,2,6,1,MG)+r(3,3,2,2,MG)+r(11,3,2,2,MG)+r(2,5,1,4,MG)+r(13,5,1,4,MG)
      +r(3,9,2,2,MG)+r(11,9,2,2,MG)+r(5,11,6,1,MG)+r(7,1,2,6,'#c8ffdf')+r(6,13,4,2,SV2);
@@ -6860,9 +6872,32 @@ document.addEventListener('contextmenu',function(e){
     var t9=e.target;if(!t9||!t9.closest)return;
     if(!t9.closest('.d95-desk'))return;
     e.preventDefault();
-    var fo9=t9.closest('[data-dirx]');
-    S.deskCtx={x:Math.max(4,Math.min(e.clientX,window.innerWidth-166)),y:Math.max(4,Math.min(e.clientY,window.innerHeight-190)),idx:fo9?parseInt(fo9.getAttribute('data-dirx'),10):null};
+    var fo9=t9.closest('[data-dirx]'),dr9=t9.closest('[data-drag]');
+    S.deskCtx={x:Math.max(4,Math.min(e.clientX,window.innerWidth-166)),y:Math.max(4,Math.min(e.clientY,window.innerHeight-190)),
+      idx:fo9?parseInt(fo9.getAttribute('data-dirx'),10):null,
+      drag:dr9?dr9.getAttribute('data-drag'):null};
     S.deskMenu=false;S._noFade=true;render();
+  }catch(e2){}
+},true);
+/* 桌面拖拽删除：把用户文件拖到回收站图标(data-drop=bin)放手即删 */
+document.addEventListener('dragstart',function(e){
+  try{var t=e.target;if(!t||!t.closest)return;var d=t.closest('[data-drag]');
+    if(!d){return;}window.__deskDrag=d.getAttribute('data-drag');
+    if(e.dataTransfer){e.dataTransfer.effectAllowed='move';try{e.dataTransfer.setData('text/plain',window.__deskDrag);}catch(_e){}}
+  }catch(e2){}
+},true);
+document.addEventListener('dragend',function(){window.__deskDrag=null;var b=document.querySelector('[data-drop="bin"]');if(b)b.style.outline='';},true);
+document.addEventListener('dragover',function(e){
+  try{var t=e.target;if(t&&t.closest&&t.closest('[data-drop="bin"]')){e.preventDefault();if(e.dataTransfer)e.dataTransfer.dropEffect='move';var b=t.closest('[data-drop="bin"]');b.style.outline='2px dashed #3ddc84';}}catch(e2){}
+},true);
+document.addEventListener('dragleave',function(e){
+  try{var t=e.target;if(t&&t.closest){var b=t.closest('[data-drop="bin"]');if(b)b.style.outline='';}}catch(e2){}
+},true);
+document.addEventListener('drop',function(e){
+  try{var t=e.target;if(!t||!t.closest)return;if(!t.closest('[data-drop="bin"]'))return;
+    e.preventDefault();var ref=window.__deskDrag||(e.dataTransfer&&e.dataTransfer.getData('text/plain'));
+    window.__deskDrag=null;
+    if(ref&&typeof deskDelete==='function'){deskDelete(ref);S._noFade=true;render();}
   }catch(e2){}
 },true);
 document.addEventListener('click',function(e){
@@ -6882,6 +6917,17 @@ setInterval(function(){try{var el=document.getElementById('d95Clock');if(el){var
 var DESKDIRS=[];
 try{DESKDIRS=JSON.parse(localStorage.getItem('gits_deskdirs_v1')||'[]');if(!Array.isArray(DESKDIRS))DESKDIRS=[];}catch(e){DESKDIRS=[];}
 function deskDirsSave(){try{localStorage.setItem('gits_deskdirs_v1',JSON.stringify(DESKDIRS.slice(0,24)));}catch(e){}}
+/* 桌面文件删除：拖入回收站或窗口/右键「删除」统一走此；ref=类型:索引 */
+function deskDelete(ref){
+  ref=String(ref||'');var m=ref.split(':'),k=m[0],ix=parseInt(m[1],10)||0;
+  try{
+    if(k==='dir'){DESKDIRS.splice(ix,1);deskDirsSave();}
+    else if(k==='lore'){if(typeof ULORE!=='undefined'&&ULORE[ix]!==undefined){ULORE.splice(ix,1);if(typeof uloreSave==='function')uloreSave();}}
+    else if(k==='preset'){if(typeof PRESET!=='undefined'){PRESET=null;if(typeof presetSave==='function')presetSave();}}
+    else if(k==='customop'){S.customOp=null;if(S.openingId===0)S.openingId=null;if(typeof savePref==='function')savePref();}
+  }catch(e){}
+  if(S.deskWin===ref||(k==='dir'&&S.deskWin==='dir:'+ix)||(k==='customop'&&S.deskWin==='mine'))S.deskWin=null;
+}
 function d95Css(mob){
     var CSS='<style>'
     +'.d95-desk{position:absolute;left:0;right:0;top:0;bottom:'+(mob?'44px':'42px')+';overflow:auto;-webkit-overflow-scrolling:touch;display:grid;'
@@ -6941,24 +6987,36 @@ function selectView(){
     return '<div class="d95-ic btn" '+attr+' title="'+esc(label)+'">'+d95Icon(id)
       +'<div class="d95-lb">'+esc(label)+'</div>'+(sub?'<div class="d95-sub">'+esc(sub)+'</div>':'')+'</div>';
   }
+  /* 可拖入回收站删除的用户文件：draggable + data-drag（拖拽ref） */
+  function icoDel(id,label,attr,sub,dref){
+    return '<div class="d95-ic btn" draggable="true" data-drag="'+dref+'"'+attr+' title="'+esc(label)+'（可拖入回收站删除）">'+d95Icon(id)
+      +'<div class="d95-lb">'+esc(label)+'</div>'+(sub?'<div class="d95-sub">'+esc(sub)+'</div>':'')+'</div>';
+  }
   var sys=ico('mycomp','我的电脑','data-act="wzOpen"','自定义开局')
     +ico('net','接入AI','data-ov="api"','拨号上网')
     +ico('trans','和文回路','data-ov="jpsb"','翻译设定')
     +ico('book','世界书','data-ov="codex"')
+    +ico('album','相册','data-act="openImgSet"','生图 · 缓存')
     +ico('floppy','存档','data-ov="saves"')
     +ico('note','剧情简介.txt','data-ov="intro"')
     +ico('key','開局碼','data-act="opToggle"','与友人共启')
     +ico('cd','音乐室','data-act="bgm"')
     +ico(S.muted?'spkoff':'spk',S.muted?'音量·静音':'音量','data-act="mute"')
     +ico('gear','设置','data-ov="set"')
-    +(S.customOp?ico('mine','我的开局','data-desk="win:mine"',(S.customOp.era||'').split('，')[0]):'')
-    +ico('bin','回收站','data-desk="win:bin"');
+    +ico('bin','回收站','data-desk="win:bin" data-drop="bin"');
   var folders=cards.map(function(c){
     return ico('folder',String(c.scene).split('──')[0],'data-desk="win:op'+c.o.id+'"',c.rnum+'·'+c.year);
   }).join('');
+  /* —— 用户自建内容文件化（可拖删）：自定义开局 / 世界书条目 / 预设 —— */
+  if(S.customOp)folders+=icoDel('mine','我的开局',' data-desk="win:mine"',(S.customOp.era||'').split('，')[0]||'自定义开局','customop:0');
   folders+=DESKDIRS.map(function(d,i){
-    return ico('mine',String((d&&d.n)||'新建文件夹'),'data-desk="dir:'+i+'" data-dirx="'+i+'"','自定义开局');
+    return icoDel('mine',String((d&&d.n)||'新建文件夹'),' data-desk="dir:'+i+'" data-dirx="'+i+'"','自定义开局','dir:'+i);
   }).join('');
+  folders+=(typeof ULORE!=='undefined'?ULORE:[]).map(function(en,i){
+    return icoDel('doc',String((en&&en.title)||'世界书条目'),' data-desk="lore:'+i+'" data-dragx="lore:'+i+'"','世界书条目','lore:'+i);
+  }).join('');
+  if(typeof PRESET!=='undefined'&&PRESET&&PRESET.entries)
+    folders+=icoDel('preset',String(PRESET.name||'自定义预设'),' data-desk="preset:0" data-dragx="preset:0"',(PRESET.entries.length||0)+' 条提示词','preset:0');
   var winHtml='';
   var dw=S.deskWin;
   if(dw&&dw.indexOf('op')===0){
@@ -6988,8 +7046,29 @@ function selectView(){
   }else if(dw==='bin'){
     winHtml+=d95Win('回收站',
       '<div style="display:flex;align-items:center;gap:14px"><div style="flex:none">'+d95Icon('bin',40)+'</div>'
-      +'<div style="flex:1;color:#8fae9c">回收站是空的。<br>义体、记忆与曾经的自己，都不在此处理。</div></div>'
-      +'<div style="display:flex;justify-content:flex-end;margin-top:14px"><button class="d95-btn btn" data-desk="close">关 闭</button></div>',430);
+      +'<div style="flex:1;color:#8fae9c">把桌面上的<b style="color:var(--gold3)">世界书条目 / 预设 / 自定义开局</b>文件拖到回收站图标即可删除。<br>系统项与十四个预设开局不可删。</div></div>'
+      +'<div style="display:flex;justify-content:flex-end;margin-top:14px"><button class="d95-btn btn" data-desk="close">关 闭</button></div>',440);
+  }else if(dw&&dw.indexOf('lore:')===0){
+    var li9=parseInt(dw.slice(5),10),le9=(typeof ULORE!=='undefined'?ULORE:[])[li9];
+    if(le9)winHtml+=d95Win('C:\\LORE\\'+esc(String(le9.title||'条目'))+'.ent',
+      '<div style="display:flex;align-items:center;gap:14px;margin-bottom:8px"><div style="flex:none">'+d95Icon('doc',40)+'</div>'
+      +'<div style="flex:1;min-width:0"><div class="kai" style="font-size:18px;color:var(--gold2);word-break:break-all">'+esc(le9.title||'世界书条目')+'</div>'
+      +'<div style="font-size:11.5px;color:var(--mut);margin-top:3px">关键词：'+esc((le9.keys||[]).join(' / ')||'（常驻）')+(le9.constant?' · 常驻':'')+'</div></div></div>'
+      +'<div style="max-height:180px;overflow:auto;color:#8fae9c;font-size:12.5px;line-height:1.7;border-top:1px dashed rgba(61,220,132,.3);padding-top:9px;white-space:pre-wrap">'+esc(String(le9.content||'').slice(0,1200))+'</div>'
+      +'<div style="display:flex;justify-content:flex-end;gap:10px;margin-top:14px;flex-wrap:wrap">'
+      +'<button class="d95-btn btn" data-desk="del:lore:'+li9+'" style="border-color:#9fd8b4 #04120a #04120a #9fd8b4;color:#ffd0e8">删 除</button>'
+      +'<button class="d95-btn btn" data-desk="close">关 闭</button>'
+      +'<button class="d95-btn d95-go btn" data-act="editlore" data-desk="mc">编辑世界书 →</button></div>',540);
+  }else if(dw==='preset:0'){
+    if(typeof PRESET!=='undefined'&&PRESET)winHtml+=d95Win('C:\\PRESET\\'+esc(String(PRESET.name||'预设'))+'.json',
+      '<div style="display:flex;align-items:center;gap:14px;margin-bottom:8px"><div style="flex:none">'+d95Icon('preset',40)+'</div>'
+      +'<div style="flex:1;min-width:0"><div class="kai" style="font-size:18px;color:var(--gold2);word-break:break-all">'+esc(PRESET.name||'自定义预设')+'</div>'
+      +'<div style="font-size:11.5px;color:var(--mut);margin-top:3px">共 '+((PRESET.entries||[]).length)+' 条提示词 · '+(PRESET.on?'<span style="color:var(--grn)">已启用</span>':'已停用')+'</div></div></div>'
+      +'<div style="max-height:150px;overflow:auto;color:#8fae9c;font-size:12px;line-height:1.6;border-top:1px dashed rgba(61,220,132,.3);padding-top:9px">'+(PRESET.entries||[]).slice(0,12).map(function(en){return '· '+esc((en.name||en.content||'').slice(0,40));}).join('<br>')+'</div>'
+      +'<div style="display:flex;justify-content:flex-end;gap:10px;margin-top:14px;flex-wrap:wrap">'
+      +'<button class="d95-btn btn" data-desk="del:preset:0" style="color:#ffd0e8">删 除</button>'
+      +'<button class="d95-btn btn" data-desk="close">关 闭</button>'
+      +'<button class="d95-btn d95-go btn" data-act="toPreset" data-desk="mc">管理预设 →</button></div>',540);
   }
   if(S.opShow){
     winHtml+=d95Win('開局碼 — 拨入',
@@ -7013,9 +7092,15 @@ function selectView(){
   if(S.deskCtx){
     var cxD=S.deskCtx;
     function ci(lbl,attr){return '<div class="d95-mi btn" '+attr+' style="padding:7px 15px;font-size:12.5px">'+lbl+'</div>';}
-    var cItems=(cxD.idx!=null)
-      ? ci('打 开','data-desk="dir:'+cxD.idx+'"')+ci('重命名','data-desk="rname:'+cxD.idx+'"')+'<div class="d95-msep"></div>'+ci('删 除','data-desk="deldir:'+cxD.idx+'"')
-      : ci('新建文件夹','data-desk="newdir"')+'<div class="d95-msep"></div>'+ci('刷 新','data-desk="refresh"');
+    var cItems;
+    if(cxD.idx!=null) /* 自定义开局文件夹：打开/重命名/删除 */
+      cItems=ci('打 开','data-desk="dir:'+cxD.idx+'"')+ci('重命名','data-desk="rname:'+cxD.idx+'"')+'<div class="d95-msep"></div>'+ci('删 除','data-desk="deldir:'+cxD.idx+'"');
+    else if(cxD.drag){ /* 世界书条目/预设/我的开局：打开/删除 */
+      var _dk=cxD.drag.split(':')[0];
+      var _open=_dk==='lore'||_dk==='preset'?'data-desk="'+cxD.drag+'"':'data-desk="win:mine"';
+      cItems=ci('打 开',_open)+'<div class="d95-msep"></div>'+ci('删 除','data-desk="del:'+cxD.drag+'"');
+    }else
+      cItems=ci('新建文件夹','data-desk="newdir"')+'<div class="d95-msep"></div>'+ci('刷 新','data-desk="refresh"');
     ctxHtml='<div id="d95Ctx" style="position:absolute;left:'+(cxD.x|0)+'px;top:'+(cxD.y|0)+'px;z-index:6;width:152px;background:#0c1a10 repeating-conic-gradient(rgba(61,220,132,.045) 0 25%,transparent 0 50%);background-size:4px 4px;border:2px solid;border-color:#9fd8b4 #04120a #04120a #9fd8b4;box-shadow:4px 4px 0 rgba(0,0,0,.5);padding:3px 0">'+cItems+'</div>';
   }
   var menu='';
@@ -9581,7 +9666,9 @@ root.addEventListener('click',function(e){
           deskDirsSave();S.deskNaming=null;S._noFade=true;render();return;}
         if(dk9.indexOf('rname:')===0){var riN=parseInt(dk9.slice(6),10);S.deskCtx=null;S.deskNaming={mode:'ren',idx:riN,val:(DESKDIRS[riN]&&DESKDIRS[riN].n)||''};S._noFade=true;render();return;}
         if(dk9.indexOf('deldir:')===0){S.deskCtx=null;DESKDIRS.splice(parseInt(dk9.slice(7),10),1);deskDirsSave();S._noFade=true;render();return;}
+        if(dk9.indexOf('del:')===0){S.deskCtx=null;S.deskWin=null;deskDelete(dk9.slice(4));S._noFade=true;render();return;} /* 窗口内/右键「删除」 */
         if(dk9.indexOf('dir:')===0){S.deskCtx=null;S.wiz={step:1,era:null,place:null,placeCustom:false,npcs:[],role:null,busy:false,err:'',customYear:''};S.screen='wizard';render();return;}
+        if(dk9.indexOf('lore:')===0||dk9.indexOf('preset:')===0){S.deskWin=dk9;S.deskMenu=false;S.deskCtx=null;S._noFade=true;render();return;}
         if(dk9.indexOf('win:')===0){S.deskWin=dk9.slice(4);S.deskMenu=false;S.deskCtx=null;S._noFade=true;render();return;}
         return;
       }

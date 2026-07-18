@@ -9893,8 +9893,7 @@ if(window.__VN__)return;
 var VN=window.__VN__={on:false,bg:'',prevNames:null,favorSeen:{},rev:false,
   lastFire:0,scanLen:0,scanMsg:null,firedTurn:false,doneFor:null,first:true,
   talk:false,ctlKey:null,posKey:''};
-/* 影像岛默认关闭（素子专属立绘停用）；用户主动点「影像」入口才开 */
-VN.on=false;try{VN.on=localStorage.getItem('gits_vn')==='1';}catch(e){}
+VN.on=true;try{VN.on=localStorage.getItem('gits_vn')!=='0';}catch(e){} /* 影像岛默认开启(立绘+背景系统已完备)；✕可收起 */
 try{VN.rev=localStorage.getItem('gits_vn_flag')==='1';}catch(e){}
 var MOB=false;try{MOB=Math.min(screen.width||9e9,window.innerWidth||9e9)<=560;}catch(e){}
 var VNV='18';

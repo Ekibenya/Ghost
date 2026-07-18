@@ -9913,7 +9913,7 @@ var CHR_DATA=[
 {"slug":"borma","name_zh":"波马","aliases":["波马","ボーマ","Borma"],"file":"core/vendor/cubism/build/chunks/8d3f5a92/borma.webp","alpha":true,"kind":"full","fs":"core/vendor/cubism/build/chunks/8d3f5a92/borma_3.webp"},
 {"slug":"paz","name_zh":"帕兹","aliases":["帕兹","パズ","Paz"],"file":"core/vendor/cubism/build/chunks/8d3f5a92/paz.webp","alpha":true,"kind":"full","fs":"core/vendor/cubism/build/chunks/8d3f5a92/paz_3.webp"},
 {"slug":"operator","name_zh":"操作员","aliases":["操作员","オペレーター","Operator","操作员机器人"],"file":"core/vendor/cubism/build/chunks/8d3f5a92/operator.webp","alpha":true,"kind":"full","fs":"core/vendor/cubism/build/chunks/8d3f5a92/operator_3.webp"},
-{"slug":"fuchikoma","name_zh":"攻壳车","aliases":["フチコマ","攻壳车","攻殻車","攻壳机动车","思考战车","Fuchikoma"],"file":"core/vendor/cubism/build/chunks/8d3f5a92/fuchikoma.webp","alpha":true,"kind":"full","fs":"core/vendor/cubism/build/chunks/8d3f5a92/fuchikoma_3.webp"}
+{"slug":"fuchikoma","name_zh":"攻壳车","aliases":["フチコマ","攻壳车","攻殻車","攻壳机动车","思考战车","Fuchikoma"],"file":"core/vendor/cubism/build/chunks/8d3f5a92/fuchikoma.webp","alpha":true,"kind":"full","fs":"core/vendor/cubism/build/chunks/8d3f5a92/fuchikoma_3.webp","mech":true}
 ];
 var CHR_IDX=(function(){var a=[];CHR_DATA.forEach(function(c){(c.aliases||[]).concat([c.name_zh||'',c.slug]).forEach(function(k){if(k)a.push({k:k,c:c});});});a.sort(function(p,q){return q.k.length-p.k.length;});return a;})();
 function chrOf(name){name=String(name||'');if(!name)return null;for(var i=0;i<CHR_IDX.length;i++)if(name.indexOf(CHR_IDX[i].k)>=0)return CHR_IDX[i].c;return null;}
@@ -9924,7 +9924,8 @@ var root=document.createElement('div');
 root.id='vnRoot';
 root.style.cssText='position:fixed;left:0;top:0;width:0;height:0;z-index:5;display:none;overflow:hidden;border-radius:16px;background:#0b0906;pointer-events:none;box-shadow:0 10px 28px rgba(18,40,27,.45),inset 0 1px 0 rgba(255,255,255,.1)';
 root.innerHTML=
-  '<img id="vnBgA" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:1;transition:opacity 1s ease">'
+  '<img id="vnBgFill" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:blur(16px) saturate(.85) brightness(.5);transform:scale(1.12)">'
+ +'<img id="vnBgA" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:1;transition:opacity 1s ease">'
  +'<img id="vnBgB" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 1s ease">'
  +'<div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.12),transparent 30%,transparent 72%,rgba(0,0,0,.3))"></div>'
  +'<div id="vnCast" style="position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden"></div>'
@@ -10047,6 +10048,7 @@ function ctlRefresh(){
   var E=ENG(); var s=(E&&E.S)||{};
   var key=(s.worldFull?'F':'')+(s.isleBig?'B':'');
   if(key===VN.ctlKey)return; VN.ctlKey=key;
+  try{bgFit();}catch(e){}
   try{var _ch=$id('vnCast');if(_ch){var _n=_ch.children.length;[].forEach.call(_ch.children,function(el){if(el._c)setSprite(el,el._c,_n);else castSize(el);});}}catch(e){} /* 取景档随岛状态切换,单人小窗换横图 */
   function b(act,txt){return '<div data-vnact="'+act+'" style="'+PILLCSS+'">'+txt+'</div>';}
   var h='';
@@ -10097,12 +10099,18 @@ function sceneOf(){
   return DIRT+'s9_office_aquarium.jpg';                  /* 默认:本部办公室 */
 }
 var bgFlip=false;
+function bgFit(){ /* 小窗:背景整图contain+模糊同图补两侧(不再是裁切缩略感);展开/全屏:cover铺满 */
+  var small=(castFrame()==='S');
+  ['vnBgA','vnBgB'].forEach(function(id){var el=$id(id);if(el)el.style.objectFit=small?'contain':'cover';});
+}
 function setBg(name){
   if(VN.bg===name)return; VN.bg=name;
   try{localStorage.setItem('gits_vn_flag',VN.rev?'1':'0');}catch(e){}
   var a=$id('vnBgA'),b=$id('vnBgB');if(!a||!b)return;
   var showEl=bgFlip?a:b, hideEl=bgFlip?b:a; bgFlip=!bgFlip;
   showEl.src=name;
+  var fl=$id('vnBgFill');if(fl&&fl.getAttribute('src')!==name)fl.src=name;
+  bgFit();
   showEl.style.opacity=1; hideEl.style.opacity=0;
 }
 
@@ -10142,16 +10150,17 @@ function pixelReveal(cv,img,opts){
   requestAnimationFrame(fr);
 }
 function castFrame(){var E=ENG();var st=(E&&E.S)||{};return st.worldFull?'F':(st.isleBig?'B':'S');}
-function castSize(el){ /* 取景:小窗单人=横向半身宽图整图；小窗多人=上半裁切；展开=及膝；全屏=全身 */
+function castSize(el){ /* 取景:小窗单人=横向半身宽图整图；小窗多人=上半裁切；展开=及膝；全屏=全身；机体(フチコマ)恒全身不放大 */
   var f=castFrame();
+  if(el._mech){el.style.top='auto';el.style.bottom='0';el.style.height=f==='F'?'94%':'86%';el.style.maxWidth='46%';el.style.objectPosition='bottom center';return;}
   if(f==='F'){el.style.top='auto';el.style.bottom='0';el.style.height='94%';el.style.maxWidth='46%';el.style.objectPosition='bottom center';}
   else if(f==='B'){el.style.top='2%';el.style.bottom='auto';el.style.height='160%';el.style.maxWidth='62%';el.style.objectPosition='top center';}
   else if(el._wide){el.style.top='4%';el.style.bottom='auto';el.style.height='92%';el.style.maxWidth='96%';el.style.objectPosition='center bottom';}
   else{el.style.top='3%';el.style.bottom='auto';el.style.height='240%';el.style.maxWidth='84%';el.style.objectPosition='top center';}
 }
 function setSprite(el,c,count){ /* 按档位+人数选图源;换源时重跑像素显形 */
-  var use=(castFrame()==='S'&&count===1&&c.fs)?c.fs:c.file;
-  el._c=c;el._wide=(use!==c.file);
+  var use=(!c.mech&&castFrame()==='S'&&count===1&&c.fs)?c.fs:c.file;
+  el._c=c;el._wide=(use!==c.file);el._mech=!!c.mech;
   castSize(el);
   if(el._src===use)return;
   el._src=use;

@@ -4636,7 +4636,7 @@ function gmapEnsureThree(cb){
   if(GM.loading){GM.q.push(cb);return;}
   GM.loading=true;GM.q=cb?[cb]:[];
   var done=function(ok){
-    GM.loading=false;if(!ok)GM.fail=true;
+    GM.loading=false;if(!ok){GM.fail=true;GM.failAt=Date.now();}
     try{window.__THREE_OK__=!!(ok&&window.THREE);}catch(e){}
     var q=GM.q||[];GM.q=null;
     for(var i=0;i<q.length;i++){try{if(q[i])q[i](ok&&!!window.THREE);}catch(e){}}
@@ -5032,13 +5032,16 @@ function gmInitScene(){
   var T=window.THREE;if(!T)return false;
   try{
     GM.renderer=new T.WebGLRenderer({canvas:GM.el.cv,antialias:!GM.mob,alpha:false,powerPreference:'high-performance'});
-  }catch(e){GM.fail=true;return false;}
+  }catch(e){GM.fail=true;GM.failAt=Date.now();return false;}
   if(!GM.renderer)return false;
   try{
     GM.renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,GM.mob?1.5:2));
     if('toneMapping' in GM.renderer)GM.renderer.toneMapping=T.NoToneMapping; /* 过曝靠加性叠加，无真bloom（§4.2） */
     GM.renderer.setClearColor(0x041008,1);
   }catch(e){}
+  if(GM.el&&GM.el.cv&&!GM.el.cv.__glGuard){GM.el.cv.__glGuard=1; /* 上下文丢失→标记失败带时间戳；恢复→reset重建（DOCKHEAL会补挂） */
+    GM.el.cv.addEventListener('webglcontextlost',function(ev){try{ev.preventDefault();}catch(e2){}GM.fail=true;GM.failAt=Date.now();try{GMAP.close();}catch(e3){}},false);
+    GM.el.cv.addEventListener('webglcontextrestored',function(){try{GMAP.reset();}catch(e4){}},false);}
   GM.scene=new T.Scene();
   GM.camera=new T.PerspectiveCamera(66,1,1,4000); /* fov66=夸张透视，Noessel:畸变即模态提示 */
   GM.cityGroup=gmBuildCity(T);
@@ -5166,7 +5169,7 @@ function gmLoop(ts){
   if(GM.low&&!GM.dirty&&GM.mode!=='hunt')return; /* 按需渲染 */
   gmCamUpdate(dt);
   gmSyncMarks();
-  try{GM.renderer.render(GM.scene,GM.camera);}catch(e){GM.fail=true;GMAP.close();return;}
+  try{GM.renderer.render(GM.scene,GM.camera);}catch(e){GM.fail=true;GM.failAt=Date.now();GMAP.close();return;}
   GM.dirty=(GM.mode==='hunt')||!!GM.drag||Math.abs(GM.cam.vyaw)>0.0001;
 }
 /* ---- 模式/楼高切换 ---- */
@@ -5276,6 +5279,14 @@ var GMAP={
   ensureThree:gmapEnsureThree,
   gmapFail:false,
   failed:function(){return GM.fail;},
+  reset:function(){ /* 解除失败闩锁并清理残骸——3D描画不可不再终身，冷却后可重试 */
+    try{if(GM.renderer){try{GM.renderer.dispose();}catch(e1){}try{if(GM.renderer.forceContextLoss&&!GM.fail)GM.renderer.forceContextLoss();}catch(e2){}}}catch(e){}
+    GM.renderer=null;GM.scene=null;GM.camera=null;GM.cityGroup=null;
+    try{if(GM.el&&GM.el.layer&&GM.el.layer.parentNode)GM.el.layer.parentNode.removeChild(GM.el.layer);}catch(e5){}
+    GM.el=null; /* canvas可能已死(上下文永久丢失)——层整体弃置,下次open全新重建 */
+    GM.inited=false;GM.opened=false;GM.loading=false;
+    GM.fail=false;GM.failAt=0;GMAP.gmapFail=false;
+  },
   isOpen:function(){return GM.opened;},
   open:function(opt){
     opt=opt||{};
@@ -5362,7 +5373,7 @@ var GMAP={
   setMode:gmSetMode,
   setHeightScale:gmSetHScale,
   _nodeClick:gmNodeClick,
-  __debug:function(){return {opened:GM.opened,inited:GM.inited,fail:GM.fail,mode:GM.mode,polarity:GM.polarity,
+  __debug:function(){return {failAt:GM.failAt||0,opened:GM.opened,inited:GM.inited,fail:GM.fail,mode:GM.mode,polarity:GM.polarity,
     hscale:GM.hscale,player:GM.player?GM.player.name:null,stats:GM.stats,marks:GM.marks.length,
     topo:(GM.topoMarks||[]).length,adj:GM.roadAdj?Object.keys(GM.roadAdj).length:0};}
 };
@@ -5580,6 +5591,11 @@ render=function(){_busR0.apply(this,arguments);try{busCheck();}catch(e){}};
 /* ---- GITS-DOCKHEAL 地图停靠自愈:偶发未挂载(全屏往返/竞态)时3秒内自动重挂 ---- */
 setInterval(function(){try{
   if(typeof S==='undefined'||!S||S.screen!=='game'||S.zen||S.worldFull)return;
+  var MPX=window.GMAP;
+  if(MPX&&MPX.failed&&MPX.failed()&&MPX.reset){ /* 失败闩锁冷却6秒→解闩重试（彻底告别终身「3D描画不可」） */
+    var fa=0;try{fa=(MPX.__debug&&MPX.__debug().failAt)||0;}catch(e2){}
+    if(!fa||Date.now()-fa>6000){MPX.reset();if(window.PGDOCK)window.PGDOCK.sync();return;}
+  }
   var lc=document.getElementById('pgLeftCol');
   if(lc&&lc.offsetWidth&&!lc.querySelector('canvas')&&window.PGDOCK)window.PGDOCK.sync();
 }catch(e){}},3000);

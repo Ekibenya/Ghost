@@ -5777,6 +5777,39 @@ setInterval(function(){try{
   if(lc&&lc.offsetWidth&&!lc.querySelector('canvas')&&window.PGDOCK)window.PGDOCK.sync();
 }catch(e){}},3000);
 try{window.SDBUS.on(function(){try{giEqTextSync();}catch(e){}});}catch(e){} /* 定稿→正文装备回写 */
+/* ---- GITS-UIHEAL 界面自愈巡检 ---------------------------------------------
+   全屏/弹窗各路径的进出竞态偶发把核心界面件留在隐藏/屏外/被摘除状态(动画卡帧、
+   fill残留、定时器过期后补刀等)。不再逐路径打补丁——每2秒体检:游戏画面且非
+   zen/worldFull/弹窗时,核心件必须在场且可见;被藏→显,被钉屏外→清动画清变换,
+   从DOM消失→整渲染重建(8秒节流)。 ---- */
+setInterval(function(){try{
+  if(typeof S==='undefined'||!S||S.screen!=='game')return;
+  if(S.zen||S.worldFull||S.overlay||S.bgmOpen)return;
+  if(S.thinking||S._stream)return;
+  var mob=false;try{mob=isMobile();}catch(e){}
+  var ids=mob?['zjTopBar','zjInWrap','zjPager']:['zjTopBar','zjInWrap','zjSideCol','pgLeftCol'];
+  var missing=false;
+  function mend(el){
+    var cs=getComputedStyle(el);
+    if(cs.display==='none')el.style.display='';
+    var r=el.getBoundingClientRect();
+    if(r.width>0&&(r.left>=window.innerWidth||r.right<=0||r.top>=window.innerHeight||r.bottom<=0)){
+      if(el.getAnimations)el.getAnimations().forEach(function(an){try{an.cancel();}catch(e2){}});
+      el.style.transform='';el.style.opacity='';
+    }
+  }
+  for(var i=0;i<ids.length;i++){
+    var el=document.getElementById(ids[i]);
+    if(!el){missing=true;continue;}
+    mend(el);
+  }
+  var sc=document.getElementById('zjSideCol');
+  if(sc)[].forEach.call(sc.querySelectorAll('.glass'),mend);
+  if(missing){
+    var nw=Date.now();
+    if(!window.__uiHealAt||nw-window.__uiHealAt>8000){window.__uiHealAt=nw;S._noFade=true;S._keepScroll=true;render();}
+  }
+}catch(e){}},2000);
 /* ---- GITS-MAP3D·WIRE B+C 玩法全接线 ----------------------------------------
    ①入口恒3D(2D舆图已废除) ②ZJ_LOCS→setNodes(含Cxx区块编号)
    ③◇时地 ZJ_KEYS最长匹配→setPlayer(render管线钩子=giCaseWatch同款挂法)

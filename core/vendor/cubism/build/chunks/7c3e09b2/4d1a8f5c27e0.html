@@ -11209,7 +11209,7 @@ function lastWorld(){
 }
 function tick(){
   /* 只认「位置在顶部区域·尺寸达标」的岛，忽略转场瞬间残留/错位的同 id 岛(否则角色层会被定到屏幕底部只露头顶) */
-  var isle=null;{var _iss=document.querySelectorAll('[id="zjSceneIsle"]');for(var _ii=0;_ii<_iss.length;_ii++){var _ir=_iss[_ii].getBoundingClientRect();if(_ir.width>=60&&_ir.height>=60&&_ir.top<window.innerHeight*0.55){isle=_iss[_ii];break;}}}
+  var isle=null;{var _iss=document.querySelectorAll('[id="zjSceneIsle"]');for(var _ii=0;_ii<_iss.length;_ii++){var _ir=_iss[_ii].getBoundingClientRect();if(_ir.width>=60&&_ir.height>=60&&_ir.top<window.innerHeight*0.55){isle=_iss[_ii];break;}}if(!isle)for(var _i2=0;_i2<_iss.length;_i2++){var _e2=_iss[_i2],_r2=_e2.getBoundingClientRect();if(_r2.width>=60&&_r2.height>=60&&String(_e2.style.transform||'').indexOf('translate')>=0){isle=_e2;break;}} /* 用户拖拽下移的岛带translate标记:凭标记认领,不受顶部55%区域限——拖到输入栏影像不再消失 */}
   /* 迁移期:岛曾被旧✕藏起 → 自动点顶栏药丸把它请回来 */
   if(VN.unhide){
     if(isle)VN.unhide=false;

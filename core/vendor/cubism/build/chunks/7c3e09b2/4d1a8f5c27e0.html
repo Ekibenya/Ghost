@@ -2335,7 +2335,7 @@ var pref = loadPref();
 var S = {
   screen: 'title', device: pref.device||'auto', openingId: pref.openingId||null,
   history: [], input:'', mode:'say', thinking:false, aiLive:null, muted:pref.muted||false, dice:!!pref.dice, sugg:pref.sugg!==0, chatOnly:!!pref.chat, micOn:(pref.mic===0?false:(pref.mic===1?true:null)),graphHidden:pref.graphHidden||[], npcMeta:pref.npcMeta||{}, _npcMetaBusy:null,
-  overlay:null, tab:'story', secC:true, secN:true, secP:true, secW:true, secG:true,secS:true, secA:true, secM:false,
+  overlay:null, tab:'story', secC:true, secN:true, secP:true, secW:true, secG:true,secS:true, secA:true, secM:true, /* 記憶MEM默认展开（用户裁定） */
   codexCat:'核心', codexIdx:0, saves:pref.saves||[], connected:TH.available,
   mem:pref.mem||[], memOn:pref.memOn!==false, memN:pref.memN||0,
   customOp:pref.customOp||null, customRole:pref.customRole||null, wiz:null, setTab:'font'

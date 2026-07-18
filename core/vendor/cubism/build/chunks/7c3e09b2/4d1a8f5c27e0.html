@@ -5870,7 +5870,7 @@ try{window.SDBUS.on(function(){try{giEqTextSync();}catch(e){}});}catch(e){} /* �
 setInterval(function(){try{
   if(typeof S==='undefined'||!S||S.screen!=='game')return;
   if(S.zen||S.worldFull||S.overlay||S.bgmOpen)return;
-  if(S.thinking||S._stream)return;
+  var busy=!!(S.thinking||S._stream); /* 生成中:照常显隐修补,只推迟整渲染 */
   var mob=false;try{mob=isMobile();}catch(e){}
   var ids=mob?['zjTopBar','zjInWrap','zjPager']:['zjTopBar','zjInWrap','zjSideCol','pgLeftCol'];
   var missing=false;
@@ -5878,7 +5878,8 @@ setInterval(function(){try{
     var cs=getComputedStyle(el);
     if(cs.display==='none')el.style.display='';
     var r=el.getBoundingClientRect();
-    if(r.width>0&&(r.left>=window.innerWidth||r.right<=0||r.top>=window.innerHeight||r.bottom<=0)){
+    var ghosted=parseFloat(cs.opacity||'1')<0.05||cs.visibility==='hidden'; /* fill:forwards淡出残留:在位但全透明 */
+    if(r.width>0&&(ghosted||r.left>=window.innerWidth||r.right<=0||r.top>=window.innerHeight||r.bottom<=0)){
       /* 年轻且在跑的动画(zen退出级联滑入起始帧在屏外)不打断,留给下轮体检 */
       var young=false;
       if(el.getAnimations)el.getAnimations().forEach(function(an){try{if(an.playState==='running'&&(an.currentTime||0)<900)young=true;}catch(e3){}});
@@ -5894,7 +5895,7 @@ setInterval(function(){try{
   }
   var sc=document.getElementById('zjSideCol');
   if(sc)[].forEach.call(sc.querySelectorAll('.glass'),mend);
-  if(missing){
+  if(missing&&!busy){
     var nw=Date.now();
     if(!window.__uiHealAt||nw-window.__uiHealAt>8000){window.__uiHealAt=nw;S._noFade=true;S._keepScroll=true;render();}
   }

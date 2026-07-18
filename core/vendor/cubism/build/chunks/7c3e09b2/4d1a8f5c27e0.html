@@ -6787,8 +6787,6 @@ function d95Icon(n,sz){
     b=r(1,2,14,11,GY)+r(2,3,12,9,CB)
      +r(5,4,2,7,CY)+r(7,5,2,5,CY)+r(9,6,2,3,CY)+r(11,7,1,1,AH)
      +r(6,13,4,1,GY)+r(4,14,8,1,SV2);
-  }else if(n==='sig'){ /* 九课瞄准环:任务栏開始钮 */
-    b='<circle cx="8" cy="8" r="5.2" fill="none" stroke="'+G+'" stroke-width="1.6"/>'+r(7,0,2,3,G)+r(7,13,2,3,G)+r(0,7,3,2,G)+r(13,7,3,2,G)+'<circle cx="8" cy="8" r="1.9" fill="#ffb347"/>';
   }else if(n==='mycomp'){
     b=r(1,1,10,8,GY)+r(2,2,8,6,CB)+r(3,3,4,1,G)+r(3,5,6,1,G)+r(3,7,2,1,CY)
      +r(5,9,2,1,GY)+r(3,10,6,1,GY)
@@ -7089,7 +7087,7 @@ function d95Css(mob){
     +'.d95-lb{font-family:var(--fMono),Fusion Pixel,monospace;font-size:11px;line-height:1.35;color:#baf5d3;text-align:center;text-shadow:1px 1px 0 #000,0 0 6px rgba(0,0,0,.7);max-width:96px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-all}'
     +'.d95-sub{font-family:var(--fMono),Fusion Pixel,monospace;font-size:9px;letter-spacing:.04em;color:#58c88a;text-shadow:1px 1px 0 #000;white-space:nowrap;max-width:96px;overflow:hidden;text-overflow:ellipsis}'
     +'.d95-bev{border:2px solid;border-color:#9fd8b4 #04120a #04120a #9fd8b4}'
-    +'.d95-bar{position:absolute;left:0;right:0;bottom:0;height:'+(mob?'44px':'42px')+';display:flex;align-items:center;gap:7px;padding:0 7px;background:#12281a repeating-conic-gradient(rgba(61,220,132,.05) 0 25%,transparent 0 50%);background-size:4px 4px;border-top:2px solid rgba(61,220,132,.75);box-shadow:0 -4px 14px rgba(0,0,0,.5);z-index:4}'
+    +'.d95-bar{position:absolute;left:0;right:0;bottom:0;height:'+(mob?'44px':'42px')+';display:flex;align-items:center;gap:7px;padding:0 7px;background:rgba(16,32,22,.62) repeating-conic-gradient(rgba(61,220,132,.05) 0 25%,transparent 0 50%);background-size:4px 4px;-webkit-backdrop-filter:blur(10px) saturate(140%);backdrop-filter:blur(10px) saturate(140%);border-top:2px solid rgba(61,220,132,.75);box-shadow:0 -4px 14px rgba(0,0,0,.45),0 -1px 6px rgba(61,220,132,.4),0 -12px 28px rgba(61,220,132,.12);z-index:4}'
     +'.d95-start{flex:none;white-space:nowrap;display:flex;align-items:center;gap:7px;padding:4px 13px 4px 9px;background:#1d3a27;color:#dfe8f6;font-family:var(--fMono);font-size:14px;letter-spacing:.14em;cursor:pointer}'
     +'.d95-start:active,.d95-start.d95-dn{border-color:#04120a #9fd8b4 #9fd8b4 #04120a;background:#142b1c}'
     +'.d95-task{flex:0 1 auto;min-width:0;display:flex;align-items:center;gap:6px;padding:3px 12px;background:#142b1c;border-color:#04120a #9fd8b4 #9fd8b4 #04120a;color:#cfe8d8;font-size:12px;max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}'
@@ -7097,7 +7095,6 @@ function d95Css(mob){
     +'.d95-clk{font-family:var(--fMono);font-size:13px;letter-spacing:.1em;color:#7dffb0}'
     +'.d95-trico{cursor:pointer;display:flex;opacity:.92}.d95-trico:hover{opacity:1;filter:drop-shadow(0 0 6px rgba(61,220,132,.85))}'
     +'.d95-start:hover{background:#25502f;text-shadow:0 0 9px rgba(125,255,176,.6)}'
-    +'.d95-bar{box-shadow:0 -1px 0 rgba(61,220,132,.35),0 -6px 18px rgba(61,220,132,.08)}'
     +'.d95-winlayer{position:absolute;left:0;right:0;top:0;bottom:'+(mob?'44px':'42px')+';display:flex;align-items:center;justify-content:center;z-index:3;pointer-events:none}'
     +'.d95-win{pointer-events:auto;background:#0c1a10 repeating-conic-gradient(rgba(61,220,132,.045) 0 25%,transparent 0 50%);background-size:4px 4px;border:2px solid;border-color:#9fd8b4 #04120a #04120a #9fd8b4;box-shadow:5px 5px 0 rgba(0,0,0,.5),0 0 34px rgba(61,220,132,.15);max-height:86%;display:flex;flex-direction:column}'
     +'.d95-tb{flex:none;display:flex;align-items:center;gap:8px;padding:5px 6px 5px 10px;background:repeating-linear-gradient(180deg,#0b5b36 0 2px,#06331d 2px 4px);border-bottom:2px solid #041d10}'
@@ -7122,7 +7119,7 @@ function d95Css(mob){
   return CSS;
 }
 function selectView(){
-  var mob=isMobile();
+  var mob=(S.device==='mobile')||(S.device!=='desktop'&&window.innerWidth<920); /* 选局桌面沿用原宽度断点:桌面排布不随游戏布局的指针判定改动 */
   var NUM=['一','二','三','四','五','六','七','八','九','十','十一','十二','十三','十四','十五','十六','十七','十八'];
   function yearOf(era){var m=/前(\d+)年/.exec(era);if(m)return -parseInt(m[1],10);var m2=/(\d+)年/.exec(era);return m2?parseInt(m2[1],10):0;}
   var cards=G.openings.map(function(o){
@@ -7281,10 +7278,9 @@ function selectView(){
     +(winHtml?'<div class="d95-winlayer">'+winHtml+'</div>':'')
     +ctxHtml
     +menu
-    +'<div style="position:absolute;left:0;right:0;bottom:'+(mob?'50px':'48px')+';z-index:2;pointer-events:none;text-align:center;font-family:var(--fMono),Fusion Pixel,monospace;font-size:'+(mob?'11px':'12.5px')+';letter-spacing:.18em;color:rgba(125,255,176,.5);text-shadow:0 1px 0 rgba(0,0,0,.7)">▸ 点开任意文件夹，即是选择一个开局──「我的电脑」可自定义开局 ◂</div>'+'<div class="d95-bar"><div class="d95-start d95-bev btn'+(S.deskMenu?' d95-dn':'')+'" data-desk="menu">'+d95Icon('sig',17)+'<span>開始</span></div>'
+    +'<div style="position:absolute;left:0;right:0;bottom:'+(mob?'50px':'48px')+';z-index:2;pointer-events:none;text-align:center;font-family:var(--fMono),Fusion Pixel,monospace;font-size:'+(mob?'11px':'12.5px')+';letter-spacing:.18em;color:rgba(125,255,176,.5);text-shadow:0 1px 0 rgba(0,0,0,.7)">▸ 点开任意文件夹，即是选择一个开局──「我的电脑」可自定义开局 ◂</div>'+'<div class="d95-bar"><div class="d95-start d95-bev btn'+(S.deskMenu?' d95-dn':'')+'" data-desk="menu">◢▮ 開始</div>'
     +taskChip
-    +'<div class="d95-tray"><span class="d95-trico btn" data-ov="set" title="设置">'+d95Icon('gear',17)+'</span>'
-     +'<span class="d95-trico btn" data-act="mute" title="音量">'+d95Icon(S.muted?'spkoff':'spk',17)+'</span>'
+    +'<div class="d95-tray"><span class="d95-trico btn" data-act="mute" title="音量">'+d95Icon(S.muted?'spkoff':'spk',17)+'</span>'
     +'<span class="d95-trico btn" data-act="bgm" title="音乐室">'+d95Icon('cd',17)+'</span>'
     +'<span class="d95-clk" id="d95Clock">'+clk+'</span></div></div>'
     +'</div>';

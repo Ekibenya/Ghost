@@ -7896,7 +7896,7 @@ function gameView(){
     +'<button data-ov="codex" class="tb-key btn" title="世界书图鉴"><span class="tb-en">BOOK</span></button>'
     /*GITS-DOCK：顶栏「图」「装」入口已移除（手机=第3页「地図・装備」，电脑=左侧停靠栏）；
       920~1199px死区补票:桌面布局但停靠栏未达阈值时,MAP/EQP走兼容路由(map=3D浮层,equip=装备舱overlay) */
-    +((!isMobile()&&window.innerWidth<1200)?'<button data-ov="map" class="tb-key btn" title="三维地图"><span class="tb-en">MAP</span></button>'
+    +((window.innerWidth>560&&window.innerWidth<1200)?'<button data-ov="map" class="tb-key btn" title="三维地图"><span class="tb-en">MAP</span></button>'
       +'<button data-ov="equip" class="tb-key btn" title="装备舱"><span class="tb-en">EQP</span></button>':'')
     +'<button data-ov="saves" class="tb-key btn" title="存档"><span class="tb-en">SAVE</span></button>'
     +'<button data-act="toselect" class="tb-key btn tb-amber" title="另择开局"><span class="tb-en">EXIT</span></button>';

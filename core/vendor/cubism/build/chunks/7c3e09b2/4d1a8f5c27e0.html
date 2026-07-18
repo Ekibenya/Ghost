@@ -6750,6 +6750,42 @@ function d95Win(title,body,w,off){
     +'<div class="d95-tb"><span class="d95-tt">'+title+'</span><span class="d95-tbt"><i>▁</i><i>▢</i><i class="d95-x btn" data-desk="close">✕</i></span></div>'
     +'<div class="d95-bd">'+body+'</div></div>';
 }
+/* ---- D95 复古系统音效：WebAudio 方波合成（点击/开窗/关窗/菜单/進入），随 S.muted 静音 ---- */
+var D95AC=null;
+function d95Beep(seq){
+  try{
+    if(typeof S!=='undefined'&&S&&S.muted)return;
+    if(!D95AC){D95AC=new (window.AudioContext||window.webkitAudioContext)();try{window.__D95AC=D95AC;}catch(e0){}}
+    if(D95AC.state==='suspended')D95AC.resume();
+    var t=D95AC.currentTime+0.01;
+    seq.forEach(function(sg){
+      var o=D95AC.createOscillator(),g=D95AC.createGain();
+      o.type='square';o.frequency.value=sg[0];
+      var t0=t+(sg[2]||0),t1=t0+sg[1];
+      g.gain.setValueAtTime(0.042,t0);g.gain.exponentialRampToValueAtTime(0.0008,t1);
+      o.connect(g);g.connect(D95AC.destination);o.start(t0);o.stop(t1+0.02);
+    });
+  }catch(e){}
+}
+function d95Snd(k){
+  if(k==='click')d95Beep([[880,.045]]);
+  else if(k==='open')d95Beep([[659,.07],[988,.1,.075]]);
+  else if(k==='close')d95Beep([[988,.06],[659,.09,.065]]);
+  else if(k==='menu')d95Beep([[523,.05]]);
+  else if(k==='go')d95Beep([[523,.07],[659,.07,.075],[784,.07,.15],[1047,.18,.225]]);
+}
+document.addEventListener('click',function(e){
+  try{
+    if(typeof S==='undefined'||!S||S.screen!=='select')return;
+    var el=e.target;if(!el.closest)return;
+    if(el.closest('.d95-win [data-start]'))d95Snd('go');
+    else if(el.closest('.d95-x,[data-desk="close"]'))d95Snd('close');
+    else if(el.closest('[data-desk="menu"]'))d95Snd('menu');
+    else if(el.closest('[data-desk^="win:"]'))d95Snd('open');
+    else if(el.closest('.d95-mi'))d95Snd('click');
+    else if(el.closest('.d95-ic'))d95Snd('open');
+  }catch(e2){}
+},true);
 setInterval(function(){try{var el=document.getElementById('d95Clock');if(el){var d=new Date();
   el.textContent=('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);}}catch(e){}},5000);
 function selectView(){

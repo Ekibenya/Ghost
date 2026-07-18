@@ -10856,7 +10856,7 @@ function presence(){
   var names=npcs.map(function(n){return String(n.name||'');});
   var cast=[],seen={};
   /* 素子由常驻交互iframe(vnMitsu)独占呈现——非素子开局她以NPC进◈link时不得再建静态立绘,防同屏双身 */
-  for(var i=0;i<names.length&&cast.length<3;i++){var c=chrOf(names[i]);if(c&&c.slug!=='motoko'&&!seen[c.slug]){seen[c.slug]=1;cast.push(c);}}
+  for(var i=0;i<names.length&&cast.length<3;i++){var c=chrOf(names[i]);if(c&&!seen[c.slug]){seen[c.slug]=1;cast.push(c);}}
   var key=cast.map(function(c){return c.slug;}).join('+');
   if(key!==VN.castKey){VN.castKey=key;castApply(cast);}
   return {names:names,npcs:npcs};

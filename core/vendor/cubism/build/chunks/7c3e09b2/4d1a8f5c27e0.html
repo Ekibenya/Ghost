@@ -7429,12 +7429,19 @@ function overlayView(){
     +inner+'</div></div>';
 }
 function codexBody(){
-  var CATS=['核心','人物','群像','组织','政治','军事','历史','科技','装备','网络','地理','社会','思想','宗教','企业','案件','动画','语录','风味','分歧','事件','开局'];
-  /* 图鉴可见性过滤（仅表层UI；引擎注入走G.lorebook原表不受影响）：
-     MVU类全隐藏；核心类只示 世界观总纲2029/公安9课速览/译名对照总表/玩家扮演与称谓规则 */
+  var CATS=['核心','人物','群像','组织','政治','军事','历史','科技','装备','网络','地理','社会','思想','宗教','企业','案件','动画','语录','风味','事件'];
+  /* 图鉴可见性过滤（仅表层UI；引擎注入走G.lorebook原表+scanLore自身时间锁，不受影响）：
+     ①MVU/开局/分歧 三类整体隐藏（引擎供电与if线导航=底层）
+     ②核心类只示 世界观总纲2029/公安9课速览/译名对照总表/玩家扮演与称谓规则
+     ③风味类隐藏文体指导两条 ④时间线锁：from>当前开局时间码的条目不可见（与scanLore同源
+       规则——傀儡师正体/案件真相等随剧情推进自然解锁，图鉴跟着时间线成长） */
+  var _cxOp=null;try{_cxOp=currentOpening();}catch(eCx){}
+  var _cxNow=(_cxOp&&typeof _cxOp.year==='number')?_cxOp.year:null;
   function codexVisible(e){
-    if(e.cat==='MVU')return false;
+    if(e.cat==='MVU'||e.cat==='开局'||e.cat==='分歧')return false;
     if(e.cat==='核心')return /世界观总纲2029|公安9课速览|译名对照总表|玩家扮演与称谓规则/.test(String(e.title||''));
+    if(e.cat==='风味'&&/拟声词风格|栏外注文体/.test(String(e.title||'')))return false;
+    if(_cxNow!==null&&typeof e.from==='number'&&e.from>_cxNow)return false;
     return true;
   }
   if(ULORE.length)CATS.push('自定义');else if(S.codexCat==='自定义')S.codexCat='核心';

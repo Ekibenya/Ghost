@@ -3254,6 +3254,52 @@ sdMerge=function(prev,cur){
 var _eqSettle0=giSettle;
 giSettle=function(v,prev,u){_eqSettle0(v,prev,u);try{giEqSettle(v,prev,u);}catch(e){}};
 /* ---- 双通道②叙事契约：buildSystem 追加 道具规则(§1.6通道A)+引擎库存注入(§1.1) ---- */
+/* ---- GITS-EQTEXT 正文→装备账本回写（弱AI文本解析,SDBUS定稿触发） ----
+   「捡起/收进背包/缴获/领取…」→入账；「丢弃/交出/耗尽…」→出账。
+   仅认目录内物品(名称+别名最长匹配)；已在◆武装的物品不重复入账(面板通道优先)；
+   每轮各≤3笔防幻觉刷物资；账目可观测:window.__EQTEXT ---- */
+function giEqTextSync(){
+  var lw=null;for(var i=S.history.length-1;i>=0;i--){if(S.history[i].role==='world'){lw=S.history[i];break;}}
+  if(!lw||lw.__eqTxDone)return;lw.__eqTxDone=1;
+  var t='';try{t=stripMvu(lw.text||'');}catch(e){t=String(lw.text||'');}
+  if(!t)return;
+  var inv=giInv(),adds=0,drops=0,log=[];
+  var armsNow=[];try{var pcx=currentPanel();armsNow=giEqParseArms(pcx&&pcx.char?pcx.char['武装']:'');}catch(e){}
+  var skip={};(inv.pend||[]).forEach(function(x){skip[eqNorm(x.nm)]=1;});((inv.sent&&inv.sent.k)||[]).forEach(function(k){skip[k]=1;});
+  function findItem(seg){
+    var best=null,bl=0;
+    for(var j=0;j<EQ_CATALOG.length;j++){var it=EQ_CATALOG[j];
+      var names=[it[1]].concat(it[6]||[]);
+      for(var k=0;k<names.length;k++){var nm=String(names[k]||'');
+        if(nm&&nm.length>2&&seg.indexOf(nm)>=0&&nm.length>bl){bl=nm.length;best=it;}}} /* ≥3字防「背包」类泛名误认 */
+    return best;
+  }
+  function inArms(it){return armsNow.some(function(a2){return (a2.id&&a2.id===it[0])||eqNorm(a2.nm)===eqNorm(it[1]);});}
+  var mm;
+  function clauseAround(idx,vlen){ /* 动词锚点±子句窗口:向前到上个句读,向后到下个句读 */
+    var stops='。！？；，\n';
+    var a=idx;while(a>0&&stops.indexOf(t[a-1])<0&&idx-a<30)a--;
+    var b2=idx+vlen;while(b2<t.length&&stops.indexOf(t[b2])<0&&b2-idx<30+vlen)b2++;
+    return t.slice(a,b2);
+  }
+  var done={};
+  var ACQ=/(捡起|拾起|拾走|收进|放入|塞进|收入|领取|领了|缴获|购入|入手|接过|收下|递给你|交到你手)/g;
+  while((mm=ACQ.exec(t))&&adds<3){
+    var seg=clauseAround(mm.index,mm[0].length);
+    var it=findItem(seg);if(!it||done['+'+it[0]])continue;
+    if(inArms(it)||skip[eqNorm(it[1])])continue;
+    done['+'+it[0]]=1;giEqBagAdd(inv,it[0],it[1],1);adds++;log.push('+'+it[1]);
+  }
+  var DROP=/(丢弃|扔掉|抛下|上缴|交出|归还|用尽|耗尽|用光|摔碎|损毁|炸毁|充公)/g;
+  while((mm=DROP.exec(t))&&drops<3){
+    var seg2=clauseAround(mm.index,mm[0].length);
+    var it2=findItem(seg2);if(!it2||done['-'+it2[0]])continue;
+    if(skip[eqNorm(it2[1])])continue;
+    if(giEqBagTake(inv,it2[0]||it2[1],1)){done['-'+it2[0]]=1;drops++;log.push('-'+it2[1]);}
+  }
+  if(adds||drops){giSave();window.__EQTEXT={at:Date.now(),ops:log};
+    try{if(S.screen==='game'){S._noFade=true;S._panelKeep=true;render();}}catch(e){}}
+}
 function giEqSysLine(history){
   var out='【道具规则】◆武装≤5项、首项=持握武器、消耗品带×n用后减一；便装态随身≤2项；物品只解锁动作不加数值：标记弹=反迷彩、光纤卷轴=安全dive前提、接口线缆=直连前提；禁止无中生有新装备——新物品必须来自军械科领取/现场缴获/黑市购入，且正文交代来源。';
   try{
@@ -5730,6 +5776,7 @@ setInterval(function(){try{
   var lc=document.getElementById('pgLeftCol');
   if(lc&&lc.offsetWidth&&!lc.querySelector('canvas')&&window.PGDOCK)window.PGDOCK.sync();
 }catch(e){}},3000);
+try{window.SDBUS.on(function(){try{giEqTextSync();}catch(e){}});}catch(e){} /* 定稿→正文装备回写 */
 /* ---- GITS-MAP3D·WIRE B+C 玩法全接线 ----------------------------------------
    ①入口恒3D(2D舆图已废除) ②ZJ_LOCS→setNodes(含Cxx区块编号)
    ③◇时地 ZJ_KEYS最长匹配→setPlayer(render管线钩子=giCaseWatch同款挂法)

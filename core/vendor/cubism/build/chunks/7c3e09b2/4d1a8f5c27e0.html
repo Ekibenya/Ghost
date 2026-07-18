@@ -5576,6 +5576,12 @@ var _busR0=render;
 render=function(){_busR0.apply(this,arguments);try{busCheck();}catch(e){}};
 })();
 /* ---- /GITS-SDBUS ---- */
+/* ---- GITS-DOCKHEAL 地图停靠自愈:偶发未挂载(全屏往返/竞态)时3秒内自动重挂 ---- */
+setInterval(function(){try{
+  if(typeof S==='undefined'||!S||S.screen!=='game'||S.zen||S.worldFull)return;
+  var lc=document.getElementById('pgLeftCol');
+  if(lc&&lc.offsetWidth&&!lc.querySelector('canvas')&&window.PGDOCK)window.PGDOCK.sync();
+}catch(e){}},3000);
 /* ---- GITS-MAP3D·WIRE B+C 玩法全接线 ----------------------------------------
    ①入口恒3D(2D舆图已废除) ②ZJ_LOCS→setNodes(含Cxx区块编号)
    ③◇时地 ZJ_KEYS最长匹配→setPlayer(render管线钩子=giCaseWatch同款挂法)
@@ -6879,6 +6885,7 @@ function sidebar(){
   var p=currentPanel();var cc=p?p.char:{};var cw=p?p.world:{};
   var _cm=null;for(var _k=S.history.length-1;_k>=0;_k--){if(S.history[_k].role==='world'){_cm=S.history[_k];break;}}
   var _newsImg='';if(_cm){var _vv=imgVers(_cm);if(_vv){var _vx=(_cm.verIx==null?_vv.length-1:Math.max(0,Math.min(_cm.verIx,_vv.length-1)));var _v0=_vv[_vx]||_vv[0];if(_v0&&_v0[0])_newsImg=_v0[0];}}
+  var _tkr=[cw['时地']].filter(Boolean).join(' · ')||(currentOpening()?currentOpening().era:'')||'──'; /* 小窗滚动字镜像:情報台第一排 */
   var PS=(G&&G.panelSpec)||null;
   var _wkeys=PS?(PS.widgets||[]).map(function(w){return w.k;}):[];
   var _txtKeys=PS?(PS.textOrder||[]):['衣装','持物','身体','观瞻'];
@@ -6894,7 +6901,8 @@ function sidebar(){
   }).join('')||'<div style="font-size:12px;color:var(--mut);padding:6px 0">场上暂无旁人。</div>';
   var worldRows=['时地'].filter(function(k){return cw[k];}).map(function(k){return '<div style="display:flex;gap:12px;font-size:13px;line-height:1.7;margin:3px 0"><span style="flex:none;width:2.6em;color:var(--mut)">'+k+'</span><span style="flex:1;color:var(--ink2)">'+esc(cw[k])+'</span></div>';}).join('');
   function head(open,act,color,title,mark){return '<div class="btn" data-act="'+act+'" style="display:flex;align-items:center;gap:10px;padding:12px 15px;cursor:pointer"><span class="diamond" style="background:'+color+'"></span><span style="font-family:var(--fUI);font-weight:600;font-size:14px;letter-spacing:.18em;color:var(--fg-data);flex:1">'+title+'</span><span style="color:var(--fg-label);font-family:var(--fMono);font-size:10px">'+(open?'▾':'▸')+'</span></div>';}
-  return '<div class="bambooV" data-zjzoom style="height:100%;overflow-y:auto;touch-action:pan-y;background:rgba(7,18,12,var(--zjbga,.3));-webkit-backdrop-filter:blur(var(--zjblur,9px)) saturate(180%);backdrop-filter:blur(var(--zjblur,9px)) saturate(180%);zoom:'+FS+';padding-top:'+(isMobile()?(glassUI()?'128px':'100px'):'62px')+';padding-bottom:'+(isMobile()?'calc(78px + env(safe-area-inset-bottom))':'0')+'">'
+  return '<div id="zjPanelScroll" class="bambooV" data-zjzoom style="height:100%;overflow-y:auto;touch-action:pan-y;background:rgba(7,18,12,var(--zjbga,.3));-webkit-backdrop-filter:blur(var(--zjblur,9px)) saturate(180%);backdrop-filter:blur(var(--zjblur,9px)) saturate(180%);zoom:'+FS+';padding-top:'+(isMobile()?(glassUI()?'128px':'100px'):'62px')+';padding-bottom:'+(isMobile()?'calc(78px + env(safe-area-inset-bottom))':'0')+'">'
+    +'<div style="padding:10px 14px 0"><div style="display:flex;align-items:center;gap:8px;height:24px;border:1px solid rgba(61,220,132,.28);background:rgba(3,8,6,.5);padding:0 10px">'+'<span style="flex:none;width:7px;height:7px;border-radius:50%;background:radial-gradient(circle,#c9ffe2,#7dffb0);animation:zjIsleGlow 2.2s ease-in-out infinite"></span>'+'<div style="flex:1;min-width:0;overflow:hidden;-webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)"><div class="zjMarq" style="font-size:11px;letter-spacing:.16em;color:var(--fg-data);font-family:var(--kai)"><span>'+esc(_tkr)+'</span><span aria-hidden="true">'+esc(_tkr)+'</span></div></div></div></div>'
     +'<div style="padding:15px 15px 3px"><div style="font-family:var(--fUI);font-weight:600;font-size:15px;letter-spacing:.22em;color:var(--fg-data);text-align:center" class="zjGlow">◆ S9//MFD<span style="font-family:var(--fMono);font-size:10px;color:var(--fg-label);margin-left:8px">情報台</span></div><div class="slip" style="margin-top:9px"></div></div>'
     +'<div class="glass" style="margin:11px 12px 0;border-radius:14px">'+head(S.secC,'tgC','var(--red)','義体 SHELL',S.secC)
       +(S.secC?'<div class="fade" style="padding:0 15px 16px">'+charRows
@@ -8384,6 +8392,7 @@ function render(){
   var chipsEl=document.getElementById('zjChipsRow');
   var chipsL=chipsEl?chipsEl.scrollLeft:null;
   var ppnl=document.getElementById('zjPanelScroll');var panelPos=ppnl?ppnl.scrollTop:null;
+  var _saw=document.querySelector('.sa-wrap');var _saPos=_saw?_saw.scrollTop:null; /* 装备停靠滚动跨render保持 */
   /* 安全网·根治闪屏跳顶：只要有浮层开着，整页重渲染就①记下浮层内滚动位置、重建后原位恢复；②强制关闭淡入。 */
   var ovBox=S.overlay?document.getElementById('zjOvBox'):null;
   var ovScroll=ovBox?scrollCapture(ovBox):null;
@@ -8417,7 +8426,8 @@ function render(){
     S._stayTop=false;
   }
   if(chipsL){var chipsEl2=document.getElementById('zjChipsRow');if(chipsEl2)chipsEl2.scrollLeft=chipsL;}
-  if(S._panelKeep){var ppnl2=document.getElementById('zjPanelScroll');if(ppnl2&&panelPos!=null)ppnl2.scrollTop=panelPos;}S._panelKeep=false;
+  var ppnl2=document.getElementById('zjPanelScroll');if(ppnl2&&panelPos!=null)ppnl2.scrollTop=panelPos;S._panelKeep=false; /* 情報台滚动无条件跨render保持(修折叠/AI回合跳顶) */
+  var _saw2=document.querySelector('.sa-wrap');if(_saw2&&_saPos!=null)_saw2.scrollTop=_saPos;
   if(focused){var ta=document.getElementById('zjInput');if(ta){ta.focus();try{ta.setSelectionRange(selStart,selStart);}catch(e){}}}
   try{
     if(S.thinking&&!SBX.thinking){SBX.thinking=true;sbxEmit('GENERATION_STARTED',null);}
@@ -8758,6 +8768,23 @@ function storyPadComp(story,newTop){
 }
 /* 进/出全屏（zen）带滑动淡出动画——顶栏/场景/灵动岛上滑离场、输入框/切换框下滑离场；进时先动画再切、出时先切再回落。
    点正文与「退出全屏」按钮共用此函数，保证两种入口动画一致。 */
+function zenHeal(){ /* 退出全屏自愈看门狗:清除被卡死WAAPI动画(running但currentTime恒0)钉在屏外的界面件 */
+  setTimeout(function(){try{
+    if(S.zen)return;
+    var els=[];['zjTopBar','zjInWrap','zjTabWrap','zjBotScrim','zjSceneIsle','pgLeftCol','zjSideCol'].forEach(function(id){var e=document.getElementById(id);if(e)els.push(e);});
+    var sc=document.getElementById('zjSideCol');
+    if(sc)[].push.apply(els,sc.querySelectorAll('.glass'));
+    els.forEach(function(el){
+      var stuck=false;
+      if(el.getAnimations)el.getAnimations().forEach(function(an){if(an.playState==='running'&&!an.currentTime)stuck=true;});
+      var r=el.getBoundingClientRect();
+      var off=r.width>0&&(r.left>=window.innerWidth||r.top>=window.innerHeight||r.right<=0||r.bottom<=0);
+      if(stuck||off){
+        if(el.getAnimations)el.getAnimations().forEach(function(an){try{an.cancel();}catch(e2){}});
+        el.style.transform='';el.style.opacity='';
+      }});
+  }catch(e){}},700);
+}
 function zenToggle(){
   /* 手术式全屏切换。滑动动画（核心设计）逐帧原样保留：顶栏/场景/灵动岛上滑离场、输入框/切换框下滑离场。
      与旧实现唯一的区别：整个切换【不调 render()】——正文文字、插画、背景模糊层、三维画布一个节点都不销毁，
@@ -8875,6 +8902,7 @@ function zenToggle(){
         if(!reducedMotion()&&lcol.animate)lcol.animate([{transform:'translateX(-64px)',opacity:0},{transform:'none',opacity:1}],{duration:320,easing:'cubic-bezier(.3,1.05,.35,1)'});
       }
       if(!reducedMotion())list2.forEach(function(g){var el=g[0];if(el.animate)el.animate([{transform:'translateY('+zOff(el,g[1])+'px)',opacity:.2},{transform:'none',opacity:1}],{duration:380,easing:'cubic-bezier(.3,1.05,.35,1)'});});
+      zenHeal();
     }else{ /* 兜底：全屏期间发生过标准 render，走整渲染老路径退出 */
       var oldY=(function(){var s=document.getElementById('zjStory');var w=s&&s.querySelector('[data-zjzoom]');return w?w.getBoundingClientRect().top:null;})();
       S._noFade=true;S._keepScroll=true;render();
@@ -8884,6 +8912,7 @@ function zenToggle(){
         if(!reducedMotion()&&s2.animate){var dy2=Math.round(oldY-w2.getBoundingClientRect().top);if(Math.abs(dy2)>2)s2.animate([{transform:'translateY('+dy2+'px)'},{transform:'none'}],{duration:340,easing:'cubic-bezier(.3,1.02,.35,1)'});}}}
       if(!reducedMotion())zEls.forEach(function(g){var el=document.getElementById(g[0]);if(el&&el.animate&&!(g[0]==='zjMiniIsle'&&el.closest&&el.closest('#zjTopBar')))el.animate([{transform:'translateY('+zOff(el,g[1])+'px)',opacity:.2},{transform:'none',opacity:1}],{duration:380,easing:'cubic-bezier(.3,1.05,.35,1)',fill:'backwards'});});
       sideSlideIn(); /* 兜底路径同样给情報台来一次右侧级联滑入 */
+      zenHeal();
     }
   }
 }

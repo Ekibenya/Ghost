@@ -2,7 +2,7 @@
 
 # 攻殻機動隊
 
-**THE GHOST IN THE SHELL · 你即草薙素子 · 公安9课与整个电脑化时代由 AI 扮演**
+**THE GHOST IN THE SHELL**
 
 *一款免安装的 AI 文字角色扮演游戏 —— 忠于士郎正宗原作漫画与 2026 新动画*
 

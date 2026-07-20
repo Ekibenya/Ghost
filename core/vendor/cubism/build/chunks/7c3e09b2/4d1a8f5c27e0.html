@@ -1073,6 +1073,26 @@ function sdInjectLine(hist){
     +' | Ghost已'+c.ghostIdle+'轮未变动 | 现实层='+c.layer+',潜深='+c.depth
     +(c.hints.length?' | 提示:'+c.hints.join('；'):'');
 }
+/* 反重复导演:长线实体近12世界回合出场密度过阈→注入冷却硬约束,打破「世界书条目↔正文互相点名」的引力井(187楼傀儡师/中村串门化反馈) */
+function antiLoopLine(hist){
+  try{
+    var WATCH=[
+      ['傀儡师/2501线',/傀儡师|人形使い|Project\s*2501|2501(计划|计画|プロジェクト)?/],
+      ['中村·公安6课线',/中村|公安6课|公安六课|公安6課|六课的|6课的/],
+      ['外务省·加维尔线',/加维尔|外务省大臣|外交官灭口/]
+    ];
+    var worlds=[];for(var i=hist.length-1;i>=0&&worlds.length<12;i--)if(hist[i]&&hist[i].role==='world')worlds.push(String(hist[i].text||''));
+    if(worlds.length<8)return '';
+    var recent3=worlds.slice(0,3).join('');
+    var noisy=[];
+    WATCH.forEach(function(w){
+      var n=0;worlds.forEach(function(t){if(w[1].test(t))n++;});
+      if(n>=5&&w[1].test(recent3))noisy.push(w[0]+'('+n+'/'+worlds.length+')');
+    });
+    if(!noisy.length)return '';
+    return '【反重复导演·硬约束】以下长线近期出场过密:'+noisy.join('、')+'——本回合强制冷却:相关人物不得登场/来访/来电,正文与低语不得再提其名,不得推进该线;玩家本回合主动点名除外。改为推进:在场之人的当下纠葛、LEADS账本未动线索、或全新市井事件。长线是暗流,露头一次后应沉底数回合再动。';
+  }catch(e){return '';}
+}
 /* 全局对象：交互线（worldCommand/骰机制/汇率表动作）由此调用引擎侧结算与计数 */
 try{window.SHELLDIAG={TAG:PANEL_TAG,SEC:{shell:SEC_CHAR,link:SEC_NPC,field:SEC_WORLD},
   keysShell:SD_SHELL_KEYS,keysField:SD_FIELD_KEYS,syn:SD_SYN,
@@ -1976,7 +1996,7 @@ function buildSystem(history,userInput){
     S.chatOnly?'【脑内热线模式·最高优先级·覆盖一切输出格式要求】本轮为9课成员间的即时通信/闲聊，不推进案件与战斗、不掷骰、不出新事件。正文只输出对话本身：逐行 名字：「台词」（出声）或 名字：『台词』（电脑直连），每句≤30字，总量≤10行，可穿插≤2行动作短句（点烟、递咖啡、Fuchikoma凑过来），严禁长篇大论与旁白场景心理描写，不要思维链。严格保持人物语纪：素子损人讨价、巴特粗口冷笑话、陀古萨敬语吐槽、石川老油条、Fuchikoma结巴敬语+打小报告。敏感话题若走非保密信道，可由一名角色提醒"这线干净吗"。正文后输出轻量状态块<gits_diag mode="lite">（全块≤5行）：必写◇时地/◇回线/◇记录，◈行≤2可选，shell区整体省略（系统自动沿用最近完整面板）。玩家的输入就是其原话，像回消息一样直接回应。'+(function(){try{return /交战|接敌|撤离/.test(String((effUpTo(history)||{world:{}}).world['态势']||''))?'当前态势在打仗：战斗中通话保持极短，允许背景枪声与喘息入行。':'';}catch(e){return '';}})():'', /*GITS-INTERACT T7.1（§1.6：交战中热线极短）*/
     '【三骰体系】玩家输入尾若附〔作战判定／GHOST直觉骰／入侵判定骰 X／100·档〕，此为引擎既掷的判定结果：严格按骰行括注的五档裁定表演绎最终档（有修正时以修正后档为准），禁止越档、不得逆天改命；骰行与〔〕结构行是引擎报文，不是角色说出的话，不要复述。未附骰行时（日常与社交永不强制掷骰）按常识软叙述。', /*GITS-INTERACT §6 三骰裁定契约*/
     SPD?'':('【自查】'+fill(G.post_history_instructions)),
-    (function(){try{var _l=sdInjectLine(history),_x='';try{_x=giCounterExtra(history);}catch(e2){}return _l?(_l+_x):(_x?('【引擎计数】'+_x.slice(3)):'');}catch(e){return '';}})(), /*GITS-INTERACT §10.2 计数器追加行（viral/放饵督办/看守）*/
+    (function(){try{var _l=sdInjectLine(history),_x='';try{_x=giCounterExtra(history);}catch(e2){}var _al='';try{_al=antiLoopLine(history);}catch(e3){}var _r=_l?(_l+_x):(_x?('【引擎计数】'+_x.slice(3)):'');return _al?(_r?_r+'\n'+_al:_al):_r;}catch(e){return '';}})(), /*GITS-INTERACT §10.2 计数器追加行（viral/放饵督办/看守）*/
     (function(){try{return giEqSysLine(history);}catch(e){return '';}})() /*GITS-EQUIP equipment_spec §1.6通道A 道具规则 + §1.1 引擎库存注入*/
   );
   if(post.length)arr.push('【玩家预设·末位指令】\n'+post.join('\n\n'));

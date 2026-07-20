@@ -3252,8 +3252,8 @@ function giEqAction(code){
     if(key.charAt(0)==='b'&&r2&&r2[7])giEqBagTake(inv,it.id||it.nm,1);
     msg='已排队：使用「'+it.nm+'」'+(r2?'——'+r2[5]:'');
   }
-  else if(op==='aug'){var b3=bagAt(key);if(!b3||!b3.id)return;giEqPendPush(inv,'aug',b3.id,b3.nm,null);last();inv.aug.push(b3.id);giEqBagTake(inv,b3.id,1);msg='已排队：挂载「'+b3.nm+'」（部件更换须整备间/义体屋，正文兑现）';}
-  else if(op==='unaug'){var gi=parseInt(key.slice(1),10),gid=inv.aug[gi];if(!gid)return;inv.aug.splice(gi,1);giEqPendPush(inv,'unaug',gid,EQ_BY_ID[gid]?EQ_BY_ID[gid][1]:gid,null);last();giEqBagAdd(inv,gid,null,1);msg='已排队：卸除部件';}
+  else if(op==='aug'){var b3=bagAt(key);if(!b3)return;var aid=b3.id||b3.nm;if(!aid)return;giEqPendPush(inv,'aug',b3.id||null,b3.nm,null);last();inv.aug.push(aid);giEqBagTake(inv,b3.id||b3.nm,1);msg='已排队：挂载「'+b3.nm+'」（部件更换须整备间/义体屋，正文兑现）';} /* 目录外部件以名字为伪id入挂载列,全消费端有EQ_BY_ID兜底 */
+  else if(op==='unaug'){var gi=parseInt(key.slice(1),10),gid=inv.aug[gi];if(!gid)return;inv.aug.splice(gi,1);giEqPendPush(inv,'unaug',EQ_BY_ID[gid]?gid:null,EQ_BY_ID[gid]?EQ_BY_ID[gid][1]:gid,null);last();giEqBagAdd(inv,EQ_BY_ID[gid]?gid:null,EQ_BY_ID[gid]?null:gid,1);msg='已排队：卸除部件';}
   else if(op==='wear'){var b4=bagAt(key);if(!b4)return;giEqPendPush(inv,'wear',b4.id,b4.nm,null);last();
     if(inv.wear)giEqBagAdd(inv,inv.wear,null,1);
     inv.wear=b4.id||null;giEqBagTake(inv,b4.id||b4.nm,1);
@@ -3441,7 +3441,7 @@ function eqDetail(sel){
     if(r&&r[3]==='c')acts.push(btn('wear:'+sel,'换 装'));
     else if(r&&r[3]==='m')acts.push(btn('camo:'+sel,'装备迷彩'));
     else if(r&&r[3]==='p')acts.push(btn('aug:'+sel,'挂 载'));
-    else acts.push(btn('eq:'+sel,'装 备'));
+    else{acts.push(btn('eq:'+sel,'装 备'));if(!r)acts.push(btn('aug:'+sel,'挂 载'));} /* 目录外物品:玩家自行裁定归携行还是义体挂载(出处以正文为准) */
     if(r&&r[7])acts.push(btn('use:'+sel,'使 用'));
     acts.push(btn('drop:'+sel,'丢 弃',1));
   }else if(where==='a'){

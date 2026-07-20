@@ -3090,8 +3090,45 @@ var EQ_CATALOG=[
 ['motoko-yacht','素子的帆船游艇','载','v','vol1 p53','休假场景解锁(lite档地图)；海上接驳载具',['游艇','帆船'],0],
 ['spm-van','SPM伪装厢车','载','v','vol1 p63','移动指挥所：车内光纤基站、迷彩充电+25/轮',['伪装厢车','SPM'],0],
 ['tiltrotor','9课倾转旋翼机','载','v','web/13','跨地图转场；调用=资本−5',['倾转旋翼机','旋翼机'],0],
-['antigrav-generator','反重力发生器(¥4800)','载','v','vol1 p160','彩蛋商品：大概率是坏的/赃物',['反重力'],0]];
-var EQ_BY_ID={};EQ_CATALOG.forEach(function(r){EQ_BY_ID[r[0]]=r;});
+['antigrav-generator','反重力发生器(¥4800)','载','v','vol1 p160','彩蛋商品：大概率是坏的/赃物',['反重力'],0],
+/* 目录扩充·第二批36条 ─ 常见剧情物品收编:雷类/光学/义体部件重点补强 */
+['frag-grenade','破片手榴弹','武','w','vol1 p97','范围杀伤；室内使用态势+1档',['手榴弹','破片雷'],1],
+['flashbang','闪光震撼弹','武','w','合理补完(突入战术)','突入先手：室内全员1拍致盲；非致死',['闪光弹','震撼弹'],1],
+['smoke-grenade','烟幕弹','武','w','合理补完','遮断目视半档；配热感义眼我方无损',['烟雾弹'],1],
+['emp-grenade','EMP手雷','武','w','合理补完(电子战)','义体/无人机瘫痪1轮；敌我不分',['EMP雷','电磁手雷'],1],
+['rubber-magazine','橡胶弹匣','武','w','合理补完(镇暴)','非致死收监判定；对全身义体无效',['橡胶弹'],0],
+['suppressor','消音器','装','w','vol1(暗杀战术)','静默击杀判定上移；配Seburo手枪系',['灭音器','消声器'],0],
+['ir-goggles','热成像仪','装','w','合理补完','夜战/烟幕全档；对热光学迷彩半档',['热像仪','热成像镜'],0],
+['recon-drone','掌上侦察无人机','装','w','合理补完','前出侦察1拍；被击落=我方位置暴露',['侦察无人机','微型无人机'],0],
+['signal-jammer','电波妨害器','装','w','合理补完(电子战)','半径50m无线遮断；敌我不分含队内频道',['干扰器','电波干扰器'],0],
+['lock-decoder','电子锁解码器','装','w','合理补完','民用电子锁3拍开启；军规锁需破冰器',['解码器','开锁器'],0],
+['grapple-gun','磁吸爪钩枪','装','w','vol1(高层潜入)','外墙攀附；配钢索垂降装置全档',['爪钩枪','磁吸枪'],0],
+['field-medkit','野战医疗包','装','w','合理补完','生身急救强档；义体损伤需修理工具组',['医疗包','急救包'],1],
+['white-noise-gen','白噪声发生器','装','w','合理补完(反窃听)','范围反窃听；机密简报强制项',['反窃听器','白噪器'],0],
+['thermal-eye','热感应义眼','件','p','vol1(狙击战)','热源探知：黑暗/烟幕降档无效',['热感义眼','红外义眼'],0],
+['zoom-eye','望远义眼','件','p','vol1 p63','8倍光学变焦；狙击/监视判定上移',['望远眼','变焦义眼'],0],
+['reflex-booster','反射加速装置','件','p','合理补完(近战义体)','先手判定+1档；战斗中电子脑负荷+5',['反射加速器'],0],
+['subdermal-armor','皮下装甲','件','p','合理补完','躯干中弹降伤一档；安检必暴露',['皮下防甲'],0],
+['jump-legs','跳跃强化腿','件','p','vol1(楼顶战)','垂直三层楼；落地静音判定另掷',['强化腿','跳跃腿'],0],
+['comm-implant','短距通信植入体','件','p','原作(队内频道)','脑内加密频道；断线态才失联',['通信植入'],0],
+['toxin-filter','毒素过滤肝','件','p','合理补完','毒物/酒精无效化；花见清酒白喝',['过滤肝','解毒肝'],0],
+['oxy-lung','高压氧储肺','件','p','vol1(潜水)','水下40分钟；配潜水呼吸装置翻倍',['储氧肺','人工肺'],0],
+['finger-picks','指端万能钥','件','p','合理补完(潜入)','机械锁1拍；电子锁无效',['万能指'],0],
+['rescue-beacon','紧急救难信标','件','p','合理补完','脑壳存活广播；9课救援拍档+2',['救难信标'],0],
+['repair-swarm','微机械修复群','件','p','vol2(微机械)','每轮轻伤自愈；重创无效',['修复微机械'],0],
+['mil-cybercase','军规电子脑壳','件','p','合理补完','攻性防壁抗性+1档；来路注记:军品',['军用脑壳'],0],
+['formal-suit','正装西服','服','c','合理补完(外事场合)','外交/晚宴合法装；藏枪判定降档',['西装','正装'],0],
+['street-hoodie','旧城区连帽衫','服','c','合理补完','旧城区融入+1档；公务场合失礼',['连帽衫'],0],
+['armored-coat','防弹长大衣','服','c','合理补完','躯干降伤一档；奔跑判定小减',['防弹大衣'],0],
+['ration-bar','战术口粮条','耗','w','合理补完','生身体力回复；口感:素子拒评',['口粮','压缩口粮'],1],
+['canned-coffee','罐装黑咖啡','耗','w','合理补完','熬夜监视+1拍专注',['罐咖啡','黑咖啡'],1],
+['brain-coolant','电子脑冷却贴','耗','w','合理补完','电子脑负荷−15；连续使用无效',['冷却贴'],1],
+['blackbox-log','义体黑匣记录','情','w','合理补完','义体犯罪铁证；结案判定强档',['黑匣记录','黑匣子'],0],
+['crypto-chip','匿名结算芯片','情','w','合理补完','不留痕支付；被溯源=曝光+5',['加密芯片','匿名芯片'],0],
+['fuchikoma-wire','フチコマ钢索绞盘','攻','f','原作(攀爬)','垂直墙面/吊运；可载员1名',['攻壳车绞盘','钢索绞盘'],0],
+['fuchikoma-sensor','フチコマ增设感知阵','攻','f','合理补完','警戒半径翻倍；紊乱天候降档',['感知阵'],0],
+['unmarked-sedan','无标识公务轿车','载','v','原作(移动)','4座低调；跟踪对抗中性',['公务车','轿车'],0]];
+var EQ_BY_ID={};EQ_CATALOG.forEach(function(r){EQ_BY_ID[r[0]]=r;}); var EQ_ICON_ALIAS={'frag-grenade':'c4-charge','flashbang':'c4-charge','smoke-grenade':'c4-charge','emp-grenade':'c4-charge','rubber-magazine':'hv-magazine','suppressor':'seburo-m5','ir-goggles':'ew-goggles','recon-drone':'handheld-terminal','signal-jammer':'handheld-terminal','lock-decoder':'handheld-terminal','grapple-gun':'combat-knife','field-medkit':'stim-spray','white-noise-gen':'handheld-terminal','thermal-eye':'cyber-eye','zoom-eye':'cyber-eye','reflex-booster':'cyber-eye','subdermal-armor':'tactical-vest','jump-legs':'cyber-eye','comm-implant':'cyber-eye','toxin-filter':'cyber-eye','oxy-lung':'cyber-eye','finger-picks':'cyber-eye','rescue-beacon':'cyber-eye','repair-swarm':'cyber-eye','mil-cybercase':'cyber-eye','formal-suit':'motoko-civvies','street-hoodie':'motoko-civvies','armored-coat':'motoko-civvies','ration-bar':'coffee','canned-coffee':'coffee','brain-coolant':'stim-spray','blackbox-log':'case-files','crypto-chip':'case-files','fuchikoma-wire':'fuchikoma-gatling','fuchikoma-sensor':'fuchikoma-gatling','unmarked-sedan':'spm-van'}; /* 扩充条目复用同类图标,美术零新增 */
 var EQ_CAT_LABEL={'武':'武器','件':'义体部件','装':'装备','攻':'フチコマ','服':'服装','耗':'消耗品','情':'情报物品','载':'载具大件'};
 var EQ_SLOT_LABEL={w:'随身携行',v:'载具舱',p:'义体挂载',c:'服装',m:'迷彩',f:'フチコマ',b:'基地设施'};
 function eqNorm(s){return String(s==null?'':s).replace(/[×xX]\s*\d+/g,'').replace(/[(（][^)）]*[)）]/g,'').replace(/[\s·・．.\-—－]/g,'').toLowerCase();}
@@ -3109,7 +3146,7 @@ function eqFind(name){ /* 一名一译一slug（§0-4）：先精确后最长模
 }
 function eqIcon(id,px){ /* §1.7：未命中目录回退 ▪，不报错 */
   if(!id||!EQ_BY_ID[id])return '<span class="gi-noic" style="width:'+px+'px;height:'+px+'px;font-size:'+Math.round(px*.72)+'px">▪</span>';
-  return '<svg class="gi-ic" width="'+px+'" height="'+px+'" aria-hidden="true"><use href="#gi-'+id+'"></use></svg>';
+  return '<svg class="gi-ic" width="'+px+'" height="'+px+'" aria-hidden="true"><use href="#gi-'+((typeof EQ_ICON_ALIAS!=='undefined'&&EQ_ICON_ALIAS[id])||id)+'"></use></svg>';
 }
 /* ---- ◆武装 字段解析：量词×n/(注记)/目录匹配 ---- */
 function giEqParseArms(v){
